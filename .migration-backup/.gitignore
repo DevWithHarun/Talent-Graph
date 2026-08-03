@@ -1,0 +1,70 @@
+# ── Dependencies ──────────────────────────────────────────────
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ── Next.js build output ──────────────────────────────────────
+/.next/
+/out/
+/build
+
+# ── Testing ───────────────────────────────────────────────────
+/coverage
+
+# ── TypeScript ────────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Environment variables (never commit secrets) ──────────────
+.env*
+!.env.example
+
+# ── Firebase ──────────────────────────────────────────────────
+firebase-debug.log
+firestore-debug.log
+.firebase/
+dev-dist/
+
+# ── Genkit ────────────────────────────────────────────────────
+.genkit/*
+
+# ── OS / editor artifacts ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.pem
+
+# ── Debug logs ────────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── Vercel ────────────────────────────────────────────────────
+.vercel
+
+# ── Archives / uploads (never commit binary blobs) ────────────
+*.rar
+*.zip
+*.tar.gz
+*.tar
+
+# ── Agent / platform working files ───────────────────────────
+.local/
+.agents/
+attached_assets/
+extracted_app/
+
+# ── Hosting platform environment config ───────────────────────
+# These are needed locally for the Replit runtime but don't belong
+# in the shared repo. Run: git rm -r --cached .replit_integration_files replit.nix
+# to stop tracking them if they were previously committed.
+.replit_integration_files/
+replit.nix
+
+# ── Auto-generated reports ────────────────────────────────────
+SECURITY_REPORT.md
