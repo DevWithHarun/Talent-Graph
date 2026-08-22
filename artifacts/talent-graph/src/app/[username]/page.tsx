@@ -3,7 +3,7 @@ import { useParams } from '@/lib/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, where, doc, addDoc, setDoc } from 'firebase/firestore';
 import type { AthleteProfile, UserAccount, ScoutConnection, ClubMember, ScoutAthleteData, ScoutProfile, ClubProfile } from '@/lib/types';
-import { Loader2, ArrowLeft, ShieldCheck, BarChart3, Target, TrendingUp, ShieldAlert, Award, FileText, MessageSquare, MapPin, Building2, Trophy, AlertTriangle, Calendar, Users, Lock, Zap, Printer } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, BarChart3, Target, TrendingUp, ShieldAlert, Award, FileText, MessageSquare, MapPin, Building2, Trophy, AlertTriangle, Calendar, Users, Lock, Zap, Printer, Search, Bell, MoreHorizontal, Home, BriefcaseBusiness, LayoutGrid, Send, Globe2 } from 'lucide-react';
 import { PerformanceRadarChart } from '@/components/dashboard/performance-radar-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -230,88 +230,90 @@ export default function UsernamePage() {
         ? `${currentUserProfile.firstName} ${currentUserProfile.lastName}`.trim()
         : undefined;
     const viewerRole = currentUserProfile?.role;
+    const [activeTab, setActiveTab] = useState('Overview');
+    const [searchQuery, setSearchQuery] = useState('');
+    const profileTabs = ['Overview', 'About', 'Performance', 'Career', 'Activity'];
+    const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const queryValue = searchQuery.trim();
+        if (queryValue) window.location.href = `/scout-dashboard?search=${encodeURIComponent(queryValue)}`;
+    };
+    const scrollToTab = (tab: string) => {
+        setActiveTab(tab);
+        const target = tab === 'Overview' ? 'profile-overview' : tab === 'About' ? 'profile-about' : tab === 'Performance' ? 'profile-performance' : tab === 'Career' ? 'profile-career' : 'profile-activity';
+        document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
 
     return (
-        <div className="min-h-screen bg-muted/40 p-4 sm:p-8 pb-24">
-            <div className="max-w-5xl mx-auto mb-4 flex justify-between items-center">
-                 <Button variant="ghost" asChild>
-                    <Link href={isScout ? "/scout-dashboard" : "/"} className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                        <ArrowLeft className="h-5 w-5" />
-                        <span className="text-sm font-bold">Exit Profile</span>
+        <div className="min-h-screen bg-[#f3f2ef] pb-24 text-[#1d2226]">
+            <header className="sticky top-0 z-40 border-b border-[#d6d9dc] bg-white/95 backdrop-blur">
+                <div className="mx-auto flex h-[62px] max-w-6xl items-center gap-3 px-4 sm:px-6">
+                    <Link href={isScout ? "/scout-dashboard" : "/"} className="flex shrink-0 items-center gap-2">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#111827] text-[11px] font-black text-white">TG</div>
+                        <span className="hidden text-[15px] font-extrabold tracking-tight sm:block">Talent Graph</span>
                     </Link>
-                </Button>
-                <div className="flex items-center gap-2">
-                    {isScout && athlete.uid && (
-                        <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs font-bold" asChild>
-                            <Link href={`/scout-dashboard/report/${athlete.uid}`}>
-                                <Printer className="w-3.5 h-3.5" />
-                                Export Report
-                            </Link>
-                        </Button>
-                    )}
-                    {athlete.isVerified ? (
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 flex items-center gap-1.5 px-3 py-1">
-                            <ShieldCheck className="w-4 h-4" />
-                            INSTITUTIONAL VERIFIED ✅
-                        </Badge>
-                    ) : (
-                        <Badge variant="outline" className="text-muted-foreground flex items-center gap-1.5 px-3 py-1">
-                            <FileText className="w-4 h-4" />
-                            SELF-REPORTED DATA ⏳
-                        </Badge>
-                    )}
+                    <form onSubmit={handleSearch} className="relative min-w-0 flex-1 sm:max-w-[360px]">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#56687a]" />
+                        <input aria-label="Search Talent Graph" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="Search athletes, clubs, scouts..." className="h-10 w-full rounded-full border-0 bg-[#eef3f8] pl-10 pr-4 text-sm outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-[#0a66c2]" />
+                    </form>
+                    <nav className="ml-auto hidden items-center gap-1 md:flex">
+                        <Link href="/" className="flex min-w-[60px] flex-col items-center gap-0.5 rounded-lg px-3 py-1 text-[#56687a] hover:bg-[#f3f2ef] hover:text-[#0a66c2]"><Home className="h-[18px] w-[18px]" /><span className="text-[10px] font-semibold">Home</span></Link>
+                        <Link href="/scout-dashboard" className="flex min-w-[60px] flex-col items-center gap-0.5 rounded-lg px-3 py-1 text-[#56687a] hover:bg-[#f3f2ef] hover:text-[#0a66c2]"><LayoutGrid className="h-[18px] w-[18px]" /><span className="text-[10px] font-semibold">Discover</span></Link>
+                        <button className="flex min-w-[60px] flex-col items-center gap-0.5 rounded-lg px-3 py-1 text-[#56687a] hover:bg-[#f3f2ef] hover:text-[#0a66c2]"><BriefcaseBusiness className="h-[18px] w-[18px]" /><span className="text-[10px] font-semibold">Opportunities</span></button>
+                        <button className="relative flex min-w-[60px] flex-col items-center gap-0.5 rounded-lg px-3 py-1 text-[#56687a] hover:bg-[#f3f2ef] hover:text-[#0a66c2]"><Bell className="h-[18px] w-[18px]" /><span className="text-[10px] font-semibold">Alerts</span><span className="absolute right-2 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#d11124] px-1 text-[9px] font-bold text-white">2</span></button>
+                    </nav>
+                    <button className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#56687a] hover:bg-[#f3f2ef]" aria-label="Messages"><MessageSquare className="h-5 w-5" /><span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#d11124] px-1 text-[9px] font-bold text-white">1</span></button>
+                    <Button variant="ghost" size="icon" className="hidden h-9 w-9 rounded-full sm:flex"><MoreHorizontal className="h-5 w-5" /></Button>
                 </div>
-            </div>
+            </header>
 
-            <div className="max-w-5xl mx-auto space-y-8">
+            <div className="mx-auto max-w-6xl px-3 pt-4 sm:px-6 sm:pt-6">
+                <div className="mb-3 flex items-center justify-between">
+                    <Button variant="ghost" asChild className="h-8 gap-1.5 rounded-full px-3 text-xs font-semibold text-[#56687a] hover:bg-white hover:text-[#0a66c2]">
+                        <Link href={isScout ? "/scout-dashboard" : "/"}><ArrowLeft className="h-3.5 w-3.5" />Back to Talent Graph</Link>
+                    </Button>
+                    {isScout && athlete.uid && <Button size="sm" variant="outline" className="h-8 gap-1.5 rounded-full border-[#0a66c2] text-xs font-bold text-[#0a66c2]" asChild><Link href={`/scout-dashboard/report/${athlete.uid}`}><Printer className="h-3.5 w-3.5" />Export report</Link></Button>}
+                </div>
+
+            <div className="space-y-3">
                 {/* Hero Profile Card */}
-                <Card className="overflow-hidden shadow-2xl border-none bg-background">
-                    <div className="h-48 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-950 relative">
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
-                        <div className="absolute bottom-4 left-8 flex flex-col md:flex-row items-start md:items-end gap-6">
-                            <div className="relative">
-                                <Avatar className="h-32 w-32 border-4 border-background shadow-2xl rounded-2xl">
-                                    <AvatarImage src={athlete.photoUrl || `https://api.dicebear.com/8.x/initials/svg?seed=${userDisplayName}`} />
-                                    <AvatarFallback className="rounded-none text-2xl font-black">{getInitials(userDisplayName)}</AvatarFallback>
-                                </Avatar>
+                <Card className="overflow-hidden rounded-xl border border-[#d6d9dc] bg-white shadow-sm">
+                    <div className="relative h-36 overflow-hidden bg-[radial-gradient(circle_at_80%_20%,#19a974_0%,transparent_34%),linear-gradient(120deg,#0b2433,#123f4d_45%,#0a66c2)] sm:h-44">
+                        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(135deg,transparent_0_45%,#fff_45%_46%,transparent_46%_100%)] [background-size:42px_42px]" />
+                        <div className="absolute right-5 top-4 rounded-full border border-white/20 bg-black/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/80"><Globe2 className="mr-1 inline h-3 w-3" /> Open to opportunities</div>
+                    </div>
+                    <CardContent className="relative px-5 pb-0 sm:px-8">
+                        <div className="-mt-14 flex flex-col gap-4 sm:-mt-16 sm:flex-row sm:items-end">
+                            <Avatar className="h-28 w-28 rounded-full border-4 border-white bg-white shadow-lg sm:h-32 sm:w-32">
+                                <AvatarImage src={athlete.photoUrl || `https://api.dicebear.com/8.x/initials/svg?seed=${userDisplayName}`} className="object-cover" />
+                                <AvatarFallback className="rounded-full bg-[#0b2433] text-2xl font-black text-white">{getInitials(userDisplayName)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1 pb-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h1 className="text-2xl font-extrabold tracking-tight sm:text-[30px]">{userDisplayName}</h1>
+                                    {athlete.isVerified && <ShieldCheck className="h-5 w-5 fill-[#0a66c2] text-white" />}
+                                    {athlete.jerseyNumber && <span className="text-sm font-semibold text-[#56687a]">#{athlete.jerseyNumber}</span>}
+                                </div>
+                                <p className="mt-1 text-[15px] font-medium text-[#38434f]">{athlete.position || 'Athlete'}{athlete.clubName || athlete.team ? ` · ${athlete.clubName || athlete.team}` : ''}</p>
+                                <p className="mt-1 flex items-center gap-1 text-sm text-[#56687a]"><MapPin className="h-3.5 w-3.5" />{athlete.county || athlete.country || 'Kenya'} · <span className="font-semibold text-[#0a66c2]">@{athlete.username}</span></p>
                             </div>
-                            <div className="text-white pb-2">
-                                <div className="flex items-center gap-3">
-                                  <h1 className="text-4xl font-black tracking-tight">{userDisplayName}</h1>
-                                  {athlete.jerseyNumber && <Badge variant="outline" className="text-white border-white/20">#{athlete.jerseyNumber}</Badge>}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-3 mt-1">
-                                    <Badge className="bg-primary text-primary-foreground font-black tracking-widest">{athlete.readinessTier || 'RAW'}</Badge>
-                                    <span className="text-sm font-bold text-white/70">@{athlete.username}</span>
-                                    {athlete.dominantFoot && <span className="text-xs font-black uppercase text-white/40 tracking-widest">Foot: {athlete.dominantFoot}</span>}
-                                </div>
+                            <div className="flex gap-2 pb-1">
+                                {isScout && !existingConnection && <Button onClick={handleRequestAccess} className="h-9 rounded-full bg-[#0a66c2] px-4 text-sm font-bold hover:bg-[#004182]"><Send className="mr-1.5 h-3.5 w-3.5" />Connect</Button>}
+                                {existingConnection && <Button variant="outline" className="h-9 rounded-full border-[#0a66c2] px-4 text-sm font-bold text-[#0a66c2]">{existingConnection.status === 'accepted' ? 'Connected' : 'Pending'}</Button>}
+                                <Button variant="outline" asChild className="h-9 rounded-full border-[#56687a] px-4 text-sm font-bold text-[#38434f]"><Link href="/chat"><MessageSquare className="mr-1.5 h-3.5 w-3.5" />Message</Link></Button>
+                                <Button variant="outline" size="icon" className="h-9 w-9 rounded-full"><MoreHorizontal className="h-4 w-4" /></Button>
                             </div>
                         </div>
-                    </div>
-                    
-                    <CardContent className="p-8 space-y-6">
-                        {athlete.bio && (
-                            <div className="flex items-start gap-2 text-muted-foreground">
-                                <MessageSquare className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
-                                <p className="text-sm leading-relaxed">{athlete.bio}</p>
-                            </div>
-                        )}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                            {indices.map(idx => (
-                                <div key={idx.label} className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] flex items-center gap-1.5">
-                                        <idx.icon className="w-3 h-3" />
-                                        {idx.label}
-                                    </p>
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-3xl font-black">{safeRenderValue(idx.value)}</span>
-                                        <span className="text-[10px] text-muted-foreground font-bold">/ 100</span>
-                                    </div>
-                                </div>
-                            ))}
+                        {athlete.bio && <p className="max-w-3xl py-5 text-sm leading-relaxed text-[#38434f]">{athlete.bio}</p>}
+                        <div className="mt-3 flex gap-1 overflow-x-auto border-t border-[#d6d9dc]">
+                            {profileTabs.map(tab => <button key={tab} onClick={() => scrollToTab(tab)} className={`relative whitespace-nowrap px-4 py-3 text-sm font-bold transition ${activeTab === tab ? 'text-[#0a66c2]' : 'text-[#56687a] hover:text-[#0a66c2]'}`}>{tab}{activeTab === tab && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#0a66c2]" />}</button>)}
                         </div>
                     </CardContent>
                 </Card>
+
+                <div id="profile-about" className="grid grid-cols-2 gap-3 rounded-xl border border-[#d6d9dc] bg-white p-4 shadow-sm sm:grid-cols-4 sm:p-5">
+                    {indices.map(idx => <div key={idx.label} className="border-r border-[#e4e6e8] px-2 last:border-0 sm:px-4"><p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#56687a]"><idx.icon className="h-3 w-3 text-[#0a66c2]" />{idx.label}</p><p className="mt-1 text-2xl font-extrabold text-[#1d2226]">{safeRenderValue(idx.value)}<span className="ml-1 text-xs font-semibold text-[#56687a]">/100</span></p></div>)}
+                </div>
 
                 {/* Growth gate wraps everything below the hero */}
                 <div className="relative">
@@ -356,7 +358,7 @@ export default function UsernamePage() {
                 )}
 
                 {/* Content below gate (blurred for guests) */}
-                <div className={isGated ? 'space-y-8 pointer-events-none select-none blur-sm opacity-50' : 'space-y-8'}>
+                <div id="profile-activity" className={isGated ? 'space-y-8 pointer-events-none select-none blur-sm opacity-50' : 'space-y-8'}>
 
                 {/* Social Engagement */}
                 <ProfileEngagement
@@ -446,7 +448,7 @@ export default function UsernamePage() {
                             const motm = history.filter(m => m.manOfTheMatch).length;
                             const avgRating = history.length ? (history.reduce((s, m) => s + (m.rating || 0), 0) / history.length).toFixed(1) : '--';
                             return (
-                                <Card className="bg-background border-none shadow-lg">
+                                <Card id="profile-career" className="bg-white border border-[#d6d9dc] shadow-sm">
                                     <CardHeader className="pb-3">
                                         <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
                                             <Trophy className="w-3 h-3" /> Career Stats
@@ -573,7 +575,7 @@ export default function UsernamePage() {
                             />
                         )}
 
-                        <Card className="shadow-xl bg-background border-none overflow-hidden">
+                        <Card id="profile-performance" className="shadow-sm bg-white border border-[#d6d9dc] overflow-hidden">
                             <CardHeader className="bg-neutral-50 border-b">
                                 <CardTitle className="text-sm font-black uppercase tracking-widest">Performance Radar</CardTitle>
                             </CardHeader>
@@ -592,11 +594,19 @@ export default function UsernamePage() {
                                 <MatchStatisticsTable matchHistory={athlete.matchHistory || []} />
                             </CardContent>
                         </Card>
-                    </div>
                 </div>
+            </div>
+        </div>
                 </div> {/* end blurred content wrapper */}
                 </div> {/* end relative gate wrapper */}
             </div>
+            <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[68px] items-center justify-around border-t border-[#d6d9dc] bg-white/95 px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur md:hidden">
+                <Link href="/" className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#0a66c2]"><Home className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Home</span></Link>
+                <Link href="/scout-dashboard" className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><LayoutGrid className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Discover</span></Link>
+                <Link href="/chat" className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><MessageSquare className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Messages</span></Link>
+                <button className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><Bell className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Alerts</span></button>
+                <button className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><BriefcaseBusiness className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Opportunities</span></button>
+            </nav>
         </div>
     );
 }
