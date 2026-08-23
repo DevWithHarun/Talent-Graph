@@ -3,7 +3,7 @@ import { useParams } from '@/lib/navigation';
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from '@/firebase';
 import { collection, query, where, doc, addDoc, setDoc } from 'firebase/firestore';
 import type { AthleteProfile, UserAccount, ScoutConnection, ClubMember, ScoutAthleteData, ScoutProfile, ClubProfile } from '@/lib/types';
-import { Loader2, ArrowLeft, ShieldCheck, BarChart3, Target, TrendingUp, ShieldAlert, Award, FileText, MessageSquare, MapPin, Building2, Trophy, AlertTriangle, Calendar, Users, Lock, Zap, Printer, Search, Bell, MoreHorizontal, Home, BriefcaseBusiness, LayoutGrid, Send, Globe2 } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, BarChart3, Target, TrendingUp, ShieldAlert, Award, FileText, MessageSquare, MapPin, Building2, Trophy, AlertTriangle, Calendar, Users, Lock, Zap, Printer, Search, Bell, MoreHorizontal, Home, BriefcaseBusiness, LayoutGrid, Send, Globe2, Info, Gauge, Activity } from 'lucide-react';
 import { PerformanceRadarChart } from '@/components/dashboard/performance-radar-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -232,7 +232,13 @@ export default function UsernamePage() {
     const viewerRole = currentUserProfile?.role;
     const [activeTab, setActiveTab] = useState('Overview');
     const [searchQuery, setSearchQuery] = useState('');
-    const profileTabs = ['Overview', 'About', 'Performance', 'Career', 'Activity'];
+    const profileTabs = [
+        { label: 'Overview', icon: Home },
+        { label: 'About', icon: Info },
+        { label: 'Performance', icon: Gauge },
+        { label: 'Career', icon: BriefcaseBusiness },
+        { label: 'Activity', icon: Activity },
+    ];
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const queryValue = searchQuery.trim();
@@ -306,7 +312,10 @@ export default function UsernamePage() {
                         </div>
                         {athlete.bio && <p className="max-w-3xl py-5 text-sm leading-relaxed text-[#38434f]">{athlete.bio}</p>}
                         <div className="mt-3 flex gap-1 overflow-x-auto border-t border-[#d6d9dc]">
-                            {profileTabs.map(tab => <button key={tab} onClick={() => scrollToTab(tab)} className={`relative whitespace-nowrap px-4 py-3 text-sm font-bold transition ${activeTab === tab ? 'text-[#0a66c2]' : 'text-[#56687a] hover:text-[#0a66c2]'}`}>{tab}{activeTab === tab && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#0a66c2]" />}</button>)}
+                            {profileTabs.map(tab => {
+                                const TabIcon = tab.icon;
+                                return <button key={tab.label} onClick={() => scrollToTab(tab.label)} className={`relative flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-bold transition ${activeTab === tab.label ? 'text-[#0a66c2]' : 'text-[#56687a] hover:text-[#0a66c2]'}`}><TabIcon className="h-3.5 w-3.5" />{tab.label}{activeTab === tab.label && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#0a66c2]" />}</button>;
+                            })}
                         </div>
                     </CardContent>
                 </Card>
@@ -361,14 +370,14 @@ export default function UsernamePage() {
                 <div id="profile-activity" className={isGated ? 'space-y-8 pointer-events-none select-none blur-sm opacity-50' : 'space-y-8'}>
 
                 {/* Social Engagement */}
-                <ProfileEngagement
+                {(activeTab === 'Overview' || activeTab === 'Activity') && <ProfileEngagement
                     athleteId={athlete.uid}
                     athleteName={userDisplayName}
                     viewerName={viewerName}
                     viewerRole={viewerRole}
-                />
+                />}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {activeTab !== 'Overview' && activeTab !== 'Activity' && <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-8">
                         {isScout && (
                             <Card className="bg-neutral-900 text-white border-none shadow-lg">
@@ -594,7 +603,7 @@ export default function UsernamePage() {
                                 <MatchStatisticsTable matchHistory={athlete.matchHistory || []} />
                             </CardContent>
                         </Card>
-                </div>
+                </div>}
             </div>
         </div>
                 </div> {/* end blurred content wrapper */}
