@@ -8,7 +8,7 @@ import {
   Eye, Award, Layers, GitGraph, PlusCircle, Play, Zap, ArrowRight,
   CheckCircle2, Home, Pencil, Headphones, User, MoreHorizontal, Trash2,
   Plus, Flame, Clock, ShieldCheck, ShieldX, Building2, Bell, CheckCheck,
-  Trophy, Settings2, Shield, Activity, Sparkles,
+  Trophy, Settings2, Shield, Activity, Sparkles, Search, MessageSquare, MapPin, Ruler, Scale, ChevronRight,
   type LucideIcon
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -288,12 +288,29 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   ];
 
   return (
-    <div className="min-h-screen bg-muted/40 pb-20 md:pb-0">
+    <div className="min-h-screen bg-[#f7f6f2] pb-20 text-[#102a20] md:bg-muted/40 md:pb-0 md:text-foreground">
 
       {/* ── Top Header ── */}
-      <header className="bg-background border-b sticky top-0 z-30">
+      <header className="sticky top-0 z-30 border-b border-[#e6e5df] bg-[#fbfaf7]/95 backdrop-blur md:bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 md:h-16">
+          <div className="flex h-[72px] items-center gap-3 md:hidden">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#12362a] text-sm font-black text-white">
+              {(athleteProfile.firstName?.[0] || 'A')}{(athleteProfile.lastName?.[0] || '')}
+            </div>
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68736d]" />
+              <input aria-label="Search players, clubs, scouts" placeholder="Search players, clubs, scouts" className="h-11 w-full rounded-full border border-[#ebe9e3] bg-white pl-10 pr-3 text-sm text-[#102a20] shadow-[0_1px_5px_rgba(16,42,32,0.06)] outline-none placeholder:text-[#8b918d] focus:border-[#12362a]" />
+            </div>
+            <button className="relative shrink-0 text-[#102a20]" aria-label="Messages">
+              <MessageSquare className="h-6 w-6" />
+              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#1b9d5c]" />
+            </button>
+            <button className="relative shrink-0 text-[#102a20]" aria-label="Notifications" onClick={() => setActiveTab('notifications')}>
+              <Bell className="h-6 w-6" />
+              {unreadCount > 0 && <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#b4472f] px-1 text-[9px] font-black text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+            </button>
+          </div>
+          <div className="hidden h-14 items-center justify-between md:flex md:h-16">
 
             {/* Logo */}
             <div className="flex items-center gap-3">
@@ -518,9 +535,52 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       </div>
 
       {/* ── Main Content ── */}
-      <main className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+      <main className="container mx-auto space-y-5 p-4 sm:p-6 lg:space-y-8 lg:p-8">
+        <section className="space-y-4 md:hidden">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-[24px] font-medium tracking-[-0.03em]">{athleteProfile.firstName} {athleteProfile.lastName}</h1>
+              <p className="mt-1 text-sm text-[#718078]">
+                {athleteProfile.clubName || 'No club'} <span className="mx-1">·</span> {athleteProfile.age || '—'} yrs
+                <span className="ml-2 rounded bg-[#17352b] px-2 py-0.5 text-[10px] font-black tracking-wide text-white">{athleteProfile.readinessTier || 'PRO'}</span>
+              </p>
+              {athleteProfile.isVerified && <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#e1f3e9] px-2.5 py-1 text-[11px] font-semibold text-[#287a55]"><ShieldCheck className="h-3.5 w-3.5" /> Coach verified</span>}
+              <Link href={`/${athleteProfile.username}`} className="mt-3 flex items-center gap-1 text-sm font-medium text-[#43866a]">View full profile <ChevronRight className="h-4 w-4" /></Link>
+            </div>
+            <button onClick={() => setFabOpen(v => !v)} aria-label="Quick actions" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#102a20] text-2xl font-light text-white shadow-lg">+</button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-[#e8e6df] bg-white p-4 shadow-[0_1px_4px_rgba(16,42,32,0.04)]">
+              <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-[#8a918b]"><Ruler className="h-4 w-4 rounded-full bg-[#f0efe8] p-0.5 text-[#5d685f]" />Height</div>
+              <p className="text-lg font-medium">{athleteProfile.heightCm ? `${athleteProfile.heightCm} cm` : '—'}</p>
+            </div>
+            <div className="rounded-2xl border border-[#e8e6df] bg-white p-4 shadow-[0_1px_4px_rgba(16,42,32,0.04)]">
+              <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-[#8a918b]"><Scale className="h-4 w-4 rounded-full bg-[#f0efe8] p-0.5 text-[#5d685f]" />Weight</div>
+              <p className="text-lg font-medium">{athleteProfile.weightKg ? `${athleteProfile.weightKg} kg` : '—'}</p>
+            </div>
+          </div>
+          <div className={`rounded-2xl border p-5 ${availabilityTone}`}>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-black uppercase tracking-wide opacity-80">Squad readiness</p>
+              <span className="rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-medium">Next fixture</span>
+            </div>
+            <div className="mt-1 flex items-end justify-between gap-3">
+              <div>
+                <h2 className="text-[24px] font-semibold leading-tight">{availabilityLabel}</h2>
+                <p className="mt-1 text-sm opacity-80">Match readiness for the next fixture.</p>
+              </div>
+              <strong className="text-lg">{readiness}%</strong>
+            </div>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/80">
+              <div className="h-full rounded-full bg-[#102a20]" style={{ width: `${readiness}%` }} />
+            </div>
+          </div>
+          <Link href="/dashboard/add-match" className="flex h-14 items-center justify-center gap-2 rounded-full bg-[#102a20] text-sm font-medium text-white shadow-[0_8px_18px_rgba(16,42,32,0.18)]">
+            Log match <ChevronRight className="h-5 w-5" />
+          </Link>
+        </section>
         {/* Profile completion banner */}
-        <div className={`rounded-xl border p-4 ${bannerBg}`}>
+        <div className={`hidden rounded-xl border p-4 md:block ${bannerBg}`}>
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <BannerIcon className={`h-5 w-5 shrink-0 ${bannerIconColor}`} />
@@ -575,7 +635,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           </div>
         </div>
 
-        <div className={`rounded-xl border p-4 ${availabilityTone}`}>
+        <div className={`hidden rounded-xl border p-4 md:block ${availabilityTone}`}>
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Squad Readiness</p>
@@ -721,13 +781,15 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           </div>
         )}
 
-        <ProfileHeader profile={athleteProfile} />
+        <div className="hidden md:block">
+          <ProfileHeader profile={athleteProfile} />
+        </div>
 
         {athleteProfile.username && (
           <ShareProfileCard username={athleteProfile.username} firstName={athleteProfile.firstName} />
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="hidden grid-cols-2 gap-3 md:grid md:grid-cols-4">
           {indices.map((idx) => (
             <Card key={idx.label} className="border-none shadow-sm overflow-hidden group bg-background">
               <CardHeader className="p-4 pb-2 space-y-0 flex flex-row items-center justify-between">
