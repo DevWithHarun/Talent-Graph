@@ -29,7 +29,7 @@ async function geminiGenerate(prompt: string): Promise<string> {
     const err = await res.json().catch(() => ({}));
     throw new Error(`Gemini error: ${JSON.stringify((err as any)?.error?.message ?? res.status)}`);
   }
-  const data = await res.json();
+  const data = await res.json() as any;
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 }
 
