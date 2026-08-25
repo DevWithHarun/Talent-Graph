@@ -14,7 +14,7 @@ export async function verifyIdToken(idToken: string): Promise<string | null> {
         body: JSON.stringify({ idToken }),
       }
     );
-    const data = await res.json();
+    const data = await res.json() as any;
     if (!res.ok || !data.users?.[0]?.localId) return null;
     return data.users[0].localId as string;
   } catch {
