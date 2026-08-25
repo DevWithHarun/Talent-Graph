@@ -90,7 +90,7 @@ router.post('/support/tickets', async (req, res) => {
     );
     if (!firestoreRes.ok) { res.status(500).json({ error: 'Failed to create ticket' }); return; }
     const doc = await firestoreRes.json();
-    res.json({ success: true, ticketId: doc.name?.split('/').pop() });
+    res.json({ success: true, ticketId: (doc as any).name?.split('/').pop() });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
