@@ -603,9 +603,8 @@ export default function UsernamePage() {
                                 <MatchStatisticsTable matchHistory={athlete.matchHistory || []} />
                             </CardContent>
                         </Card>
+                    </div>
                 </div>}
-            </div>
-        </div>
                 </div> {/* end blurred content wrapper */}
                 </div> {/* end relative gate wrapper */}
             </div>
@@ -616,6 +615,7 @@ export default function UsernamePage() {
                 <button className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><Bell className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Alerts</span></button>
                 <button className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><BriefcaseBusiness className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Opportunities</span></button>
             </nav>
+        </div>
         </div>
     );
 }
