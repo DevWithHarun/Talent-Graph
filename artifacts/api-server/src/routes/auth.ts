@@ -66,7 +66,7 @@ router.get('/auth/google/callback', async (req, res) => {
         }),
       }
     );
-    const firebaseData = await firebaseRes.json();
+    const firebaseData = await firebaseRes.json() as any;
     if (!firebaseRes.ok || !firebaseData.localId) {
       console.error('[google/callback] Firebase signInWithIdp failed:', firebaseData);
       res.redirect(`${APP_URL}/login?error=firebase_failed`);
