@@ -46,7 +46,7 @@ export async function sendBulkSMS(recipients: SMSRecipient[], body: string): Pro
     return { sent: 0, failed: valid.length, total: valid.length, error: msg };
   }
 
-  const results = await response.json();
+  const results = await res.json() as any;
   let sent = 0, failed = 0;
   for (const r of results) {
     if (['ACCEPTED', 'SCHEDULED', 'SENT'].includes(r.status?.type)) sent++;
