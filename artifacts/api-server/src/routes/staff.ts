@@ -82,7 +82,7 @@ router.post('/staff/create', async (req, res) => {
         body: JSON.stringify({ email, password: tempPassword, displayName, returnSecureToken: true }),
       }
     );
-    const signUpData = await signUpRes.json();
+    const signUpData = await signUpRes.json() as any;
     if (!signUpRes.ok) {
       const msg = signUpData?.error?.message || 'Failed to create account';
       if (msg === 'EMAIL_EXISTS') { res.status(409).json({ error: 'An account with this email already exists.' }); return; }
