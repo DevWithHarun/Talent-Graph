@@ -31,7 +31,7 @@ router.get('/support/tickets', async (req, res) => {
     let url = `${FIRESTORE_BASE}/support_tickets?key=${FIREBASE_API_KEY}&pageSize=50&orderBy=createdAt%20desc`;
     const firestoreRes = await fetch(url);
     if (!firestoreRes.ok) { res.status(firestoreRes.status).json({ error: 'Failed to fetch tickets' }); return; }
-    const data = await firestoreRes.json();
+    const data = await firestoreRes.json() as any;
     const tickets = (data.documents ?? []).map((doc: any) => {
       const f = doc.fields || {};
       const str = (k: string) => f[k]?.stringValue ?? null;
