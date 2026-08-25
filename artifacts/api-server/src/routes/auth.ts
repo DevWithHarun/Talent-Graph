@@ -44,7 +44,7 @@ router.get('/auth/google/callback', async (req, res) => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, grant_type: 'authorization_code' }),
     });
-    const tokenData = await tokenRes.json();
+    const tokenData = await tokenRes.json() as any;
     if (!tokenRes.ok || !tokenData.id_token) {
       console.error('[google/callback] token exchange failed:', tokenData);
       res.redirect(`${APP_URL}/login?error=google_failed`);
