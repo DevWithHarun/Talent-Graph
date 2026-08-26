@@ -6,12 +6,12 @@ import { Link } from 'wouter';
 import {
   LogOut, Loader2, Target, TrendingUp, ShieldAlert, BarChart3,
   Eye, Award, User, MoreHorizontal, Trash2,
-  PlusCircle, Play, Zap, Support, Settings2, Activity, Search, Bell, MapPin, Building2, Pencil
+  PlusCircle, Play, Zap, Settings2, Activity, Search, Bell, MapPin, Building2
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { signOut } from 'firebase/auth';
 import { useAuth, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, updateDoc, arrayRemove, collection, query, orderBy, limit, where, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc, arrayRemove, collection, query, orderBy, limit, where } from 'firebase/firestore';
 import { useRouter } from '@/lib/navigation';
 import {
   AlertDialog,
@@ -74,8 +74,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   const [activeSectionTab, setActiveSectionTab] = useState<SectionTab>('overview');
   
   const [moreOpen, setMoreOpen] = useState(false);
-  const [confirmDeleteVideo, setConfirmDeleteVideo] = useState<ShowcaseVideo | null>(null);
-  const [isDeletingVideo, setIsDeletingVideo] = useState(false);
   const [confirmDeleteMatch, setConfirmDeleteMatch] = useState<string | null>(null);
   const [isDeletingMatch, setIsDeletingMatch] = useState(false);
   const { toast } = useToast();
@@ -167,22 +165,15 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   return (
     <div className="min-h-screen bg-[#0d0d0d] text-slate-100 pb-20 md:pb-12">
 
-      {/* ── Top App Header ── */}
+      {/* ── Top App Header (Clean Search Bar, No Duplicate Photo) ── */}
       <header className="sticky top-0 z-30 border-b border-[#262626] bg-[#121212]/90 backdrop-blur">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Mobile Bar */}
-          <div className="flex h-16 items-center gap-3 md:hidden">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1e1e1e] border border-[#262626] overflow-hidden text-sm font-bold text-slate-200">
-              {athleteProfile.photoUrl ? (
-                <img src={athleteProfile.photoUrl} alt="Profile" className="h-full w-full object-cover" />
-              ) : (
-                <span>{(athleteProfile.firstName?.[0] || 'A')}{(athleteProfile.lastName?.[0] || '')}</span>
-              )}
-            </div>
+          <div className="flex h-14 items-center gap-3 md:hidden">
             <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input aria-label="Search" placeholder="Search..." className="h-10 w-full rounded-full border border-[#262626] bg-[#1a1a1a] pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-slate-500" />
+              <input aria-label="Search" placeholder="Search talent..." className="h-9 w-full rounded-full border border-[#262626] bg-[#1a1a1a] pl-9 pr-3 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-slate-500" />
             </div>
             <button className="relative shrink-0 text-slate-300 p-2" aria-label="Notifications" onClick={() => setActiveGlobalTab('notifications')}>
               <Bell className="h-5 w-5" />
@@ -247,17 +238,17 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       {/* ── Sub-Navigation Tabs ── */}
       <div className="border-b border-[#262626] bg-[#121212]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-2 sm:gap-6 overflow-x-auto">
+          <div className="flex gap-2 sm:gap-6 overflow-x-auto no-scrollbar py-1">
             {([
               { id: 'overview' as SectionTab, label: 'Overview & Portfolio', icon: User },
               { id: 'recruitment' as SectionTab, label: 'Recruitment & Pipeline', icon: Award },
               { id: 'insights' as SectionTab, label: 'Insights & Growth', icon: Activity },
-            ] as { id: SectionTab; label: string; icon: any }[]).map((tab) => (
+            ] as const).map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveSectionTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-2 whitespace-nowrap py-3 px-1 text-xs sm:text-sm font-bold border-b-2 transition-colors shrink-0',
+                  'flex items-center gap-2 whitespace-nowrap py-2.5 px-3 text-xs sm:text-sm font-bold border-b-2 transition-colors shrink-0',
                   activeSectionTab === tab.id
                     ? 'border-emerald-500 text-emerald-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -274,10 +265,10 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       {/* ── Main Content Container ── */}
       <main className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
 
-        {/* ── LinkedIn-Style Hero Banner Section ── */}
-        <section className="rounded-xl border border-[#262626] bg-[#161616] overflow-hidden">
-          {/* Cover Header */}
-          <div className="h-32 sm:h-44 w-full bg-gradient-to-r from-emerald-900/40 via-slate-900 to-zinc-900 relative">
+        {/* ── Professional Hero Section (Avatar Top, Clean Stacked Info Below) ── */}
+        <section className="rounded-xl border border-[#262626] bg-[#161616] overflow-hidden shadow-sm">
+          {/* Top Banner Cover Area */}
+          <div className="h-28 sm:h-40 w-full bg-gradient-to-r from-emerald-950 via-slate-900 to-zinc-900 relative">
             <div className="absolute top-3 right-3">
               <EditProfileMediaDialog profile={athleteProfile} />
             </div>
@@ -285,24 +276,24 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
 
           {/* Profile Card Main Body */}
           <div className="px-4 sm:px-6 pb-6 pt-0 relative">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-12 sm:-mt-16 mb-4 gap-4">
-              {/* Profile Photo Avatar */}
+            {/* Avatar Row */}
+            <div className="flex justify-between items-end -mt-12 sm:-mt-16 mb-4">
               <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-[#161616] bg-[#222] flex items-center justify-center text-2xl font-black text-slate-200 overflow-hidden shrink-0 shadow-lg">
                 {athleteProfile.photoUrl ? (
-                  <img src={athleteProfile.photoUrl} alt="Athlete Photo" className="h-full w-full object-cover" />
+                  <img src={athleteProfile.photoUrl} alt="Athlete Profile" className="h-full w-full object-cover" />
                 ) : (
                   <span>{(athleteProfile.firstName?.[0] || 'A')}{(athleteProfile.lastName?.[0] || '')}</span>
                 )}
               </div>
 
-              {/* Top Right Action Area */}
-              <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" className="bg-emerald-500 text-black hover:bg-emerald-400 font-bold gap-2 text-xs" asChild>
+              {/* Action Buttons Right-Aligned */}
+              <div className="flex items-center gap-2">
+                <Button size="sm" className="bg-emerald-500 text-black hover:bg-emerald-400 font-bold gap-1.5 text-xs h-9 px-3" asChild>
                   <Link href="/dashboard/add-match">
                     <PlusCircle className="h-4 w-4" /> Log Match
                   </Link>
                 </Button>
-                <Button variant="outline" size="sm" className="border-[#333] bg-[#222] text-slate-200 hover:bg-[#2a2a2a] text-xs" asChild>
+                <Button variant="outline" size="sm" className="border-[#333] bg-[#222] text-slate-200 hover:bg-[#2a2a2a] text-xs h-9 px-3" asChild>
                   <Link href={`/${athleteProfile.username}`}>
                     <Eye className="mr-1.5 h-3.5 w-3.5" /> Public View
                   </Link>
@@ -310,40 +301,47 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
               </div>
             </div>
 
-            {/* Main Information Block */}
+            {/* User Information Stacked Directly Below Avatar */}
             <div className="space-y-3">
+              {/* 1. Name & Badges Row */}
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-black text-slate-100">{athleteProfile.firstName} {athleteProfile.lastName}</h1>
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-100 tracking-tight leading-none">
+                    {athleteProfile.firstName} {athleteProfile.lastName}
+                  </h1>
                   {athleteProfile.isVerified && (
-                    <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px]">
+                    <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px] px-1.5 py-0 font-semibold">
                       Verified
                     </Badge>
                   )}
-                  <Badge variant="outline" className="border-slate-700 bg-slate-800/50 text-slate-300 text-[10px]">
+                  <Badge variant="outline" className="border-slate-700 bg-slate-800/50 text-slate-300 text-[10px] px-1.5 py-0 font-semibold">
                     {athleteProfile.readinessTier || 'PRO'}
                   </Badge>
                 </div>
-                <p className="text-sm font-medium text-slate-300 mt-0.5">
-                  {athleteProfile.position || 'Athlete'} · {athleteProfile.preferredFoot ? `${athleteProfile.preferredFoot} Footed` : 'Professional Player'}
+                
+                {/* 2. Position & Player Headline */}
+                <p className="text-xs sm:text-sm font-medium text-slate-300 mt-1">
+                  {athleteProfile.position || 'Forward'} · Professional Player
                 </p>
               </div>
 
-              {/* Sub Details Bar */}
-              <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-slate-400 border-t border-[#262626] pt-3">
+              {/* 3. Club Status */}
+              <div className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">
+                <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span>{athleteProfile.clubName || 'Free Agent'}</span>
+              </div>
+
+              {/* 4. Location & Physical Metrics Row */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 border-t border-[#262626] pt-3 mt-2">
                 <div className="flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{athleteProfile.clubName || 'Free Agent'}</span>
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="text-slate-300">{athleteProfile.nationality || 'Kenya'}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-slate-500" />
-                  <span>{athleteProfile.nationality || 'Kenya'}</span>
+                <div className="text-slate-300">
+                  <strong className="text-slate-400 font-normal">HT:</strong> {athleteProfile.heightCm ? `${athleteProfile.heightCm} cm` : '150 cm'}
                 </div>
-                <div>
-                  <strong>HT:</strong> {athleteProfile.heightCm ? `${athleteProfile.heightCm} cm` : '—'}
-                </div>
-                <div>
-                  <strong>WT:</strong> {athleteProfile.weightKg ? `${athleteProfile.weightKg} kg` : '—'}
+                <div className="text-slate-300">
+                  <strong className="text-slate-400 font-normal">WT:</strong> {athleteProfile.weightKg ? `${athleteProfile.weightKg} kg` : '60 kg'}
                 </div>
               </div>
             </div>
