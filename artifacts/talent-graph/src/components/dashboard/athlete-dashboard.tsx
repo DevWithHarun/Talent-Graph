@@ -121,7 +121,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     id: string; title: string; content: string; authorName: string; audience: string; createdAt: string;
   }>(announcementsQuery);
 
-  // Pending match stat confirmations (coach/analyst logged — athlete hasn't confirmed yet)
+  // Pending match stat confirmations
   const pendingConfirmQuery = useMemoFirebase(() => (
     firestore && athleteProfile ? query(
       collection(firestore, 'match_confirmations'),
@@ -131,7 +131,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   ), [firestore, athleteProfile?.uid]);
   const { data: pendingConfirmations } = useCollection<{ id: string }>(pendingConfirmQuery);
 
-  // Total badge = unread notifications + pending match confirmations awaiting athlete sign-off
   const unreadCount = (unreadNotifs?.length ?? 0) + (pendingConfirmations?.length ?? 0);
 
   const handleMarkAllRead = async () => {
@@ -172,7 +171,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       });
       setConfirmDeleteVideo(null);
     } catch {
-      // silent - toast not available here without hook; failure is non-critical
+      // silent
     } finally {
       setIsDeletingVideo(false);
     }
@@ -232,14 +231,14 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   const availabilityLabel = readiness >= 80 ? 'Available' : readiness >= 65 ? 'Doubtful' : readiness >= 45 ? 'Injured' : 'Suspended';
   const availabilityTone =
     availabilityLabel === 'Available'
-      ? 'bg-green-500/10 border-green-400/30 text-green-700'
+      ? 'bg-emerald-500/10 border-emerald-400/30 text-emerald-700 dark:bg-emerald-500/20 dark:border-emerald-400/40 dark:text-emerald-400'
       : availabilityLabel === 'Doubtful'
-      ? 'bg-amber-500/10 border-amber-400/30 text-amber-700'
+      ? 'bg-amber-500/10 border-amber-400/30 text-amber-700 dark:bg-amber-500/20 dark:border-amber-400/40 dark:text-amber-400'
       : availabilityLabel === 'Injured'
-      ? 'bg-orange-500/10 border-orange-400/30 text-orange-700'
-      : 'bg-red-500/10 border-red-400/30 text-red-700';
+      ? 'bg-orange-500/10 border-orange-400/30 text-orange-700 dark:bg-orange-500/20 dark:border-orange-400/40 dark:text-orange-400'
+      : 'bg-red-500/10 border-red-400/30 text-red-700 dark:bg-red-500/20 dark:border-red-400/40 dark:text-red-400';
 
-  // ── Streak: consecutive weeks (Mon–Sun) with ≥1 match logged ──
+  // Streak
   const matchStreak = (() => {
     const history = athleteProfile.matchHistory ?? [];
     if (!history.length) return 0;
@@ -265,13 +264,12 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   })();
 
   const bannerBg = isComplete
-    ? 'bg-green-500/10 border-green-500/20'
+    ? 'bg-emerald-500/10 border-emerald-500/20 dark:bg-emerald-500/20'
     : profileScore >= 50
-    ? 'bg-primary/5 border-primary/20'
-    : 'bg-yellow-500/10 border-yellow-500/20';
-
+    ? 'bg-primary/5 border-primary/20 dark:bg-primary/10'
+    : 'bg-yellow-500/10 border-yellow-500/20 dark:bg-yellow-500/20';
   const BannerIcon = isComplete ? CheckCircle2 : Zap;
-  const bannerIconColor = isComplete ? 'text-green-500' : profileScore >= 50 ? 'text-primary' : 'text-yellow-500';
+  const bannerIconColor = isComplete ? 'text-emerald-500' : profileScore >= 50 ? 'text-primary' : 'text-yellow-500';
 
   const bannerTopAction = !athleteProfile.photoUrl
     ? null
@@ -288,30 +286,46 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   ];
 
   return (
-    <div className="min-h-screen bg-[#f7f6f2] pb-20 text-[#102a20] md:bg-muted/40 md:pb-0 md:text-foreground">
+    <div className="min-h-screen bg-background pb-20 md:pb-0 text-foreground">
 
       {/* ── Top Header ── */}
-      <header className="sticky top-0 z-30 border-b border-[#e6e5df] bg-[#fbfaf7]/95 backdrop-blur md:bg-background">
+      <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-[72px] items-center gap-3 md:hidden">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#12362a] text-sm font-black text-white">
-              {(athleteProfile.firstName?.[0] || 'A')}{(athleteProfile.lastName?.[0] || '')}
+            {/* Avatar with profile picture */}
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary overflow-hidden">
+              {athleteProfile.photoUrl ? (
+                <img src={athleteProfile.photoUrl} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                `${athleteProfile.firstName?.[0] || 'A'}${athleteProfile.lastName?.[0] || ''}`
+              )}
             </div>
             <div className="relative min-w-0 flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68736d]" />
-              <input aria-label="Search players, clubs, scouts" placeholder="Search players, clubs, scouts" className="h-11 w-full rounded-full border border-[#ebe9e3] bg-white pl-10 pr-3 text-sm text-[#102a20] shadow-[0_1px_5px_rgba(16,42,32,0.06)] outline-none placeholder:text-[#8b918d] focus:border-[#12362a]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                aria-label="Search"
+                placeholder="Search…"
+                className="h-11 w-full rounded-full border bg-background pl-10 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
+              />
             </div>
-            <button className="relative shrink-0 text-[#102a20]" aria-label="Messages">
+            <button className="relative shrink-0 text-foreground" aria-label="Messages">
               <MessageSquare className="h-6 w-6" />
-              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#1b9d5c]" />
+              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-primary" />
             </button>
-            <button className="relative shrink-0 text-[#102a20]" aria-label="Notifications" onClick={() => setActiveTab('notifications')}>
+            <button
+              className="relative shrink-0 text-foreground"
+              aria-label="Notifications"
+              onClick={() => setActiveTab('notifications')}
+            >
               <Bell className="h-6 w-6" />
-              {unreadCount > 0 && <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#b4472f] px-1 text-[9px] font-black text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+              {unreadCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-primary-foreground">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
           </div>
           <div className="hidden h-14 items-center justify-between md:flex md:h-16">
-
             {/* Logo */}
             <div className="flex items-center gap-3">
               <Zap className="h-5 w-5 text-primary shrink-0" />
@@ -324,14 +338,14 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             {/* Desktop actions */}
             <div className="hidden md:flex items-center gap-2">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-muted/40 mr-2">
-                <div className={`w-2 h-2 rounded-full ${isComplete ? 'bg-green-500' : profileScore >= 50 ? 'bg-primary' : 'bg-yellow-500'}`} />
+                <div className={`w-2 h-2 rounded-full ${isComplete ? 'bg-emerald-500' : profileScore >= 50 ? 'bg-primary' : 'bg-yellow-500'}`} />
                 <span className="text-xs font-black">{profileScore}%</span>
                 <span className="text-[10px] text-muted-foreground font-medium">profile strength</span>
               </div>
               {matchStreak > 0 && (
                 <div className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-orange-400/40 bg-orange-500/10 mr-2">
                   <Flame className="h-3.5 w-3.5 text-orange-500" />
-                  <span className="text-xs font-black text-orange-600">{matchStreak}w</span>
+                  <span className="text-xs font-black text-orange-600 dark:text-orange-400">{matchStreak}w</span>
                   <span className="text-[10px] text-orange-500/70 font-medium">streak</span>
                 </div>
               )}
@@ -385,13 +399,13 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             {/* Mobile right: completion % + more sheet */}
             <div className="flex md:hidden items-center gap-2">
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border bg-muted/40">
-                <div className={`w-1.5 h-1.5 rounded-full ${isComplete ? 'bg-green-500' : profileScore >= 50 ? 'bg-primary' : 'bg-yellow-500'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full ${isComplete ? 'bg-emerald-500' : profileScore >= 50 ? 'bg-primary' : 'bg-yellow-500'}`} />
                 <span className="text-[11px] font-black tabular-nums">{profileScore}%</span>
               </div>
               {matchStreak > 0 && (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-full border border-orange-400/40 bg-orange-500/10">
                   <Flame className="h-3 w-3 text-orange-500" />
-                  <span className="text-[11px] font-black text-orange-600 tabular-nums">{matchStreak}w</span>
+                  <span className="text-[11px] font-black text-orange-600 dark:text-orange-400 tabular-nums">{matchStreak}w</span>
                 </div>
               )}
 
@@ -502,7 +516,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       </header>
 
       {/* ── Desktop Horizontal Tab Nav ── */}
-      <div className="hidden md:block border-b bg-background sticky top-[65px] z-10">
+      <div className="hidden md:block border-b bg-card/50 sticky top-[65px] z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-0 overflow-x-auto">
             {([
@@ -536,50 +550,82 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
 
       {/* ── Main Content ── */}
       <main className="container mx-auto space-y-5 p-4 sm:p-6 lg:space-y-8 lg:p-8">
+
+        {/* ── Mobile: Avatar + Personal Info ── */}
         <section className="space-y-4 md:hidden">
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-[24px] font-medium tracking-[-0.03em]">{athleteProfile.firstName} {athleteProfile.lastName}</h1>
-              <p className="mt-1 text-sm text-[#718078]">
-                {athleteProfile.clubName || 'No club'} <span className="mx-1">·</span> {athleteProfile.age || '—'} yrs
-                <span className="ml-2 rounded bg-[#17352b] px-2 py-0.5 text-[10px] font-black tracking-wide text-white">{athleteProfile.readinessTier || 'PRO'}</span>
-              </p>
-              {athleteProfile.isVerified && <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#e1f3e9] px-2.5 py-1 text-[11px] font-semibold text-[#287a55]"><ShieldCheck className="h-3.5 w-3.5" /> Coach verified</span>}
-              <Link href={`/${athleteProfile.username}`} className="mt-3 flex items-center gap-1 text-sm font-medium text-[#43866a]">View full profile <ChevronRight className="h-4 w-4" /></Link>
+            <div className="flex items-center gap-4">
+              {/* Avatar with photo */}
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
+                {athleteProfile.photoUrl ? (
+                  <img src={athleteProfile.photoUrl} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-2xl font-black text-primary">
+                    {athleteProfile.firstName?.[0]}{athleteProfile.lastName?.[0]}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h1 className="text-xl font-black tracking-tight">{athleteProfile.firstName} {athleteProfile.lastName}</h1>
+                <p className="text-sm text-muted-foreground">
+                  {athleteProfile.position || 'Position not set'} · {athleteProfile.age || '—'} yrs
+                  <span className="ml-2 inline-block rounded bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">
+                    {athleteProfile.readinessTier || 'PRO'}
+                  </span>
+                </p>
+                {athleteProfile.isVerified && (
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                    <ShieldCheck className="h-3.5 w-3.5" /> Coach verified
+                  </span>
+                )}
+              </div>
             </div>
-            <button onClick={() => setFabOpen(v => !v)} aria-label="Quick actions" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#102a20] text-2xl font-light text-white shadow-lg">+</button>
+            <button
+              onClick={() => setFabOpen(v => !v)}
+              aria-label="Quick actions"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-light text-primary-foreground shadow-lg"
+            >
+              +
+            </button>
           </div>
+          {/* Height & Weight cards */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-[#e8e6df] bg-white p-4 shadow-[0_1px_4px_rgba(16,42,32,0.04)]">
-              <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-[#8a918b]"><Ruler className="h-4 w-4 rounded-full bg-[#f0efe8] p-0.5 text-[#5d685f]" />Height</div>
-              <p className="text-lg font-medium">{athleteProfile.heightCm ? `${athleteProfile.heightCm} cm` : '—'}</p>
+            <div className="rounded-xl border bg-card p-4 shadow-sm">
+              <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                <Ruler className="h-4 w-4" /> Height
+              </div>
+              <p className="text-lg font-bold">{athleteProfile.heightCm ? `${athleteProfile.heightCm} cm` : '—'}</p>
             </div>
-            <div className="rounded-2xl border border-[#e8e6df] bg-white p-4 shadow-[0_1px_4px_rgba(16,42,32,0.04)]">
-              <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-[#8a918b]"><Scale className="h-4 w-4 rounded-full bg-[#f0efe8] p-0.5 text-[#5d685f]" />Weight</div>
-              <p className="text-lg font-medium">{athleteProfile.weightKg ? `${athleteProfile.weightKg} kg` : '—'}</p>
+            <div className="rounded-xl border bg-card p-4 shadow-sm">
+              <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                <Scale className="h-4 w-4" /> Weight
+              </div>
+              <p className="text-lg font-bold">{athleteProfile.weightKg ? `${athleteProfile.weightKg} kg` : '—'}</p>
             </div>
           </div>
-          <div className={`rounded-2xl border p-5 ${availabilityTone}`}>
+          {/* Squad readiness */}
+          <div className={`rounded-xl border p-5 ${availabilityTone}`}>
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-black uppercase tracking-wide opacity-80">Squad readiness</p>
-              <span className="rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-medium">Next fixture</span>
+              <span className="rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-medium">Next fixture</span>
             </div>
             <div className="mt-1 flex items-end justify-between gap-3">
               <div>
-                <h2 className="text-[24px] font-semibold leading-tight">{availabilityLabel}</h2>
+                <h2 className="text-2xl font-bold leading-tight">{availabilityLabel}</h2>
                 <p className="mt-1 text-sm opacity-80">Match readiness for the next fixture.</p>
               </div>
               <strong className="text-lg">{readiness}%</strong>
             </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/80">
-              <div className="h-full rounded-full bg-[#102a20]" style={{ width: `${readiness}%` }} />
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-background/80">
+              <div className="h-full rounded-full bg-primary" style={{ width: `${readiness}%` }} />
             </div>
           </div>
-          <Link href="/dashboard/add-match" className="flex h-14 items-center justify-center gap-2 rounded-full bg-[#102a20] text-sm font-medium text-white shadow-[0_8px_18px_rgba(16,42,32,0.18)]">
+          <Link href="/dashboard/add-match" className="flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground shadow-lg hover:bg-primary/90 transition">
             Log match <ChevronRight className="h-5 w-5" />
           </Link>
         </section>
-        {/* Profile completion banner */}
+
+        {/* ── Profile completion banner (desktop) ── */}
         <div className={`hidden rounded-xl border p-4 md:block ${bannerBg}`}>
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -592,9 +638,9 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                   <Badge
                     variant="outline"
                     className={`text-[9px] font-black uppercase tracking-widest px-1.5 ${
-                      isComplete ? 'border-green-400 text-green-600' :
+                      isComplete ? 'border-emerald-400 text-emerald-600 dark:border-emerald-500 dark:text-emerald-400' :
                       profileScore >= 50 ? 'border-primary/40 text-primary' :
-                      'border-yellow-400 text-yellow-700'
+                      'border-yellow-400 text-yellow-700 dark:border-yellow-500 dark:text-yellow-400'
                     }`}
                   >
                     {isComplete ? 'Fully Indexed' : profileScore >= 50 ? 'Indexing' : 'Incomplete'}
@@ -616,7 +662,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                 <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-700 ${
-                      isComplete ? 'bg-green-500' : profileScore >= 50 ? 'bg-primary' : 'bg-yellow-500'
+                      isComplete ? 'bg-emerald-500' : profileScore >= 50 ? 'bg-primary' : 'bg-yellow-500'
                     }`}
                     style={{ width: `${profileScore}%` }}
                   />
@@ -635,6 +681,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           </div>
         </div>
 
+        {/* ── Squad Readiness (desktop) ── */}
         <div className={`hidden rounded-xl border p-4 md:block ${availabilityTone}`}>
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
@@ -652,7 +699,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           </div>
         </div>
 
-        {/* ── Club Invitations (club-initiated invites awaiting athlete response) ── */}
+        {/* ── Club Invitations ── */}
         <AthleteClubInvitations
           athleteUid={athleteProfile.uid}
           athleteName={`${athleteProfile.firstName} ${athleteProfile.lastName}`}
@@ -662,7 +709,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         {athleteProfile?.clubStatus && athleteProfile.clubName && (
           <div className={`rounded-xl border p-4 flex items-center justify-between gap-4 ${
             athleteProfile.clubStatus === 'active'
-              ? 'bg-green-500/5 border-green-400/30'
+              ? 'bg-emerald-500/5 border-emerald-400/30'
               : athleteProfile.clubStatus === 'rejected'
               ? 'bg-destructive/5 border-destructive/20'
               : 'bg-primary/5 border-primary/20'
@@ -670,12 +717,12 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${
                 athleteProfile.clubStatus === 'active'
-                  ? 'bg-green-500/15'
+                  ? 'bg-emerald-500/15'
                   : athleteProfile.clubStatus === 'rejected'
                   ? 'bg-destructive/10'
                   : 'bg-primary/10'
               }`}>
-                {athleteProfile.clubStatus === 'active' && <ShieldCheck className="h-5 w-5 text-green-600" />}
+                {athleteProfile.clubStatus === 'active' && <ShieldCheck className="h-5 w-5 text-emerald-600" />}
                 {athleteProfile.clubStatus === 'rejected' && <ShieldX className="h-5 w-5 text-destructive" />}
                 {athleteProfile.clubStatus === 'pending' && <Clock className="h-5 w-5 text-primary" />}
               </div>
@@ -687,7 +734,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                     variant="outline"
                     className={`text-[9px] font-black uppercase tracking-widest px-1.5 shrink-0 ${
                       athleteProfile.clubStatus === 'active'
-                        ? 'border-green-400 text-green-600'
+                        ? 'border-emerald-400 text-emerald-600 dark:border-emerald-500 dark:text-emerald-400'
                         : athleteProfile.clubStatus === 'rejected'
                         ? 'border-destructive/50 text-destructive'
                         : 'border-primary/40 text-primary'
@@ -745,7 +792,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                 <Flame className="h-5 w-5 text-orange-500" />
               </div>
               <div>
-                <p className="text-sm font-black text-orange-600">
+                <p className="text-sm font-black text-orange-600 dark:text-orange-400">
                   {matchStreak === 1 ? 'Streak started!' : `${matchStreak}-week streak`}
                   {matchStreak >= 4 && ' 🔥'}
                 </p>
@@ -781,6 +828,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           </div>
         )}
 
+        {/* ── Profile Header (desktop) ── */}
         <div className="hidden md:block">
           <ProfileHeader profile={athleteProfile} />
         </div>
@@ -789,9 +837,10 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           <ShareProfileCard username={athleteProfile.username} firstName={athleteProfile.firstName} />
         )}
 
+        {/* ── Index Cards ── */}
         <div className="hidden grid-cols-2 gap-3 md:grid md:grid-cols-4">
           {indices.map((idx) => (
-            <Card key={idx.label} className="border-none shadow-sm overflow-hidden group bg-background">
+            <Card key={idx.label} className="border shadow-sm overflow-hidden group bg-card">
               <CardHeader className="p-4 pb-2 space-y-0 flex flex-row items-center justify-between">
                 <CardTitle className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">{idx.label}</CardTitle>
                 <idx.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -806,15 +855,16 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           ))}
         </div>
 
+        {/* ── Main Grid ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <MatchActionCenter athleteProfile={athleteProfile} />
 
-            <Card className="shadow-xl bg-background border-none overflow-hidden">
-              <div className="bg-neutral-950 p-6 text-white flex justify-between items-center">
+            <Card className="shadow-xl bg-card border overflow-hidden">
+              <div className="bg-muted/50 p-6 flex justify-between items-center">
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">Master Index</h3>
-                  <p className="text-xs font-bold text-neutral-400">Institutional Performance Projection</p>
+                  <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">Master Index</h3>
+                  <p className="text-xs font-bold text-muted-foreground/70">Institutional Performance Projection</p>
                 </div>
                 <div className="text-right">
                   <div className="text-5xl font-black tracking-tighter leading-none">{safeRenderValue(athleteProfile.compositeScoutingIndex)}</div>
@@ -834,7 +884,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
               <MatchPerformanceChart matchHistory={athleteProfile.matchHistory || []} />
             )}
 
-            <Card className="shadow-lg border-none">
+            <Card className="shadow-lg border">
               <CardHeader>
                 <CardTitle className="text-lg font-black uppercase tracking-widest">Match Statistics</CardTitle>
                 <CardDescription>Performance breakdown by official competition.</CardDescription>
@@ -851,14 +901,14 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             <CareerHistoryCard profile={athleteProfile} />
 
             {athleteProfile.highlightVideoUrl && (
-              <Card className="shadow-lg border-none overflow-hidden">
-                <CardHeader className="bg-neutral-950 text-white flex flex-row items-center justify-between">
+              <Card className="shadow-lg border overflow-hidden">
+                <CardHeader className="bg-muted/50 flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-sm font-black uppercase tracking-[0.3em] flex items-center gap-2">
                       <Play className="w-4 h-4 text-primary fill-primary" /> Highlight Reel
                     </CardTitle>
                     {athleteProfile.highlightVideoTitle && (
-                      <p className="text-xs font-bold text-neutral-400 mt-0.5">{athleteProfile.highlightVideoTitle}</p>
+                      <p className="text-xs font-bold text-muted-foreground mt-0.5">{athleteProfile.highlightVideoTitle}</p>
                     )}
                   </div>
                 </CardHeader>
@@ -888,14 +938,14 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                   <Play className="w-4 h-4 text-primary fill-primary" /> Showcase Videos
                 </h3>
                 {athleteProfile.showcaseVideos.map((vid) => (
-                  <Card key={vid.id} className="shadow-lg border-none overflow-hidden">
-                    <CardHeader className="bg-neutral-950 text-white py-3 px-4 flex flex-row items-center justify-between">
+                  <Card key={vid.id} className="shadow-lg border overflow-hidden">
+                    <CardHeader className="bg-muted/50 py-3 px-4 flex flex-row items-center justify-between">
                       <CardTitle className="text-sm font-black uppercase tracking-widest flex-1">
                         {vid.title || 'Showcase Clip'}
                       </CardTitle>
                       <button
                         onClick={() => setConfirmDeleteVideo(vid)}
-                        className="ml-3 p-1.5 rounded-lg text-neutral-500 hover:text-red-400 hover:bg-white/10 transition-colors shrink-0"
+                        className="ml-3 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                         title="Delete this video"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -981,30 +1031,30 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
               affiliatedClubId={athleteProfile.affiliatedClubId}
             />
 
-            <Card className="bg-neutral-900 text-white border-none shadow-2xl">
+            <Card className="bg-muted/30 border shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Award className="w-5 h-5 text-primary" />
                   Scouting Pipeline
                 </CardTitle>
-                <CardDescription className="text-neutral-400 text-xs">
+                <CardDescription className="text-xs">
                   Update your professional data points to influence your CSI rating.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="secondary" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
+                <Button variant="outline" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
                   <Link href="/onboarding/metrics">
                     <Layers className="mr-3 h-4 w-4" />
                     1. Update Master Index
                   </Link>
                 </Button>
-                <Button variant="secondary" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
+                <Button variant="outline" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
                   <Link href="/dashboard/update-attributes">
                     <GitGraph className="mr-3 h-4 w-4" />
                     2. Refine Attributes
                   </Link>
                 </Button>
-                <Button variant="secondary" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
+                <Button variant="default" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
                   <Link href="/dashboard/add-match">
                     <PlusCircle className="mr-3 h-4 w-4" />
                     3. Independent Match
@@ -1018,7 +1068,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         </div>
       </main>
 
-      {/* ── Controlled dialogs (opened by bottom nav) ── */}
+      {/* ── Controlled dialogs ── */}
       <EditProfileMediaDialog
         profile={athleteProfile}
         externalOpen={activeTab === 'edit'}
@@ -1052,7 +1102,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             </div>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto divide-y">
-            {/* Notification items */}
             {(unreadNotifs && unreadNotifs.length > 0) ? (
               (unreadNotifs as any[]).map((n: any) => {
                 const isMsg = n.type === 'new_message';
@@ -1122,17 +1171,14 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         </SheetContent>
       </Sheet>
 
-
       {/* ── Quick-Action FAB ── */}
       <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-2 md:bottom-6">
-        {/* Action items — slide up when open */}
         <div
           className={cn(
             'flex flex-col items-end gap-2 transition-all duration-200 origin-bottom',
             fabOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
           )}
         >
-          {/* Log a Match */}
           <button
             onClick={() => { setFabOpen(false); router.push('/dashboard/add-match'); }}
             className="flex items-center gap-2 rounded-full bg-background border shadow-md px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
@@ -1140,8 +1186,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             <Award className="h-4 w-4 text-amber-500" />
             Log a Match
           </button>
-
-          {/* Rate Attributes */}
           <button
             onClick={() => { setFabOpen(false); router.push('/dashboard/update-attributes'); }}
             className="flex items-center gap-2 rounded-full bg-background border shadow-md px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
@@ -1149,8 +1193,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             <BarChart3 className="h-4 w-4 text-blue-500" />
             Rate Attributes
           </button>
-
-          {/* Update Master Index */}
           <button
             onClick={() => { setFabOpen(false); router.push('/onboarding/metrics'); }}
             className="flex items-center gap-2 rounded-full bg-background border shadow-md px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
@@ -1158,8 +1200,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             <Zap className="h-4 w-4 text-green-500" />
             Update Index
           </button>
-
-          {/* Injury Tracker */}
           <button
             onClick={() => { setFabOpen(false); router.push('/dashboard/injury-tracker'); }}
             className="flex items-center gap-2 rounded-full bg-background border shadow-md px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
@@ -1168,8 +1208,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             Injury Tracker
           </button>
         </div>
-
-        {/* FAB trigger */}
         <button
           onClick={() => setFabOpen(v => !v)}
           className={cn(
@@ -1183,53 +1221,30 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           <Plus className="h-6 w-6" />
         </button>
       </div>
-
-      {/* FAB backdrop — closes on tap outside */}
       {fabOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setFabOpen(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setFabOpen(false)} />
       )}
 
       {/* ── Mobile Bottom Tab Bar ── */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden h-16 items-stretch border-t bg-background/95 backdrop-blur shadow-[0_-1px_12px_rgba(0,0,0,0.08)]">
-
-        {/* Home */}
-        <button
-          onClick={() => setActiveTab('home')}
-          className={cn(
-            'flex flex-1 flex-col items-center justify-center gap-1 transition-colors relative',
-            activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'
-          )}
-        >
-          {activeTab === 'home' && (
-            <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
-          )}
-          <Home className={cn('h-5 w-5 transition-transform', activeTab === 'home' && 'scale-110')} />
-          <span className={cn('text-[10px] font-bold uppercase tracking-wide', activeTab === 'home' && 'font-black')}>
-            Home
-          </span>
-        </button>
-
-        {/* Edit Profile */}
-        <button
-          onClick={() => setActiveTab('edit')}
-          className={cn(
-            'flex flex-1 flex-col items-center justify-center gap-1 transition-colors relative',
-            activeTab === 'edit' ? 'text-primary' : 'text-muted-foreground'
-          )}
-        >
-          {activeTab === 'edit' && (
-            <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
-          )}
-          <Pencil className={cn('h-5 w-5 transition-transform', activeTab === 'edit' && 'scale-110')} />
-          <span className={cn('text-[10px] font-bold uppercase tracking-wide', activeTab === 'edit' && 'font-black')}>
-            Edit
-          </span>
-        </button>
-
-        {/* Public View — link, not a dialog */}
+        {bottomTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              'flex flex-1 flex-col items-center justify-center gap-1 transition-colors relative',
+              activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'
+            )}
+          >
+            {activeTab === tab.id && (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+            )}
+            <tab.icon className={cn('h-5 w-5 transition-transform', activeTab === tab.id && 'scale-110')} />
+            <span className={cn('text-[10px] font-bold uppercase tracking-wide', activeTab === tab.id && 'font-black')}>
+              {tab.label}
+            </span>
+          </button>
+        ))}
         <Link
           href={`/${athleteProfile.username}`}
           className="flex flex-1 flex-col items-center justify-center gap-1 text-muted-foreground transition-colors relative"
@@ -1237,8 +1252,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           <Eye className="h-5 w-5" />
           <span className="text-[10px] font-bold uppercase tracking-wide">Preview</span>
         </Link>
-
-        {/* Notifications */}
         <button
           onClick={() => setActiveTab('notifications')}
           className={cn(
@@ -1261,26 +1274,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             Alerts
           </span>
         </button>
-
-
-        {/* Support */}
-        <button
-          onClick={() => setActiveTab('support')}
-          className={cn(
-            'flex flex-1 flex-col items-center justify-center gap-1 transition-colors relative',
-            activeTab === 'support' ? 'text-primary' : 'text-muted-foreground'
-          )}
-        >
-          {activeTab === 'support' && (
-            <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
-          )}
-          <Headphones className={cn('h-5 w-5 transition-transform', activeTab === 'support' && 'scale-110')} />
-          <span className={cn('text-[10px] font-bold uppercase tracking-wide', activeTab === 'support' && 'font-black')}>
-            Support
-          </span>
-        </button>
-
-        {/* More (account/logout) */}
         <button
           onClick={() => setMoreOpen(true)}
           className={cn(
