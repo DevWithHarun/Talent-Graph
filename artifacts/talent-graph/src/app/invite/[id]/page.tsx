@@ -1,6 +1,7 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'wouter';
 import { useFirestore } from '@/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,8 @@ interface Invitation {
   createdAt: string;
 }
 
-export default function InvitePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function InvitePage() {
+  const { id } = useParams<{ id: string }>();
   const firestore = useFirestore();
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(true);
