@@ -86,6 +86,7 @@ interface AthleteDashboardProps {
 }
 
 type DashboardTab = 'overview' | 'recruitment' | 'progress' | 'settings';
+type ActiveDialog = 'home' | 'edit' | 'support' | 'notifications';
 
 export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboardProps) {
   const auth = useAuth();
@@ -95,6 +96,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
 
   // ── State ──
   const [currentTab, setCurrentTab] = useState<DashboardTab>('overview');
+  const [activeTab, setActiveTab] = useState<ActiveDialog>('home');
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
@@ -103,7 +105,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   const [confirmDeleteMatch, setConfirmDeleteMatch] = useState<string | null>(null);
   const [isDeletingMatch, setIsDeletingMatch] = useState(false);
 
-  // ── Firebase Queries (unchanged) ──
+  // ── Firebase Queries ──
   const notifsQuery = useMemoFirebase(() => (
     firestore && athleteProfile ? query(
       collection(firestore, 'notifications', athleteProfile.uid, 'items'),
@@ -139,7 +141,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
 
   const unreadCount = (unreadNotifs?.length ?? 0) + (pendingConfirmations?.length ?? 0);
 
-  // ── Handlers (unchanged) ──
+  // ── Handlers ──
   const handleMarkAllRead = async () => {
     if (!firestore || !athleteProfile || !unreadNotifs?.length) return;
     const batch = writeBatch(firestore);
@@ -200,7 +202,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     );
   }
 
-  // ── Computed values (unchanged) ──
+  // ── Computed values ──
   const indices = [
     { label: 'Performance', value: athleteProfile.performanceIndex, icon: BarChart3 },
     { label: 'Efficiency', value: athleteProfile.efficiencyIndex, icon: Target },
@@ -293,10 +295,10 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     { id: 'settings', label: 'Settings', icon: Settings2 },
   ];
 
-  // ── Render functions for each tab ──
+  // ── Render functions ──
   const renderOverview = () => (
     <div className="space-y-8">
-      {/* Profile completion banner (desktop) */}
+      {/* Profile completion banner */}
       <div className={`hidden rounded-xl border p-4 md:block ${bannerBg}`}>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -370,7 +372,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         </div>
       </div>
 
-      {/* Mobile hero (stats + readiness + log match) – no duplicate avatar */}
+      {/* Mobile hero */}
       <section className="md:hidden space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border bg-card p-4 shadow-sm">
@@ -514,7 +516,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         ))}
       </div>
 
-      {/* Master Index & Attributes (side by side on large) */}
+      {/* Master Index & Attributes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="shadow-xl bg-card border overflow-hidden">
           <div className="bg-muted/50 p-6 flex justify-between items-center">
@@ -848,7 +850,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             <button
               className="relative shrink-0 text-foreground"
               aria-label="Notifications"
-              onClick={() => setActiveTab('notifications')} // we'll keep the sheet logic via a separate state
+              onClick={() => setActiveTab('notifications')}
             >
               <Bell className="h-6 w-6" />
               {unreadCount > 0 && (
@@ -1079,7 +1081,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         {currentTab === 'settings' && renderSettings()}
       </main>
 
-      {/* ── Notifications Sheet (kept as before) ── */}
+      {/* ── Notifications Sheet ── */}
       <Sheet open={activeTab === 'notifications'} onOpenChange={(open) => { if (!open) setActiveTab('home'); }}>
         <SheetContent side="right" className="w-full sm:w-[420px] p-0 flex flex-col overflow-hidden">
           <SheetHeader className="p-5 border-b shrink-0">
@@ -1167,6 +1169,17 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         </SheetContent>
       </Sheet>
 
+      {/* ── Controlled dialogs ── */}
+      <EditProfileMediaDialog
+        profile={athleteProfile}
+        externalOpen={activeTab === 'edit'}
+        onExternalOpenChange={(open) => { if (!open) setActiveTab('home'); }}
+      />
+      <SupportDialog
+        open={activeTab === 'support'}
+        onOpenChange={(open) => { if (!open) setActiveTab('home'); }}
+      />
+
       {/* ── Quick-Action FAB ── */}
       <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-2 md:bottom-6">
         <div
@@ -1243,7 +1256,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         ))}
       </nav>
 
-      {/* ── Delete Dialogs (unchanged) ── */}
+      {/* ── Delete Dialogs ── */}
       <AlertDialog open={!!confirmDeleteVideo} onOpenChange={(o) => { if (!o) setConfirmDeleteVideo(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1287,17 +1300,6 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* ── Edit and Support dialogs (unchanged) ── */}
-      <EditProfileMediaDialog
-        profile={athleteProfile}
-        externalOpen={activeTab === 'edit'}
-        onExternalOpenChange={(open) => { if (!open) setActiveTab('home'); }}
-      />
-      <SupportDialog
-        open={activeTab === 'support'}
-        onOpenChange={(open) => { if (!open) setActiveTab('home'); }}
-      />
     </div>
   );
 }
