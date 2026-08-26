@@ -295,7 +295,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     { id: 'settings', label: 'Settings', icon: Settings2 },
   ];
 
-  // ── Render functions (fully implemented, no activeTab references) ──
+  // ── Render functions ──
   const renderOverview = () => (
     <div className="space-y-8">
       {/* Profile completion banner */}
