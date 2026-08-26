@@ -292,14 +292,14 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-[72px] items-center gap-3 md:hidden">
-            {/* Avatar with profile picture */}
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary overflow-hidden">
+            {/* Avatar with profile picture - now clickable to public view */}
+            <Link href={`/${athleteProfile.username}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary overflow-hidden">
               {athleteProfile.photoUrl ? (
                 <img src={athleteProfile.photoUrl} alt="Profile" className="h-full w-full object-cover" />
               ) : (
                 `${athleteProfile.firstName?.[0] || 'A'}${athleteProfile.lastName?.[0] || ''}`
               )}
-            </div>
+            </Link>
             <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -551,44 +551,8 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       {/* ── Main Content ── */}
       <main className="container mx-auto space-y-5 p-4 sm:p-6 lg:space-y-8 lg:p-8">
 
-        {/* ── Mobile: Avatar + Personal Info ── */}
+        {/* ── Mobile: only stats, readiness, and log match (no duplicate avatar) ── */}
         <section className="space-y-4 md:hidden">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              {/* Avatar with photo */}
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
-                {athleteProfile.photoUrl ? (
-                  <img src={athleteProfile.photoUrl} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="text-2xl font-black text-primary">
-                    {athleteProfile.firstName?.[0]}{athleteProfile.lastName?.[0]}
-                  </span>
-                )}
-              </div>
-              <div>
-                <h1 className="text-xl font-black tracking-tight">{athleteProfile.firstName} {athleteProfile.lastName}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {athleteProfile.position || 'Position not set'} · {athleteProfile.age || '—'} yrs
-                  <span className="ml-2 inline-block rounded bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">
-                    {athleteProfile.readinessTier || 'PRO'}
-                  </span>
-                </p>
-                {athleteProfile.isVerified && (
-                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Coach verified
-                  </span>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => setFabOpen(v => !v)}
-              aria-label="Quick actions"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-light text-primary-foreground shadow-lg"
-            >
-              +
-            </button>
-          </div>
-          {/* Height & Weight cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-xl border bg-card p-4 shadow-sm">
               <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -603,7 +567,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
               <p className="text-lg font-bold">{athleteProfile.weightKg ? `${athleteProfile.weightKg} kg` : '—'}</p>
             </div>
           </div>
-          {/* Squad readiness */}
+
           <div className={`rounded-xl border p-5 ${availabilityTone}`}>
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-black uppercase tracking-wide opacity-80">Squad readiness</p>
@@ -620,6 +584,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
               <div className="h-full rounded-full bg-primary" style={{ width: `${readiness}%` }} />
             </div>
           </div>
+
           <Link href="/dashboard/add-match" className="flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-primary-foreground shadow-lg hover:bg-primary/90 transition">
             Log match <ChevronRight className="h-5 w-5" />
           </Link>
