@@ -3,7 +3,9 @@
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, ShieldCheck, Clock, Trophy, Target, BookOpen, TrendingUp, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Loader2, ShieldCheck, Clock, Trophy, Target, BookOpen, TrendingUp, CheckCircle2, AlertTriangle, ShieldAlert, Plus, Minus, PencilLine, Trash2, Send } from 'lucide-react';
 import type { ClubMember, ScoutConnection, AthleteProfile, ClubProfile, ClubMatch } from '@/lib/types';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import React, { useState } from 'react';
@@ -13,12 +15,23 @@ import { Badge } from '@/components/ui/badge';
 import { PerformanceAlerts } from '@/components/club/performance-alerts';
 import { SquadAnalytics } from '@/components/club/squad-analytics';
 import { RecruitmentPipeline } from '@/components/club/recruitment-pipeline';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ClubOverviewPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [posFilter, setPosFilter] = useState('all');
   const [tierFilter, setTierFilter] = useState('all');
+  const [editingStatus, setEditingStatus] = useState<'available' | 'doubtful' | 'injured' | 'suspended' | null>(null);
+  const [draftReadinessValue, setDraftReadinessValue] = useState<number>(0);
+  const [manualReadinessCounts, setManualReadinessCounts] = useState<Record<'available' | 'doubtful' | 'injured' | 'suspended', number>>({
+    available: 0,
+    doubtful: 0,
+    injured: 0,
+    suspended: 0,
+  });
+  const [publishedReadinessCounts, setPublishedReadinessCounts] = useState<Record<'available' | 'doubtful' | 'injured' | 'suspended', number> | null>(null);
 
   const clubMemberQuery = useMemoFirebase(() => (
     firestore && user ? query(collection(firestore, 'club_members'), where('userId', '==', user.uid)) : null
@@ -145,6 +158,54 @@ export default function ClubOverviewPage() {
     );
   }, [athletes, posFilter, tierFilter]);
 
+  const isClubAdmin = React.useMemo(() => {
+    return clubMemberships?.some(m => m.role === 'admin') ?? false;
+  }, [clubMemberships]);
+
+  const displayReadinessCounts = React.useMemo(() => ({
+    available: Math.max(0, (readinessCounts.available || 0) + (manualReadinessCounts.available || 0)),
+    doubtful: Math.max(0, (readinessCounts.doubtful || 0) + (manualReadinessCounts.doubtful || 0)),
+    injured: Math.max(0, (readinessCounts.injured || 0) + (manualReadinessCounts.injured || 0)),
+    suspended: Math.max(0, (readinessCounts.suspended || 0) + (manualReadinessCounts.suspended || 0)),
+  }), [readinessCounts, manualReadinessCounts]);
+
+  const openReadinessEditor = (status: 'available' | 'doubtful' | 'injured' | 'suspended') => {
+    setEditingStatus(status);
+    setDraftReadinessValue(displayReadinessCounts[status]);
+  };
+
+  const updateManualCount = (status: 'available' | 'doubtful' | 'injured' | 'suspended', delta: number) => {
+    setManualReadinessCounts(prev => ({
+      ...prev,
+      [status]: Math.max(0, (prev[status] || 0) + delta),
+    }));
+  };
+
+  const setManualCount = (status: 'available' | 'doubtful' | 'injured' | 'suspended', value: number) => {
+    setManualReadinessCounts(prev => ({
+      ...prev,
+      [status]: Math.max(0, value),
+    }));
+  };
+
+  const removeManualCount = (status: 'available' | 'doubtful' | 'injured' | 'suspended') => {
+    setManualReadinessCounts(prev => ({
+      ...prev,
+      [status]: 0,
+    }));
+    setEditingStatus(null);
+  };
+
+  const publishReadinessCounts = () => {
+    if (!editingStatus) return;
+    setPublishedReadinessCounts({ ...displayReadinessCounts });
+    setEditingStatus(null);
+    toast({
+      title: 'Readiness board published',
+      description: 'The updated availability numbers are now visible to the club team.',
+    });
+  };
+
   if (isMembershipLoading || isConnectionsLoading || isDirectMembersLoading || (athleteIds.length > 0 && isAthletesLoading)) {
     return <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
   }
@@ -253,21 +314,42 @@ export default function ClubOverviewPage() {
 
       <Card className="border-none shadow-xl bg-background overflow-hidden">
         <CardHeader className="bg-muted/50 border-b p-4">
-          <CardTitle className="text-sm font-black uppercase tracking-widest">Squad Readiness Board</CardTitle>
-          <CardDescription className="text-[10px] font-bold uppercase tracking-tight">Coach availability tracker</CardDescription>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-sm font-black uppercase tracking-widest">Squad Readiness Board</CardTitle>
+              <CardDescription className="text-[10px] font-bold uppercase tracking-tight">Coach availability tracker</CardDescription>
+            </div>
+            {publishedReadinessCounts ? (
+              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 font-black uppercase tracking-[0.18em] text-[8px]">Published</Badge>
+            ) : (
+              <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-black uppercase tracking-[0.18em] text-[8px]">Draft</Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Available', value: readinessCounts.available, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-500/5 border-green-400/30' },
-              { label: 'Doubtful', value: readinessCounts.doubtful, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-500/5 border-amber-400/30' },
-              { label: 'Injured', value: readinessCounts.injured, icon: ShieldAlert, color: 'text-orange-600', bg: 'bg-orange-500/5 border-orange-400/30' },
-              { label: 'Suspended', value: readinessCounts.suspended, icon: ShieldAlert, color: 'text-red-600', bg: 'bg-red-500/5 border-red-400/30' },
+              { key: 'available', label: 'Available', value: displayReadinessCounts.available, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-500/5 border-green-400/30' },
+              { key: 'doubtful', label: 'Doubtful', value: displayReadinessCounts.doubtful, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-500/5 border-amber-400/30' },
+              { key: 'injured', label: 'Injured', value: displayReadinessCounts.injured, icon: ShieldAlert, color: 'text-orange-600', bg: 'bg-orange-500/5 border-orange-400/30' },
+              { key: 'suspended', label: 'Suspended', value: displayReadinessCounts.suspended, icon: ShieldAlert, color: 'text-red-600', bg: 'bg-red-500/5 border-red-400/30' },
             ].map((item) => (
-              <div key={item.label} className={`rounded-xl border p-4 ${item.bg}`}>
-                <div className="flex items-center justify-between">
+              <div key={item.key} className={`rounded-xl border p-4 ${item.bg}`}>
+                <div className="flex items-center justify-between gap-2">
                   <p className="text-[10px] font-black uppercase tracking-widest">{item.label}</p>
-                  <item.icon className={`h-4 w-4 ${item.color}`} />
+                  <div className="flex items-center gap-1">
+                    {isClubAdmin && (
+                      <button
+                        type="button"
+                        aria-label={`Edit ${item.label} count`}
+                        onClick={() => openReadinessEditor(item.key as 'available' | 'doubtful' | 'injured' | 'suspended')}
+                        className="flex h-6 w-6 items-center justify-center rounded-full border border-current/25 bg-background/70 text-current shadow-sm transition hover:scale-105"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <item.icon className={`h-4 w-4 ${item.color}`} />
+                  </div>
                 </div>
                 <div className={`mt-2 text-3xl font-black ${item.color}`}>{item.value}</div>
               </div>
@@ -275,6 +357,66 @@ export default function ClubOverviewPage() {
           </div>
         </CardContent>
       </Card>
+
+      {editingStatus && (
+        <Dialog open={Boolean(editingStatus)} onOpenChange={(open) => { if (!open) setEditingStatus(null); }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="uppercase tracking-tight font-black text-sm">Edit {editingStatus}</DialogTitle>
+              <DialogDescription className="text-[10px] font-bold uppercase tracking-tight">
+                Update the visible count for this readiness status.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-3">
+                <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => updateManualCount(editingStatus, -1)}>
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Current</span>
+                  <span className="text-3xl font-black">{displayReadinessCounts[editingStatus]}</span>
+                </div>
+                <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => updateManualCount(editingStatus, 1)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Exact number</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={draftReadinessValue}
+                    onChange={(event) => setDraftReadinessValue(Number(event.target.value) || 0)}
+                    className="h-11"
+                  />
+                  <Button
+                    type="button"
+                    className="h-11 px-4"
+                    onClick={() => {
+                      setManualCount(editingStatus, draftReadinessValue);
+                      setDraftReadinessValue(draftReadinessValue);
+                    }}
+                  >
+                    <PencilLine className="mr-2 h-4 w-4" /> Set
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="flex-col-reverse sm:flex-row">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => removeManualCount(editingStatus)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Remove
+              </Button>
+              <Button type="button" className="w-full sm:w-auto" onClick={publishReadinessCounts}>
+                <Send className="mr-2 h-4 w-4" /> Publish numbers
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Season Record + Leaderboards */}
       {seasonStats && (

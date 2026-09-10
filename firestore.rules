@@ -50,6 +50,27 @@ service cloud.firestore {
       allow read, write: if signedIn() && request.auth.uid == userId;
     }
 
+    match /support_tickets/{ticketId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if false;
+    }
+
+    match /support_tickets/{ticketId}/messages/{messageId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if false;
+    }
+
+    match /support_tickets/{ticketId}/internalNotes/{noteId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update: if signedIn();
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read: if signedIn();
       allow write: if signedIn();

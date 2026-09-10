@@ -284,6 +284,12 @@ function AddStatModal({
     setForm({ goals: 0, assists: 0, shots: 0, minutes: 90, rating: 0, yellowCards: 0, redCards: 0, manOfTheMatch: false });
   };
 
+  const finalizeSave = () => {
+    reset();
+    onSaved();
+    onClose();
+  };
+
   const handleSavePendingGhost = async () => {
     if (!firestore || !clubId) return;
 
@@ -331,13 +337,31 @@ function AddStatModal({
 
     await setDoc(doc(firestore, 'ghost_players', ghostId), pendingGhost, { merge: true });
 
-    toast({
-      title: 'Pending player added',
-      description: `${name} has been created and will auto-link once they sign up with the same email, phone or UID.`
+    await addDoc(collection(firestore, 'match_confirmations'), {
+      athleteId: ghostId,
+      athleteName: name,
+      clubId,
+      matchId: 'manual',
+      opponent: 'Manual Entry',
+      manual: true,
+      createdAt: serverTimestamp(),
+      stats: {
+        goals: form.goals,
+        assists: form.assists,
+        shots: form.shots,
+        minutes: form.minutes,
+        rating: form.rating || null,
+        yellowCards: form.yellowCards,
+        redCards: form.redCards,
+        manOfTheMatch: form.manOfTheMatch,
+      },
     });
-    reset();
-    onSaved();
-    onClose();
+
+    toast({
+      title: 'Saved successfully',
+      description: `${name} has been added and is now visible in the stats table.`
+    });
+    finalizeSave();
   };
 
   const handleSave = async () => {
@@ -366,10 +390,8 @@ function AddStatModal({
           },
           athleteName: athlete ? `${athlete.firstName} ${athlete.lastName}` : athleteId,
         });
-        toast({ title: 'Stats saved!', description: 'Player stats added successfully.' });
-        reset();
-        onSaved();
-        onClose();
+        toast({ title: 'Saved successfully', description: 'The player stats have been added and are now visible.' });
+        finalizeSave();
       } catch (e) {
         toast({ title: 'Error saving stats', variant: 'destructive' });
       } finally {
@@ -382,6 +404,8 @@ function AddStatModal({
       setSaving(true);
       try {
         await handleSavePendingGhost();
+      } catch {
+        toast({ title: 'Error saving stats', variant: 'destructive' });
       } finally {
         setSaving(false);
       }
@@ -716,6 +740,7 @@ export default function StatsPage() {
       goals: number; assists: number; shots: number; pom: number;
       ratingSum: number; ratingCount: number; yellow: number; red: number;
       mins: number; apps: number; won: number; drawn: number; lost: number;
+      displayName: string;
     }>();
     const matchMap = new Map<string, PlayerMatchRow[]>();
 
@@ -725,11 +750,15 @@ export default function StatsPage() {
       // If there's a real match, apply the filters; if manual, always include
       if (matchDoc && !filteredMatchIds.has(matchDoc.id)) continue;
 
+      const athlete = athleteMap.get(c.athleteId);
+      const displayName = athlete ? `${athlete.firstName} ${athlete.lastName}` : (c.athleteName ?? 'Unknown Player');
       const existing = byAthlete.get(c.athleteId) ?? {
         goals: 0, assists: 0, shots: 0, pom: 0,
         ratingSum: 0, ratingCount: 0, yellow: 0, red: 0,
-        mins: 0, apps: 0, won: 0, drawn: 0, lost: 0
+        mins: 0, apps: 0, won: 0, drawn: 0, lost: 0,
+        displayName,
       };
+      existing.displayName = displayName;
       existing.apps++;
       existing.goals += c.stats.goals ?? 0;
       existing.assists += c.stats.assists ?? 0;
@@ -769,7 +798,7 @@ export default function StatsPage() {
       const athlete = athleteMap.get(athleteId);
       return {
         athleteId,
-        name: athlete ? `${athlete.firstName} ${athlete.lastName}` : 'Unknown Player',
+        name: s.displayName || (athlete ? `${athlete.firstName} ${athlete.lastName}` : 'Unknown Player'),
         position: athlete?.position ?? '—',
         apps: s.apps,
         goals: s.goals,
@@ -1527,7 +1556,10 @@ export default function StatsPage() {
           clubId={clubId}
           athletes={athletes ?? []}
           firestore={firestore}
-          onSaved={() => setStatsRefreshKey(v => v + 1)}
+          onSaved={() => {
+            setStatsRefreshKey(v => v + 1);
+            setPlayerPage(1);
+          }}
         />
       )}
 

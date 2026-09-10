@@ -66,6 +66,7 @@ export default function VerifyPage() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<VerificationData>(defaultData);
   const [poseIndex, setPoseIndex] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const signatureCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDrawingRef = useRef(false);
@@ -256,31 +257,47 @@ export default function VerifyPage() {
       return;
     }
 
-    if (!firestore || !user?.uid) return;
+    if (!firestore || !user?.uid) {
+      toast({ variant: 'destructive', title: 'Verification unavailable', description: 'Please sign in again and try submitting your verification request.' });
+      return;
+    }
 
-    const requestId = `verify_athlete_${user.uid}`;
-    const requestedAt = new Date().toISOString();
-    await setDoc(doc(firestore, 'verification_requests', requestId), {
-      id: requestId,
-      targetUid: user.uid,
-      targetType: 'athlete',
-      status: 'pending',
-      requestedAt,
-      linkedInUrl: user.email || 'N/A',
-      nationalIdUrl: data.idFrontName || 'N/A',
-      registrationDocUrl: data.idBackName || 'N/A',
-      submittedData: { ...data, mode },
-      clubId: data.clubName || null,
-    }, { merge: true });
+    setIsSubmitting(true);
 
-    await setDoc(doc(firestore, 'athletes', user.uid), {
-      verificationStatus: 'pending',
-      verificationSubmittedAt: requestedAt,
-      updatedAt: requestedAt,
-    }, { merge: true });
+    try {
+      const requestId = `verify_athlete_${user.uid}`;
+      const requestedAt = new Date().toISOString();
+      await setDoc(doc(firestore, 'verification_requests', requestId), {
+        id: requestId,
+        targetUid: user.uid,
+        targetType: 'athlete',
+        status: 'pending',
+        requestedAt,
+        linkedInUrl: user.email || 'N/A',
+        nationalIdUrl: data.idFrontName || 'N/A',
+        registrationDocUrl: data.idBackName || 'N/A',
+        submittedData: { ...data, mode },
+        clubId: data.clubName || null,
+      }, { merge: true });
 
-    toast({ title: 'Verification submitted', description: 'Your request has been sent for review.' });
-    router.push('/dashboard/settings');
+      await setDoc(doc(firestore, 'athletes', user.uid), {
+        verificationStatus: 'pending',
+        verificationSubmittedAt: requestedAt,
+        updatedAt: requestedAt,
+      }, { merge: true });
+
+      toast({ title: 'Verification submitted', description: 'Your request has been sent for review.' });
+      router.push('/dashboard/settings');
+    } catch (error) {
+      console.error('[Verification submit failed]', error);
+      toast({
+        variant: 'destructive',
+        title: 'Submission failed',
+        description: 'Your verification request could not be saved. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const back = () => {
@@ -643,8 +660,13 @@ export default function VerifyPage() {
             <Button type="button" variant="outline" className="flex-1 border-[#254569] bg-transparent text-white hover:bg-[#12263d]" onClick={back}>
               Back
             </Button>
-            <Button type="button" className="flex-1 bg-[#4f8ef7] text-white font-black hover:bg-[#3f7fe4]" onClick={next}>
-              {step === steps.length - 1 ? 'Submit' : 'Continue'}
+            <Button
+              type="button"
+              className="flex-1 bg-[#4f8ef7] text-white font-black hover:bg-[#3f7fe4] disabled:cursor-not-allowed disabled:opacity-70"
+              onClick={next}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : step === steps.length - 1 ? 'Submit' : 'Continue'}
             </Button>
           </div>
         </div>
