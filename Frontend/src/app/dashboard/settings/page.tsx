@@ -206,6 +206,40 @@ export default function AthleteSettingsPage() {
       </header>
 
       <main className="container mx-auto max-w-5xl space-y-5 px-4 py-5 sm:px-6 lg:px-8">
+        <Card className="border-none shadow-xl bg-background overflow-hidden">
+          <CardHeader className="bg-muted/50 border-b py-3 px-4">
+            <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" /> Verification
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-black text-sm">Identity verification</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {profile?.isVerified
+                    ? 'Your account is verified and you have a verification badge.'
+                    : 'Complete your verification to unlock the full account experience.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {profile?.isVerified ? (
+                  <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 font-black text-[9px] uppercase tracking-widest">
+                    <CheckCircle2 className="h-2.5 w-2.5 mr-1" /> Verified
+                  </Badge>
+                ) : (
+                  <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20 font-black text-[9px] uppercase tracking-widest">
+                    <AlertTriangle className="h-2.5 w-2.5 mr-1" /> Pending
+                  </Badge>
+                )}
+                <Button size="sm" className="font-black uppercase tracking-widest h-9" onClick={() => router.push('/dashboard/verify')}>
+                  Verify now
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Account Info */}
         <Card className="border-none shadow-xl bg-background overflow-hidden">
           <CardHeader className="bg-muted/50 border-b py-3 px-4">

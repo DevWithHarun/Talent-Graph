@@ -49,6 +49,7 @@ interface MatchDoc {
 interface ConfirmDoc {
   id: string;
   athleteId: string;
+  athleteName?: string;
   clubId: string;
   matchId?: string;
   opponent?: string;
@@ -627,9 +628,11 @@ export default function StatsPage() {
   const { data: allMatches, isLoading: matchLoading } = useCollection<MatchDoc>(matchQ);
 
   // ── confirmations (player stats) ──────────────────────────────────────────
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
+
   const confirmQ = useMemoFirebase(() =>
     firestore && clubId ? query(collection(firestore, 'match_confirmations'), where('clubId', '==', clubId)) : null,
-    [firestore, clubId]);
+    [firestore, clubId, statsRefreshKey]);
   const { data: confirmations } = useCollection<ConfirmDoc>(confirmQ);
 
   // ── squad athletes ────────────────────────────────────────────────────────
@@ -695,6 +698,10 @@ export default function StatsPage() {
     [publishedMatches, season, venueFilter, competition, dateFrom, dateTo]);
 
   const filteredMatchIds = useMemo(() => new Set(filtered.map(m => m.id)), [filtered]);
+  const manualConfirmations = useMemo(
+    () => (confirmations ?? []).filter(c => c.manual || c.matchId === 'manual'),
+    [confirmations]
+  );
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [addOpen, setAddOpen] = useState(false);
@@ -810,6 +817,18 @@ export default function StatsPage() {
       if (m.cleanSheet) { cs.total++; cs[k]++; }
       if (m.attendance) { att.total += m.attendance; att[k] += m.attendance; attCount.total++; attCount[k]++; }
     }
+
+    for (const c of manualConfirmations) {
+      const goals = c.stats.goals ?? 0;
+      const yellowCards = c.stats.yellowCards ?? 0;
+      const redCards = c.stats.redCards ?? 0;
+      played.total++; played.home++;
+      gf.total += goals; gf.home += goals;
+      if (goals === 0 && yellowCards === 0 && redCards === 0) {
+        cs.total++; cs.home++;
+      }
+    }
+
     const avgAtt: VenueSplit = {
       total: attCount.total ? Math.round(att.total / attCount.total) : 0,
       home: attCount.home ? Math.round(att.home / attCount.home) : 0,
@@ -817,7 +836,7 @@ export default function StatsPage() {
       neutral: attCount.neutral ? Math.round(att.neutral / attCount.neutral) : 0,
     };
     return { played, wins, draws, losses, gf, ga, cs, avgAtt };
-  }, [filtered]);
+  }, [filtered, manualConfirmations]);
 
   // ─── GOAL STATS aggregation ───────────────────────────────────────────────
   const goalStats = useMemo(() => {
@@ -841,9 +860,25 @@ export default function StatsPage() {
         if (g.assisterName) { assists.total++; assists[k]++; }
       }
     }
+
+    for (const c of manualConfirmations) {
+      const goals = c.stats.goals ?? 0;
+      const assistsCount = c.stats.assists ?? 0;
+      gf.total += goals;
+      gf.home += goals;
+      assists.total += assistsCount;
+      assists.home += assistsCount;
+      if (c.stats.goals) {
+        const scorerName = c.athleteName ?? 'Manual Entry';
+        const existing = scorers.get(scorerName) ?? { name: scorerName, goals: 0 };
+        existing.goals += c.stats.goals;
+        scorers.set(scorerName, existing);
+      }
+    }
+
     const topScorers = Array.from(scorers.values()).sort((a, b) => b.goals - a.goals).slice(0, 10);
-    const matchCount = filtered.length || 1;
-    const homeMatches = filtered.filter(m => (m.venue ?? 'Home') === 'Home').length || 1;
+    const matchCount = filtered.length + manualConfirmations.length || 1;
+    const homeMatches = filtered.filter(m => (m.venue ?? 'Home') === 'Home').length + manualConfirmations.length || 1;
     const awayMatches = filtered.filter(m => m.venue === 'Away').length || 1;
     const neutralMatches = filtered.filter(m => m.venue === 'Neutral').length || 1;
     const avgGf: VenueSplit = {
@@ -853,7 +888,7 @@ export default function StatsPage() {
       neutral: +(gf.neutral / neutralMatches).toFixed(2),
     };
     return { gf, ga, assists, avgGf, topScorers };
-  }, [filtered]);
+  }, [filtered, manualConfirmations]);
 
   // ─── DISCIPLINE STATS aggregation ────────────────────────────────────────
   const disciplineStats = useMemo(() => {
@@ -877,14 +912,20 @@ export default function StatsPage() {
       existing.yellow += c.stats.yellowCards ?? 0;
       existing.red += c.stats.redCards ?? 0;
       byPlayer.set(c.athleteId, existing);
+      if (c.manual || c.matchId === 'manual') {
+        yellows.total += c.stats.yellowCards ?? 0;
+        yellows.home += c.stats.yellowCards ?? 0;
+        reds.total += c.stats.redCards ?? 0;
+        reds.home += c.stats.redCards ?? 0;
+      }
     }
     const playerDiscipline = Array.from(byPlayer.values())
       .filter(p => p.yellow > 0 || p.red > 0)
       .sort((a, b) => (b.yellow + b.red * 3) - (a.yellow + a.red * 3));
-    const matchCount = filtered.length || 1;
+    const matchCount = filtered.length + manualConfirmations.length || 1;
     const foulRate = +(fouls.total / matchCount).toFixed(1);
     return { yellows, reds, fouls, foulRate, playerDiscipline };
-  }, [filtered, confirmations, athleteMap]);
+  }, [filtered, confirmations, athleteMap, manualConfirmations]);
 
   // ─── KPIs ─────────────────────────────────────────────────────────────────
   const playerKpis = useMemo(() => {
@@ -1486,7 +1527,7 @@ export default function StatsPage() {
           clubId={clubId}
           athletes={athletes ?? []}
           firestore={firestore}
-          onSaved={() => {}}
+          onSaved={() => setStatsRefreshKey(v => v + 1)}
         />
       )}
 

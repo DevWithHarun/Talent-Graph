@@ -1,22 +1,19 @@
-# Talent Graph workspace
+# Talent Graph monorepo
 
-This repository is a PNPM workspace for Talent Graph, a sports talent identity
-and scouting platform.
+This repository is the company-level monorepo for Talent Graph, a sports talent
+identity and scouting platform.
 
 ## Repository layout
 
-- `artifacts/` contains deployable applications. `talent-graph` is the Vite
-  web client, `api-server` is the shared Express backend, and
-  `mockup-sandbox` hosts isolated UI previews.
-- `lib/` contains reusable workspace packages: the generated API client and
-  schemas, plus the Drizzle database package. These are consumed by artifacts
-  through `workspace:*` dependencies.
-- `scripts/` contains small repository utilities and maintenance commands.
+- `Frontend/` contains the Vite web client for the Talent Graph experience.
+- `Backend/` contains the API service layer for the platform.
+- `lib/` contains reusable workspace packages such as the generated API client,
+  validation schemas, and database layer consumed via `workspace:*` imports.
+- `scripts/` contains repo utilities and maintenance tasks.
 
-The root `pnpm-workspace.yaml` defines package discovery and shared dependency
-catalogs. Run applications through their managed Replit workflows; use
-`pnpm install` after manifest changes and `pnpm run typecheck` for the
-workspace-wide check.
+The root workspace manifest defines the monorepo boundaries and shared package
+catalog. Keep all product code in `Frontend/` and `Backend/`, and reusable logic
+in `lib/`.
 
 ## Useful commands
 
@@ -24,5 +21,5 @@ workspace-wide check.
 pnpm install
 pnpm run typecheck
 pnpm --filter @workspace/talent-graph run dev
-pnpm --filter @workspace/api-server run dev
+pnpm --filter @workspace/backend run dev
 ```

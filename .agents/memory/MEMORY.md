@@ -1,1 +1,0 @@
-- [Firestore on Replit preview](firestore-replit-preview.md) — prefer long-polling transport because proxied WebChannel listeners can hit Firebase target-state assertions.
