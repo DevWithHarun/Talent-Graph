@@ -112,29 +112,78 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
       if (idToken) headers.Authorization = `Bearer ${idToken}`;
       const senderEmail = isGuest ? form.guestEmail.trim() : (user?.email ?? '');
       const senderName = isGuest ? (form.guestName.trim() || form.guestEmail.trim().split('@')[0] || 'Guest') : (user?.displayName ?? user?.email ?? 'User');
-      const res = await fetch('/api/support/tickets', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          senderEmail,
-          senderName,
-          senderPhone: isGuest ? form.guestPhone.trim() || null : null,
-          subject: form.subject,
-          message: form.message,
-          priority: form.priority,
-          tag: form.tag,
-          source: isGuest ? 'public_guest' : 'in_app',
-        }),
-      });
 
-      if (!res.ok) {
-        const j = await res.json().catch(async () => {
-          const t = await res.text().catch(() => '');
-          return { error: t || `HTTP ${res.status}` };
+      // Try API (Vercel/Functions). Static Hosting returns HTML -> fallback to Firestore SDK.
+      try {
+        const res = await fetch('/api/support/tickets', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            senderEmail,
+            senderName,
+            senderPhone: isGuest ? form.guestPhone.trim() || null : null,
+            subject: form.subject,
+            message: form.message,
+            priority: form.priority,
+            tag: form.tag,
+            source: isGuest ? 'public_guest' : 'in_app',
+          }),
         });
-        throw new Error(j?.error || j?.details || `Failed to submit (${res.status})`);
+        const text = await res.text();
+        const isHtml = text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html');
+        if (isHtml) throw new Error('API_HTML_FALLBACK');
+        let j: any = {};
+        try { j = text ? JSON.parse(text) : {}; } catch { throw new Error(text.slice(0, 200) || `HTTP ${res.status}`); }
+        if (!res.ok) throw new Error(j?.error || j?.details || `Failed to submit (${res.status})`);
+        setSubmitted(true);
+      } catch (apiErr: any) {
+        const msg = apiErr?.message || '';
+        const isHtmlFallback = msg === 'API_HTML_FALLBACK' || msg.includes('<!DOCTYPE') || msg.includes('Unexpected token');
+        if (isHtmlFallback || msg.includes('Failed to fetch')) {
+          // Fallback: direct Firestore (Hosting has no /api)
+          if (!firestore) throw apiErr;
+          console.warn('[SupportDialog] API unavailable, fallback to Firestore', msg);
+          const now = new Date().toISOString();
+          const slaHours = form.priority === 'high' ? 1 : form.priority === 'medium' ? 4 : 24;
+          const slaDeadline = new Date(Date.now() + slaHours * 3600 * 1000).toISOString();
+          const ticketRef = await addDoc(collection(firestore, 'support_tickets'), {
+            senderUserId: user?.uid || 'anonymous',
+            senderEmail,
+            senderName,
+            senderPhone: isGuest ? form.guestPhone.trim() || null : null,
+            source: isGuest ? 'public_guest' : 'in_app',
+            subject: form.subject,
+            status: 'open',
+            priority: form.priority,
+            tags: [form.tag],
+            assignedAgentId: null,
+            slaDeadline,
+            csatRating: null,
+            accountProvisioned: false,
+            provisionedUserId: null,
+            lastMessage: form.message.slice(0, 100),
+            createdAt: now,
+            updatedAt: now,
+            isAnonymous: isGuest,
+          });
+          await addDoc(collection(firestore, 'support_tickets', ticketRef.id, 'messages'), {
+            senderType: 'user',
+            senderName,
+            body: form.message,
+            sentVia: isGuest ? 'public_guest' : 'in_app',
+            sentAt: now,
+          });
+          setSubmitted(true);
+        } else {
+          console.error('[SupportDialog] ticket submit failed', apiErr);
+          const friendly = msg.includes('<!DOCTYPE') ? 'Server temporarily unavailable — please try again or email billionaireomenda@gmail.com' : msg;
+          toast({ variant: 'destructive', title: 'Failed to create ticket', description: friendly || 'Please try again.' });
+          return;
+        }
+      } finally {
+        setSubmitting(false);
       }
-      setSubmitted(true);
+      return;
     } catch (err: any) {
       console.error('[SupportDialog] ticket submit failed', err);
       toast({ variant: 'destructive', title: 'Failed to create ticket', description: err?.message || 'Please try again.' });

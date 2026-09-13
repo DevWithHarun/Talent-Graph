@@ -210,46 +210,101 @@ export default function MySupportPage() {
       const senderName = user
         ? (user.displayName || (account ? `${account?.firstName ?? ''} ${account?.lastName ?? ''}`.trim() || user.email || 'User' : user.email || 'User'))
         : (form.guestName.trim() || form.contactEmail.trim().split('@')[0] || 'Guest');
-      const res = await fetch('/api/support/tickets', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          senderEmail: form.contactEmail.trim(),
-          senderName,
-          subject: form.subject.trim(),
-          message: form.description.trim(),
-          priority: apiPriority,
-          tag: form.category,
-          source: isGuest ? 'public_guest' : 'in_app',
-          // extra per supporting.tsx — stored as optional fields so superadmin dashboard retains newest/priority/category/reporter/owner/status/age
-          userRole: form.userRole || account?.role || (isGuest ? 'guest' : 'athlete'),
-          senderPhone: form.contactPhone.trim() || null,
-          attachmentName: attachmentName || null,
-        }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(async () => {
-          const t = await res.text().catch(() => '');
-          return { error: t || `HTTP ${res.status}` };
+
+      let ticketId: string | null = null;
+
+      // Try API first (will work on Vercel / Functions). Hosting static returns HTML -> fallback to direct Firestore.
+      try {
+        const res = await fetch('/api/support/tickets', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            senderEmail: form.contactEmail.trim(),
+            senderName,
+            subject: form.subject.trim(),
+            message: form.description.trim(),
+            priority: apiPriority,
+            tag: form.category,
+            source: isGuest ? 'public_guest' : 'in_app',
+            userRole: form.userRole || account?.role || (isGuest ? 'guest' : 'athlete'),
+            senderPhone: form.contactPhone.trim() || null,
+            attachmentName: attachmentName || null,
+          }),
         });
-        throw new Error(j?.error || j?.details || `Failed to create ticket (${res.status})`);
+        const text = await res.text();
+        const isHtml = text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html');
+        if (isHtml) throw new Error('API_HTML_FALLBACK');
+        let j: any = {};
+        try { j = text ? JSON.parse(text) : {}; } catch { throw new Error(text.slice(0, 200) || `HTTP ${res.status}`); }
+        if (!res.ok) throw new Error(j?.error || j?.details || `Failed to create ticket (${res.status})`);
+        ticketId = j?.ticketId || null;
+      } catch (apiErr: any) {
+        const msg = apiErr?.message || '';
+        const isHtmlFallback = msg === 'API_HTML_FALLBACK' || msg.includes('<!DOCTYPE') || msg.includes('Unexpected token');
+        if (isHtmlFallback || msg.includes('Failed to fetch')) {
+          // Fallback: direct Firestore (static hosting has no /api). Rules allow create: if true
+          if (!firestore) throw apiErr;
+          console.warn('[support] API unavailable, falling back to direct Firestore', msg);
+          const now = new Date().toISOString();
+          const slaHours = apiPriority === 'high' ? 1 : apiPriority === 'medium' ? 4 : 24;
+          const slaDeadline = new Date(Date.now() + slaHours * 3600 * 1000).toISOString();
+          const directData: any = {
+            senderUserId: user?.uid || 'anonymous',
+            senderEmail: form.contactEmail.trim(),
+            senderName,
+            senderPhone: form.contactPhone.trim() || null,
+            source: isGuest ? 'public_guest' : 'in_app',
+            subject: form.subject.trim(),
+            status: 'open',
+            priority: apiPriority,
+            tags: [form.category],
+            assignedAgentId: null,
+            slaDeadline,
+            csatRating: null,
+            accountProvisioned: false,
+            provisionedUserId: null,
+            lastMessage: form.description.trim().slice(0, 100),
+            createdAt: now,
+            updatedAt: now,
+            isAnonymous: isGuest,
+            userRole: form.userRole || account?.role || (isGuest ? 'guest' : 'athlete'),
+            attachmentName: attachmentName || null,
+          };
+          // Remove nulls where Firestore expects nullValue vs omit
+          const ticketRef = await addDoc(collection(firestore, 'support_tickets'), directData);
+          await addDoc(collection(firestore, 'support_tickets', ticketRef.id, 'messages'), {
+            senderType: 'user',
+            senderName,
+            body: form.description.trim(),
+            sentVia: isGuest ? 'public_guest' : 'in_app',
+            sentAt: now,
+          });
+          ticketId = ticketRef.id;
+        } else {
+          throw apiErr;
+        }
       }
-      const j = await res.json();
-      const ref = j?.ticketId ? `#${String(j.ticketId).slice(0, 8).toUpperCase()}` : 'ticket';
+
+      const ref = ticketId ? `#${String(ticketId).slice(0, 8).toUpperCase()}` : 'ticket';
       if (isGuest) {
-        toast({ title: `Ticket ${ref} created`, description: `Thanks — we’ll reply to ${form.contactEmail.trim()} soon. Save your reference ${ref} for follow-up.` });
+        toast({ title: `Ticket ${ref} created`, description: `Thanks — we’ll reply to ${form.contactEmail.trim()} soon. Save your reference ${ref} for follow-up.${form.contactPhone.trim() ? ' SMS sent if phone valid.' : ''}` });
       } else {
         toast({ title: `Ticket ${ref} created`, description: 'You’ll get a reply from the Client Support workspace (superadmin). Check My Tickets for status updates.' });
       }
       setForm(f => ({ ...f, subject: '', description: '', attachmentName: null } as any));
       setAttachmentName(null);
       if (fileRef.current) fileRef.current.value = '';
-      if (!isGuest) {
+      if (!isGuest && ticketId) {
         setActiveTab('tickets');
-        if (j?.ticketId) setSelectedId(j.ticketId);
+        setSelectedId(ticketId);
+      } else if (isGuest) {
+        // stay on form, clear phone/name for privacy? keep email for follow-up
+        setForm(f => ({ ...f, contactPhone: f.contactPhone } as any));
       }
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Could not create ticket', description: err?.message || 'Please try again.' });
+      const raw = err?.message || 'Please try again.';
+      const friendly = raw.includes('<!DOCTYPE') || raw.includes('Unexpected token') ? 'Server temporarily unavailable — please try again or email billionaireomenda@gmail.com' : raw;
+      toast({ variant: 'destructive', title: 'Could not create ticket', description: friendly });
     } finally {
       setSubmitting(false);
     }
