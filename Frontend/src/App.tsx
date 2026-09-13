@@ -5,12 +5,14 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { PWARegister } from '@/components/pwa-register';
+import { DashboardErrorBoundary } from '@/components/coach/dashboard-error-boundary';
 import { Loader2 } from 'lucide-react';
 
 // Static layout imports (synchronous — they're route wrappers)
 import CoachDashboardLayout from '@/app/coach-dashboard/layout';
 import ClubDashboardLayout from '@/app/club-dashboard/layout';
 import AnalystDashboardLayout from '@/app/analyst-dashboard/layout';
+import AthleteDashboardLayout from '@/app/dashboard/layout';
 
 // ─── Lazy page imports ───────────────────────────────────────────────────────
 
@@ -32,12 +34,12 @@ const OnboardingPage = lazy(() => import('@/app/onboarding/page'));
 // Athlete dashboard sub-pages
 const AchievementsPage = lazy(() => import('@/app/dashboard/achievements/page'));
 const AddMatchPage = lazy(() => import('@/app/dashboard/add-match/page'));
-const ClubChatPage = lazy(() => import('@/app/dashboard/club-chat/page'));
 const InjuryTrackerPage = lazy(() => import('@/app/dashboard/injury-tracker/page'));
 const InvitesPage = lazy(() => import('@/app/dashboard/invites/page'));
 const DashboardSettingsPage = lazy(() => import('@/app/dashboard/settings/page'));
 const DashboardVerifyPage = lazy(() => import('@/app/dashboard/verify/page'));
 const UpdateAttributesPage = lazy(() => import('@/app/dashboard/update-attributes/page'));
+const AthleteCareerPage = lazy(() => import('@/app/dashboard/career/page'));
 
 // Coach dashboard
 const CoachDashboardPage = lazy(() => import('@/app/coach-dashboard/page'));
@@ -98,9 +100,11 @@ const ChatConversationPage = lazy(() => import('@/app/chat/[conversationId]/page
 
 // Messages
 const MessageConversationPage = lazy(() => import('@/app/messages/[connectionId]/page'));
+const UnifiedChatPage = lazy(() => import('@/components/messaging/unified-chat-page').then(m => ({ default: m.UnifiedChatPage })));
 
 // Public pages
 const HelpPage = lazy(() => import('@/app/help/page'));
+const SupportPage = lazy(() => import('@/app/support/page'));
 const JobsPage = lazy(() => import('@/app/jobs/page'));
 const JobsAdminDashboardPage = lazy(() => import('@/app/jobs/admin/dashboard/page'));
 const JobsAdminLoginPage = lazy(() => import('@/app/jobs/admin/login/page'));
@@ -111,6 +115,8 @@ const JoinClubPage = lazy(() => import('@/app/join/club/[clubId]/page'));
 const TeamDashboardPage = lazy(() => import('@/app/team-dashboard/page'));
 const PrivacyPolicyPage = lazy(() => import('@/app/privacy-policy/page'));
 const TermsOfUsePage = lazy(() => import('@/app/terms-of-use/page'));
+const FeedPage = lazy(() => import('@/app/feed/page'));
+const AthletesPage = lazy(() => import('@/app/athletes/page'));
 
 // Public profile
 const ScoutPublicPage = lazy(() => import('@/app/scout/[username]/page'));
@@ -142,6 +148,7 @@ export default function App() {
         <TooltipProvider>
           <PWARegister />
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <DashboardErrorBoundary>
             <Suspense fallback={<Loading />}>
               <Switch>
                 {/* ── Auth ── */}
@@ -156,15 +163,17 @@ export default function App() {
                 {/* ── Onboarding ── */}
                 <Route path="/onboarding/:step?">{() => <S><OnboardingPage /></S>}</Route>
 
-                {/* ── Athlete dashboard sub-pages ── */}
-                <Route path="/dashboard/add-match">{() => <S><AddMatchPage /></S>}</Route>
-                <Route path="/dashboard/achievements">{() => <S><AchievementsPage /></S>}</Route>
-                <Route path="/dashboard/club-chat">{() => <S><ClubChatPage /></S>}</Route>
-                <Route path="/dashboard/injury-tracker">{() => <S><InjuryTrackerPage /></S>}</Route>
-                <Route path="/dashboard/invites">{() => <S><InvitesPage /></S>}</Route>
-                <Route path="/dashboard/settings">{() => <S><DashboardSettingsPage /></S>}</Route>
-                <Route path="/dashboard/verify">{() => <S><DashboardVerifyPage /></S>}</Route>
-                <Route path="/dashboard/update-attributes">{() => <S><UpdateAttributesPage /></S>}</Route>
+                {/* ── Athlete dashboard sub-pages (layout-wrapped) ── */}
+                <Route path="/dashboard/add-match">{() => <AthleteDashboardLayout><S><AddMatchPage /></S></AthleteDashboardLayout>}</Route>
+                <Route path="/dashboard/achievements">{() => <AthleteDashboardLayout><S><AchievementsPage /></S></AthleteDashboardLayout>}</Route>
+                {/* legacy club-chat → career (kept for deep-links) */}
+                <Route path="/dashboard/club-chat">{() => { window.location.replace('/dashboard/career'); return null; }}</Route>
+                <Route path="/dashboard/injury-tracker">{() => <AthleteDashboardLayout><S><InjuryTrackerPage /></S></AthleteDashboardLayout>}</Route>
+                <Route path="/dashboard/invites">{() => <AthleteDashboardLayout><S><InvitesPage /></S></AthleteDashboardLayout>}</Route>
+                <Route path="/dashboard/settings">{() => <AthleteDashboardLayout><S><DashboardSettingsPage /></S></AthleteDashboardLayout>}</Route>
+                <Route path="/dashboard/verify">{() => <AthleteDashboardLayout><S><DashboardVerifyPage /></S></AthleteDashboardLayout>}</Route>
+                <Route path="/dashboard/update-attributes">{() => <AthleteDashboardLayout><S><UpdateAttributesPage /></S></AthleteDashboardLayout>}</Route>
+                <Route path="/dashboard/career">{() => <AthleteDashboardLayout><S><AthleteCareerPage /></S></AthleteDashboardLayout>}</Route>
 
                 {/* ── Coach dashboard (layout-wrapped) ── */}
                 <Route path="/coach-dashboard">
@@ -305,11 +314,11 @@ export default function App() {
                 <Route path="/team-dashboard">{() => <S><TeamDashboardPage /></S>}</Route>
 
                 {/* ── Chat ── */}
-                <Route path="/chat">{() => <S><ChatPage /></S>}</Route>
-                <Route path="/chat/:conversationId">{() => <S><ChatConversationPage /></S>}</Route>
+                <Route path="/chat">{() => <S><UnifiedChatPage /></S>}</Route>
+                <Route path="/chat/:conversationId">{() => <S><UnifiedChatPage /></S>}</Route>
 
                 {/* ── Messages ── */}
-                <Route path="/messages/:connectionId">{() => <S><MessageConversationPage /></S>}</Route>
+                <Route path="/messages/:connectionId">{() => <S><UnifiedChatPage /></S>}</Route>
 
                 {/* ── Jobs portal ── */}
                 <Route path="/jobs/admin/dashboard">{() => <S><JobsAdminDashboardPage /></S>}</Route>
@@ -319,11 +328,14 @@ export default function App() {
                 <Route path="/jobs">{() => <S><JobsPage /></S>}</Route>
 
                 {/* ── Misc public pages ── */}
+                <Route path="/support">{() => <S><SupportPage /></S>}</Route>
                 <Route path="/help">{() => <S><HelpPage /></S>}</Route>
                 <Route path="/invite/:id">{() => <S><InvitePage /></S>}</Route>
                 <Route path="/join/club/:clubId">{() => <S><JoinClubPage /></S>}</Route>
                 <Route path="/privacy-policy">{() => <S><PrivacyPolicyPage /></S>}</Route>
                 <Route path="/terms-of-use">{() => <S><TermsOfUsePage /></S>}</Route>
+                <Route path="/feed">{() => <S><FeedPage /></S>}</Route>
+                <Route path="/athletes">{() => <S><AthletesPage /></S>}</Route>
 
                 {/* ── Dynamic public routes (must come last) ── */}
                 <Route path="/scout/:username">{() => <S><ScoutPublicPage /></S>}</Route>
@@ -336,6 +348,7 @@ export default function App() {
                 <Route>{() => <S><NotFoundPage /></S>}</Route>
               </Switch>
             </Suspense>
+            </DashboardErrorBoundary>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

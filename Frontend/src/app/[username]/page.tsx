@@ -104,6 +104,16 @@ export default function UsernamePage() {
     const { data: existingConnection } = useDoc<ScoutConnection>(existingConnectionDocRef);
     const isScoutedByViewer = existingConnection?.status === 'accepted';
 
+    const [activeTab, setActiveTab] = useState('Overview');
+    const [searchQuery, setSearchQuery] = useState('');
+    const profileTabs = [
+        { label: 'Overview', icon: Home },
+        { label: 'About', icon: Info },
+        { label: 'Performance', icon: Gauge },
+        { label: 'Career', icon: BriefcaseBusiness },
+        { label: 'Activity', icon: Activity },
+    ];
+
     const privateNotesDocRef = useMemoFirebase(() => {
       if (firestore && authUser?.uid && athlete?.uid && isScout) {
         return doc(firestore, 'scoutData', authUser.uid, 'privateNotes', athlete.uid);
@@ -230,15 +240,6 @@ export default function UsernamePage() {
         ? `${currentUserProfile.firstName} ${currentUserProfile.lastName}`.trim()
         : undefined;
     const viewerRole = currentUserProfile?.role;
-    const [activeTab, setActiveTab] = useState('Overview');
-    const [searchQuery, setSearchQuery] = useState('');
-    const profileTabs = [
-        { label: 'Overview', icon: Home },
-        { label: 'About', icon: Info },
-        { label: 'Performance', icon: Gauge },
-        { label: 'Career', icon: BriefcaseBusiness },
-        { label: 'Activity', icon: Activity },
-    ];
     const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const queryValue = searchQuery.trim();
@@ -251,7 +252,7 @@ export default function UsernamePage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f3f2ef] pb-24 text-[#1d2226]">
+        <div className="min-h-screen bg-white pb-24 text-[#1d2226]">
             <header className="sticky top-0 z-40 border-b border-[#d6d9dc] bg-white/95 backdrop-blur">
                 <div className="mx-auto flex h-[62px] max-w-6xl items-center gap-3 px-4 sm:px-6">
                     <Link href={isScout ? "/scout-dashboard" : "/"} className="flex shrink-0 items-center gap-2">
@@ -608,7 +609,7 @@ export default function UsernamePage() {
                 </div> {/* end blurred content wrapper */}
                 </div> {/* end relative gate wrapper */}
             </div>
-            <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[68px] items-center justify-around border-t border-[#d6d9dc] bg-white/95 px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur md:hidden">
+            <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[68px] items-center justify-around border-t border-[#d6d9dc] bg-white/95 px-2 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur bottom-nav-safe md:hidden">
                 <Link href="/" className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#0a66c2]"><Home className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Home</span></Link>
                 <Link href="/scout-dashboard" className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><LayoutGrid className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Discover</span></Link>
                 <Link href="/chat" className="flex min-w-[54px] flex-col items-center gap-1 py-2 text-[#56687a]"><MessageSquare className="h-[19px] w-[19px]" /><span className="text-[10px] font-semibold">Messages</span></Link>

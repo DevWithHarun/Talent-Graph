@@ -1,0 +1,724 @@
+ 
+<!-- Explain: User profile page displaying bio, skills, and media gallery. - -->
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head><script src="https://cdn-cms-s-8-4.f-static.net/versions/2/system_mini/js/minimize_appBuilderPreviewIframe_scripts_v3.js?v=vc1788865112" crossorigin="anonymous"></script><script>window.isManagment = "2";</script><base href="/.preview-f87407ec6247b10313c72a071401f413/"><script>window.IsManagment = "2";window.APP_PROJECT_ID = "f87407ec6247b10313c72a071401f413";window.__CDN_BASE_URL__ = "https:\/\/cdn-cms-s-8-4.f-static.net\/manager\/ai_app_builder\/v3\/assets\/";window.APP_CURRENCIES = {"isActive":false,"currencies":{"KES":{"code":"KES","label":"Kenyan Shilling","symbol":"\u0026#75;\u0026#83;\u0026#104;","symbolFirst":true,"rate":1,"isDefault":true}}};window.APP_TAX = {"productsTax":"","regions":[{"id":383736900,"regionName":"Rest of the World","countries":{"REST_WORLD":{}},"tax":{"option":"differentTax","differentTax":{"REST_WORLD":0},"basedOn":"shippingAddress","taxCalAfterShipping":false}},{"id":383736901,"regionName":"Kenya","countries":{"KEN":{}},"tax":{"option":"differentTax","differentTax":{"KEN":0},"basedOn":"shippingAddress","taxCalAfterShipping":false}}],"countryOptions":[{"code":"KEN","name":"Kenya","states":[],"requiresState":false},{"code":"REST_WORLD","name":"REST_WORLD","states":[],"requiresState":false}]};window.APP_BUILDER_BASE_PATH = "\/manager\/ai_app_builder\/v3";</script><link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/versions/2/system_mini/css/minimize_appBuilder_v3.css?v=vc1788865112" type="text/css" crossorigin="anonymous"><link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<!-- Regular Meta Info -->
+<title>User Profile | The Talent Graph</title>
+<meta name="description" content="View user profile, skills, and media on The Talent Graph.">
+<meta name="keywords" content="profile, athlete, scout, connection">
+<link rel="canonical" href="https://app.site123.com/.preview-f87407ec6247b10313c72a071401f413/profile.html"/>
+<!-- Facebook Meta Info -->
+<meta property="og:url" content="https://app.site123.com/.preview-f87407ec6247b10313c72a071401f413/profile.html">
+<meta property="og:image" content="">
+<meta property="og:description" content="View user profile, skills, and media on The Talent Graph.">
+<meta property="og:title" content="User Profile | The Talent Graph">
+<meta property="og:site_name" content="User Profile | The Talent Graph">
+<meta property="og:see_also" content="https://app.site123.com">
+<!-- Google+ Meta Info -->
+<meta itemprop="name" content="User Profile | The Talent Graph">
+<meta itemprop="description" content="View user profile, skills, and media on The Talent Graph.">
+<meta itemprop="image" content="">
+<!-- Twitter Meta Info -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:url" content="https://app.site123.com/.preview-f87407ec6247b10313c72a071401f413/profile.html">
+<meta name="twitter:title" content="User Profile | The Talent Graph">
+<meta name="twitter:description" content="View user profile, skills, and media on The Talent Graph.">
+<meta name="twitter:image" content="">
+<meta name="robots" content="noindex, nofollow">
+
+    <!-- twig-include:global/head.html --><!-- Explain: Shared head content with fonts, Tailwind, daisyUI, and app CSS links. - -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5.5.20" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.0"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.12/dist/cdn.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/theme.css?t=1789210548&w=12379368&edit=1">
+<link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/main.css?t=1789210548&w=12379368&edit=1">
+<link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/components.css?t=1789210548&w=12379368&edit=1">
+<link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/layout.css?t=1789210548&w=12379368&edit=1">
+<!-- /twig-include:global/head.html -->
+</head>
+<body class="min-h-screen flex flex-col bg-[var(--background-color)] text-[var(--text-color)] antialiased selection:bg-[var(--primary-color)] selection:text-slate-900" style="font-family: var(--font-body);">
+    <!-- twig-include:global/header.html --><!-- Explain: Shared site header with navigation, user notifications, and a global search bar. - -->
+<header class="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--background-color)]/90 backdrop-blur-md">
+    <nav x-data="notificationNav" x-cloak class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+        <a href="" class="flex items-center gap-2 text-xl font-bold uppercase tracking-wide text-[var(--text-color)]" style="font-family: var(--font-heading);">
+            <i class="fa-solid fa-bolt text-[var(--primary-color)]"></i>
+            Verve & Vigor
+        </a>
+        <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+            <a href="index.html#pillars" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Features</a>
+            <a href="athletes.html" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Athletes</a>
+            <a href="scout-discovery.html" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Scout Discovery</a>
+            <a href="feed.html" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Feed</a>
+            <a href="profile.html" id="nav-profile-desktop" class="hidden text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">My Profile</a>
+            <a href="login.html" id="nav-portal-desktop" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Portal</a>
+            <a href="join.html" class="rounded-full bg-[var(--primary-color)] px-5 py-2 text-slate-900 font-semibold hover:bg-[var(--primary-hover)] transition-colors">Join the Graph</a>
+            
+            <!-- Desktop Search -->
+            <div x-data="globalSearch()" class="relative hidden lg:block ml-2 group" @click.away="isOpen = false">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--primary-color)] transition-colors z-10"></i>
+                <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="isOpen = true" placeholder="Search..." class="input input-sm pl-9 bg-[var(--surface-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)] rounded-full w-32 transition-all focus:w-64 relative z-10">
+                
+                <div x-show="isOpen && query.length > 0" x-cloak class="absolute top-full mt-2 right-0 w-80 bg-[var(--surface-color)] border border-[var(--border-color)] rounded-xl shadow-2xl overflow-hidden z-50">
+                    <div x-show="loading" class="p-4 text-center text-[var(--text-muted)]">
+                        <span class="loading loading-spinner loading-sm"></span>
+                    </div>
+                    <div x-show="!loading && results.length === 0" class="p-4 text-center text-[var(--text-muted)] text-sm">
+                        No results found for "<span x-text="query"></span>"
+                    </div>
+                    <ul x-show="!loading && results.length > 0" class="max-h-96 overflow-y-auto">
+                        <template x-for="res in results" :key="res.id">
+                            <li>
+                                <a :href="res.url" class="flex flex-col p-3 border-b border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors text-left">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-bold text-white text-sm truncate" x-text="res.title"></span>
+                                        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0" :class="res.type === 'Athlete' ? 'bg-[var(--primary-color)]/20 text-[var(--primary-color)]' : 'bg-blue-500/20 text-blue-400'" x-text="res.type"></span>
+                                    </div>
+                                    <span class="text-xs text-[var(--text-muted)] truncate block" x-text="res.subtitle"></span>
+                                </a>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Notifications Bell (Desktop) -->
+            <template x-if="isLoggedIn">
+                <div class="dropdown dropdown-end ml-2">
+                    <button tabindex="0" class="btn btn-ghost btn-circle">
+                        <div class="indicator">
+                            <i class="fa-solid fa-bell text-lg text-[var(--text-muted)]"></i>
+                            <span class="indicator-item badge badge-xs badge-error shadow-sm animate-pulse" x-show="unreadCount > 0" x-text="unreadCount"></span>
+                        </div>
+                    </button>
+                    <ul tabindex="0" class="menu dropdown-content z-50 p-2 shadow-2xl bg-[var(--surface-color)] rounded-box w-80 mt-4 border border-[var(--border-color)]">
+                        <li class="menu-title px-4 py-2 font-bold text-white uppercase tracking-wide border-b border-[var(--border-color)]">Notifications</li>
+                        <template x-for="n in notifications" :key="n.key">
+                            <li>
+                                <a :href="n.link" @click="markRead(n)" class="flex flex-col items-start gap-1 py-3 border-b border-[var(--border-color)]/50" :class="!n.read ? 'bg-[var(--primary-color)]/5' : ''">
+                                    <span class="text-sm font-medium" :class="!n.read ? 'text-[var(--primary-color)]' : 'text-white'" x-text="n.message"></span>
+                                    <span class="text-xs text-[var(--text-muted)]" x-text="new Date(n.timestamp).toLocaleDateString() + ' ' + new Date(n.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"></span>
+                                </a>
+                            </li>
+                        </template>
+                        <li x-show="notifications.length === 0"><span class="text-[var(--text-muted)] py-4 text-center block">No notifications yet.</span></li>
+                    </ul>
+                </div>
+            </template>
+        </div>
+        <div class="md:hidden flex items-center gap-2">
+            <!-- Notifications Bell (Mobile) -->
+            <template x-if="isLoggedIn">
+                <div class="dropdown dropdown-end">
+                    <button tabindex="0" class="btn btn-ghost btn-circle">
+                        <div class="indicator">
+                            <i class="fa-solid fa-bell text-lg text-[var(--text-muted)]"></i>
+                            <span class="indicator-item badge badge-xs badge-error shadow-sm animate-pulse" x-show="unreadCount > 0" x-text="unreadCount"></span>
+                        </div>
+                    </button>
+                    <ul tabindex="0" class="menu dropdown-content z-50 p-2 shadow-2xl bg-[var(--surface-color)] rounded-box w-72 mt-4 border border-[var(--border-color)]">
+                        <li class="menu-title px-4 py-2 font-bold text-white uppercase tracking-wide border-b border-[var(--border-color)]">Notifications</li>
+                        <template x-for="n in notifications" :key="n.key">
+                            <li>
+                                <a :href="n.link" @click="markRead(n)" class="flex flex-col items-start gap-1 py-3 border-b border-[var(--border-color)]/50" :class="!n.read ? 'bg-[var(--primary-color)]/5' : ''">
+                                    <span class="text-sm font-medium" :class="!n.read ? 'text-[var(--primary-color)]' : 'text-white'" x-text="n.message"></span>
+                                    <span class="text-xs text-[var(--text-muted)]" x-text="new Date(n.timestamp).toLocaleDateString()"></span>
+                                </a>
+                            </li>
+                        </template>
+                        <li x-show="notifications.length === 0"><span class="text-[var(--text-muted)] py-4 text-center block">No notifications yet.</span></li>
+                    </ul>
+                </div>
+            </template>
+            
+            <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-ghost p-2" aria-label="Open menu">
+                    <i class="fa-solid fa-bars text-2xl text-[var(--text-color)]"></i>
+                </div>
+                <ul tabindex="0" class="menu dropdown-content z-[1] p-4 shadow-2xl bg-[var(--surface-color)] rounded-box w-64 mt-4 border border-[var(--border-color)] gap-2">
+                    <li class="mb-2" x-data="globalSearch()" @click.away="isOpen = false">
+                        <div class="relative w-full p-0">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10"></i>
+                            <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="isOpen = true" placeholder="Search..." class="input input-sm w-full pl-9 bg-[var(--background-color)] text-white border-[var(--border-color)] rounded-full focus:border-[var(--primary-color)] z-10 relative">
+                        </div>
+                        <div x-show="isOpen && query.length > 0" x-cloak class="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-color)] border border-[var(--border-color)] rounded-xl shadow-2xl overflow-hidden z-50">
+                            <div x-show="loading" class="p-4 text-center text-[var(--text-muted)]">
+                                <span class="loading loading-spinner loading-sm"></span>
+                            </div>
+                            <div x-show="!loading && results.length === 0" class="p-4 text-center text-[var(--text-muted)] text-sm whitespace-normal">
+                                No results found for "<span x-text="query"></span>"
+                            </div>
+                            <ul x-show="!loading && results.length > 0" class="max-h-64 overflow-y-auto w-full block">
+                                <template x-for="res in results" :key="res.id">
+                                    <li class="block w-full">
+                                        <a :href="res.url" class="flex flex-col p-3 border-b border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors whitespace-normal rounded-none">
+                                            <div class="flex justify-between items-start mb-1 w-full gap-2">
+                                                <span class="font-bold text-white text-sm line-clamp-1 flex-1" x-text="res.title"></span>
+                                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0" :class="res.type === 'Athlete' ? 'bg-[var(--primary-color)]/20 text-[var(--primary-color)]' : 'bg-blue-500/20 text-blue-400'" x-text="res.type"></span>
+                                            </div>
+                                            <span class="text-xs text-[var(--text-muted)] line-clamp-1 block w-full" x-text="res.subtitle"></span>
+                                        </a>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </li>
+                    <li><a href="index.html#pillars" class="py-3 text-base">Features</a></li>
+                    <li><a href="athletes.html" class="py-3 text-base">Athletes</a></li>
+                    <li><a href="scout-discovery.html" class="py-3 text-base">Scout Discovery</a></li>
+                    <li><a href="feed.html" class="py-3 text-base">Feed</a></li>
+                    <li id="nav-profile-mobile-container" class="hidden"><a href="profile.html" id="nav-profile-mobile" class="py-3 text-base">My Profile</a></li>
+                    <li><a href="login.html" id="nav-portal-mobile" class="py-3 text-base">Portal</a></li>
+                    <li><a href="join.html" class="py-3 text-base text-[var(--primary-color)] font-bold">Join the Graph</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<!-- /twig-include:global/header.html -->
+    <main class="flex-1">
+        <!-- twig-include:sections/profile.main.html --><!-- Explain: User profile with enhanced connection management and recruitment dashboard. -->
+<section class="py-12 bg-[var(--background-color)] min-h-screen">
+    <div x-data="profileApp()" x-init="initApp()" x-cloak class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+        
+        <div x-show="loading" class="text-center py-20">
+            <span class="loading loading-spinner text-[var(--primary-color)] loading-lg"></span>
+        </div>
+
+        <!-- Profile View -->
+        <div x-show="!loading && !editing">
+            <div class="bg-[var(--surface-color)] rounded-3xl border border-[var(--border-color)] overflow-hidden shadow-2xl relative">
+                <!-- Cover -->
+                <div class="h-48 bg-gradient-to-r from-[var(--surface-hover)] to-[var(--border-color)] relative"></div>
+                
+                <!-- Avatar -->
+                <div class="absolute top-32 left-8">
+                    <template x-if="profile && profile.profile_image">
+                        <img :src="profile.profile_image" class="w-32 h-32 rounded-full border-4 border-[var(--surface-color)] object-cover bg-[var(--background-color)] shadow-xl">
+                    </template>
+                    <template x-if="!profile || !profile.profile_image">
+                        <div class="w-32 h-32 rounded-full border-4 border-[var(--surface-color)] bg-[var(--primary-color)]/20 text-[var(--primary-color)] flex items-center justify-center text-4xl font-bold uppercase shadow-xl">
+                            <span x-text="targetEmail ? targetEmail.charAt(0) : 'U'"></span>
+                        </div>
+                    </template>
+                </div>
+                
+                <div class="pt-20 px-8 pb-8">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h1 class="text-3xl font-extrabold text-white" style="font-family: var(--font-heading);" x-text="profile ? profile.name : targetEmail.split('@')[0]"></h1>
+                            <p class="text-[var(--text-muted)]" x-text="targetEmail"></p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <template x-if="isOwnProfile">
+                                <button @click="editing = true" class="btn btn-outline text-white border-[var(--border-color)] hover:border-[var(--primary-color)]">
+                                    <i class="fa-solid fa-pen"></i> Edit Profile
+                                </button>
+                            </template>
+                            <template x-if="!isOwnProfile && isLoggedIn">
+                                <button @click="location.href='dashboard.html?chat=' + encodeURIComponent(targetEmail)" class="btn bg-[var(--primary-color)] text-slate-900 border-none hover:bg-[var(--primary-hover)]">
+                                    <i class="fa-solid fa-envelope"></i> Message
+                                </button>
+                            </template>
+                            <a :href="'feed.html?user=' + encodeURIComponent(targetEmail)" class="btn btn-ghost border border-[var(--border-color)] text-[var(--text-muted)] hover:text-white">
+                                <i class="fa-solid fa-rss mr-2 text-[var(--primary-color)]"></i> View Posts
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Mobile-Style Tab Navigation -->
+                    <template x-if="isOwnProfile">
+                        <div class="mt-8 border-b border-[var(--border-color)]">
+                            <div role="tablist" class="tabs tabs-bordered overflow-x-auto flex-nowrap hide-scrollbar whitespace-nowrap flex sm:justify-start pb-px">
+                                <template x-for="tab in [
+                                    {id: 'public_view', label: 'Public View', icon: 'fa-eye'},
+                                    {id: 'progress', label: 'Progress', icon: 'fa-chart-line'},
+                                    {id: 'badges', label: 'Badges & Achievements', icon: 'fa-medal'},
+                                    {id: 'rates', label: 'Rates Attributes', icon: 'fa-star'},
+                                    {id: 'recruitment', label: 'Recruitment', icon: 'fa-handshake'},
+                                    {id: 'log_match', label: 'Log a Match', icon: 'fa-calendar-plus'},
+                                    {id: 'notifications', label: 'Notifications', icon: 'fa-bell'},
+                                    {id: 'settings', label: 'Settings', icon: 'fa-gear'},
+                                    {id: 'support', label: 'Contact Support', icon: 'fa-headset'}
+                                ]" :key="tab.id">
+                                    <a role="tab" class="tab px-4 h-12 transition-colors duration-200 text-sm flex items-center gap-2"
+                                       :class="activeTab === tab.id ? 'tab-active !border-[var(--primary-color)] text-[var(--primary-color)] font-bold' : 'text-[var(--text-muted)] hover:text-white border-transparent'"
+                                       @click="activeTab = tab.id">
+                                        <i class="fa-solid" :class="tab.icon"></i>
+                                        <span x-text="tab.label"></span>
+                                    </a>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Tab Content: Public View (Athlete Overview) -->
+                    <div x-show="!isOwnProfile || activeTab === 'public_view'" class="mt-8" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            
+                            <!-- Left Column: Bio & Gallery -->
+                            <div class="lg:col-span-2 space-y-8">
+                                <!-- Athlete Summary -->
+                                <div class="bg-[var(--background-color)] rounded-2xl p-6 sm:p-8 border border-[var(--border-color)] shadow-md hover:border-[var(--primary-color)]/50 transition-colors">
+                                    <h3 class="text-sm font-bold uppercase text-[var(--primary-color)] tracking-widest mb-5 flex items-center gap-2">
+                                        <i class="fa-solid fa-address-card"></i> Player Summary
+                                    </h3>
+                                    <p class="text-[var(--text-color)] text-base sm:text-lg whitespace-pre-wrap leading-relaxed" x-text="(profile && profile.bio) ? profile.bio : 'No biography provided yet.'"></p>
+                                </div>
+
+                                <!-- Media Gallery -->
+                                <div class="bg-[var(--background-color)] rounded-2xl p-6 sm:p-8 border border-[var(--border-color)] shadow-md hover:border-[var(--primary-color)]/50 transition-colors">
+                                    <h3 class="text-sm font-bold uppercase text-[var(--primary-color)] tracking-widest mb-6 flex items-center gap-2">
+                                        <i class="fa-solid fa-images"></i> Highlight Reel & Media
+                                    </h3>
+                                    
+                                    <div x-show="profile && profile.gallery && profile.gallery.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+                                        <template x-for="(img, idx) in (profile ? profile.gallery : [])" :key="idx">
+                                            <a :href="img" target="_blank" class="block aspect-[4/5] rounded-xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--primary-color)] transition-all group shadow-md relative">
+                                                <img :src="img" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                                <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
+                                            </a>
+                                        </template>
+                                    </div>
+                                    
+                                    <!-- Empty Gallery State -->
+                                    <div x-show="!profile || !profile.gallery || profile.gallery.length === 0" class="text-center py-12 border-2 border-dashed border-[var(--border-color)] rounded-xl bg-[var(--surface-color)]/30">
+                                        <i class="fa-solid fa-photo-film text-4xl text-[var(--border-color)] mb-4"></i>
+                                        <p class="text-[var(--text-muted)] font-medium">No media uploaded yet</p>
+                                        <p class="text-sm text-[var(--text-muted)]/70 mt-1">Athlete highlights will appear here</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Stats & Skills -->
+                            <div class="space-y-8">
+                                <!-- Top Skills -->
+                                <div class="bg-[var(--background-color)] rounded-2xl p-6 border border-[var(--border-color)] shadow-md hover:border-[var(--primary-color)]/50 transition-colors">
+                                    <h3 class="text-sm font-bold uppercase text-[var(--primary-color)] tracking-widest mb-5 flex items-center gap-2">
+                                        <i class="fa-solid fa-star"></i> Top Skills
+                                    </h3>
+                                    
+                                    <div x-show="profile && profile.skills" class="flex flex-wrap gap-2.5">
+                                        <template x-for="skill in (profile && profile.skills ? profile.skills.split(',') : [])" :key="skill">
+                                            <span class="px-4 py-2 bg-[var(--surface-color)] text-white border border-[var(--border-color)] rounded-lg text-sm font-medium hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] transition-colors cursor-default shadow-sm" x-text="skill.trim()" x-show="skill.trim()"></span>
+                                        </template>
+                                    </div>
+                                    
+                                    <!-- Empty Skills State -->
+                                    <div x-show="!profile || !profile.skills" class="text-center py-8">
+                                        <p class="text-[var(--text-muted)] text-sm">No specific skills listed.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Key Attributes -->
+                                <div class="bg-[var(--background-color)] rounded-2xl p-6 border border-[var(--border-color)] shadow-md hover:border-[var(--primary-color)]/50 transition-colors">
+                                    <h3 class="text-sm font-bold uppercase text-[var(--primary-color)] tracking-widest mb-5 flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-simple"></i> Key Attributes
+                                    </h3>
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between p-3.5 bg-[var(--surface-color)] rounded-xl border border-[var(--border-color)] transition-colors hover:border-[var(--border-color)]/80">
+                                            <div class="flex items-center gap-3 text-[var(--text-muted)]">
+                                                <i class="fa-solid fa-location-crosshairs w-4 text-center"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wider">Position</span>
+                                            </div>
+                                            <span class="text-white font-semibold text-right" x-text="(profile && profile.position) ? profile.position : 'N/A'"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3.5 bg-[var(--surface-color)] rounded-xl border border-[var(--border-color)] transition-colors hover:border-[var(--border-color)]/80">
+                                            <div class="flex items-center gap-3 text-[var(--text-muted)]">
+                                                <i class="fa-solid fa-ruler-vertical w-4 text-center"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wider">Height</span>
+                                            </div>
+                                            <span class="text-white font-semibold text-right" x-text="(profile && profile.height) ? profile.height : 'N/A'"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3.5 bg-[var(--surface-color)] rounded-xl border border-[var(--border-color)] transition-colors hover:border-[var(--border-color)]/80">
+                                            <div class="flex items-center gap-3 text-[var(--text-muted)]">
+                                                <i class="fa-solid fa-weight-scale w-4 text-center"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wider">Weight</span>
+                                            </div>
+                                            <span class="text-white font-semibold text-right" x-text="(profile && profile.weight) ? profile.weight : 'N/A'"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3.5 bg-[var(--primary-color)]/10 rounded-xl border border-[var(--primary-color)]/30 mt-4 transition-colors">
+                                            <div class="flex items-center gap-3 text-[var(--primary-color)]">
+                                                <i class="fa-solid fa-shield-halved w-4 text-center"></i>
+                                                <span class="text-xs font-bold uppercase tracking-wider">Current Team</span>
+                                            </div>
+                                            <span class="text-white font-bold text-right" x-text="(profile && profile.team) ? profile.team : 'Free Agent'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div> <!-- End Public View Wrapper -->
+
+                    <!-- Tab Content: Recruitment & Connections -->
+                    <div x-show="isOwnProfile && activeTab === 'recruitment'" class="mt-8" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                        <div class="bg-[var(--background-color)] rounded-2xl p-6 sm:p-8 border border-[var(--border-color)] shadow-md hover:border-[var(--primary-color)]/50 transition-colors">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-sm font-bold uppercase text-[var(--primary-color)] tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-handshake"></i> My Connections & Recruitment
+                                </h3>
+                            </div>
+                            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <template x-for="conn in myConnections" :key="conn.key">
+                                    <div class="flex flex-col p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] hover:border-[var(--primary-color)] transition-all shadow-sm">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-full bg-[var(--primary-color)]/20 flex items-center justify-center text-[var(--primary-color)] font-bold shrink-0">
+                                                    <i class="fa-solid fa-user"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <h4 class="text-white font-bold truncate text-sm" x-text="athletesMap[conn.athlete] ? athletesMap[conn.athlete].name : 'Unknown Athlete'"></h4>
+                                                    <span class="badge badge-sm badge-outline border-[var(--border-color)] text-[var(--text-muted)] mt-1" x-text="conn.status || 'Scouting'"></span>
+                                                </div>
+                                            </div>
+                                            <button @click="location.href='dashboard.html?chat=' + encodeURIComponent(athletesMap[conn.athlete] ? athletesMap[conn.athlete].name : conn.athlete)" class="btn btn-circle btn-sm bg-[var(--primary-color)]/10 border-none text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-slate-900" title="Message">
+                                                <i class="fa-solid fa-paper-plane text-xs"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="mt-auto pt-4 border-t border-[var(--border-color)]/50">
+                                            <div class="flex justify-between text-xs mb-1.5">
+                                                <span class="text-[var(--text-muted)] font-medium">Scouting Progress</span>
+                                                <span class="text-[var(--primary-color)] font-bold" x-text="(conn.progress || 0) + '%'"></span>
+                                            </div>
+                                            <progress class="progress progress-success w-full h-1.5 bg-[var(--background-color)]" :value="conn.progress || 0" max="100"></progress>
+                                        </div>
+                                    </div>
+                                </template>
+                                <div x-show="myConnections.length === 0" class="col-span-full text-center py-16 border-2 border-dashed border-[var(--border-color)] rounded-2xl bg-[var(--surface-color)]/30">
+                                    <i class="fa-solid fa-users text-4xl text-[var(--border-color)] mb-4"></i>
+                                    <p class="text-[var(--text-muted)] font-medium">No connections yet</p>
+                                    <p class="text-sm text-[var(--text-muted)]/70 mt-1">Add athletes to your roster to see them here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Tabs Placeholders -->
+                    <template x-if="isOwnProfile">
+                        <div x-show="activeTab !== 'public_view' && activeTab !== 'recruitment'" class="py-16 text-center" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--background-color)] border border-[var(--border-color)] text-[var(--primary-color)] mb-4 shadow-inner">
+                                <i class="fa-solid fa-hammer text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white capitalize mb-2" style="font-family: var(--font-heading);" x-text="activeTab.replace('_', ' ')"></h3>
+                            <p class="text-[var(--text-muted)] text-sm max-w-sm mx-auto">This dashboard section is being built out. Check back soon for updates!</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Edit Mode -->
+        <div x-show="editing && isOwnProfile">
+            <div class="bg-[var(--surface-color)] rounded-3xl border border-[var(--border-color)] overflow-hidden shadow-2xl p-8">
+                <div class="flex items-center justify-between mb-8 pb-6 border-b border-[var(--border-color)]">
+                    <h2 class="text-2xl font-bold text-white uppercase tracking-tight" style="font-family: var(--font-heading);">Edit Profile</h2>
+                    <button @click="editing = false" class="btn btn-ghost btn-sm btn-circle text-[var(--text-muted)] hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Avatar Upload -->
+                    <div class="flex items-center gap-6 p-4 rounded-xl border border-[var(--border-color)] bg-[var(--background-color)]">
+                        <template x-if="form.profile_image">
+                            <img :src="form.profile_image" class="w-20 h-20 rounded-full object-cover border border-[var(--border-color)] shadow-md">
+                        </template>
+                        <template x-if="!form.profile_image">
+                            <div class="w-20 h-20 rounded-full bg-[var(--surface-color)] border border-[var(--border-color)] flex items-center justify-center text-2xl text-[var(--text-muted)] shadow-md">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                        </template>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-white mb-2">Profile Photo</label>
+                            <input type="file" accept="image/*" @change="handleAvatarUpload" class="file-input file-input-sm file-input-bordered bg-[var(--surface-color)] border-[var(--border-color)] text-[var(--text-muted)] w-full max-w-xs">
+                        </div>
+                    </div>
+
+                    <div class="grid gap-6 sm:grid-cols-2">
+                        <fieldset>
+                            <label class="label"><span class="font-medium text-white">Display Name</span></label>
+                            <input type="text" x-model="form.name" class="input w-full bg-[var(--background-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)]">
+                        </fieldset>
+                        <fieldset>
+                            <label class="label"><span class="font-medium text-white">Skills <span class="text-[var(--text-muted)] text-xs font-normal">(comma separated)</span></span></label>
+                            <input type="text" x-model="form.skills" placeholder="e.g. Dribbling, Leadership, Agility" class="input w-full bg-[var(--background-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)]">
+                        </fieldset>
+                    </div>
+
+                    <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+                        <fieldset>
+                            <label class="label"><span class="font-medium text-white">Position</span></label>
+                            <input type="text" x-model="form.position" placeholder="e.g. Point Guard" class="input w-full bg-[var(--background-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)]">
+                        </fieldset>
+                        <fieldset>
+                            <label class="label"><span class="font-medium text-white">Current Team</span></label>
+                            <input type="text" x-model="form.team" placeholder="e.g. City Stars" class="input w-full bg-[var(--background-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)]">
+                        </fieldset>
+                        <fieldset>
+                            <label class="label"><span class="font-medium text-white">Height</span></label>
+                            <input type="text" x-model="form.height" placeholder="e.g. 6'2&quot; / 188cm" class="input w-full bg-[var(--background-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)]">
+                        </fieldset>
+                        <fieldset>
+                            <label class="label"><span class="font-medium text-white">Weight</span></label>
+                            <input type="text" x-model="form.weight" placeholder="e.g. 180 lbs / 82kg" class="input w-full bg-[var(--background-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)]">
+                        </fieldset>
+                    </div>
+
+                    <fieldset>
+                        <label class="label"><span class="font-medium text-white">Biography</span></label>
+                        <textarea x-model="form.bio" rows="5" class="textarea w-full bg-[var(--background-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)] resize-none" placeholder="Tell the community about yourself..."></textarea>
+                    </fieldset>
+
+                    <hr class="border-[var(--border-color)] my-6">
+
+                    <div>
+                        <label class="block text-sm font-medium text-white mb-2">Media Gallery</label>
+                        <p class="text-xs text-[var(--text-muted)] mb-4">Upload images to showcase your journey and highlights.</p>
+                        <input type="file" multiple accept="image/*" @change="handleGalleryUpload" class="file-input file-input-bordered bg-[var(--background-color)] border-[var(--border-color)] text-[var(--text-muted)] w-full mb-6">
+                        
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                            <template x-for="(img, idx) in form.gallery" :key="idx">
+                                <div class="relative aspect-square rounded-xl overflow-hidden border border-[var(--border-color)] shadow-md group">
+                                    <img :src="img" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button @click="removeGalleryImage(idx)" class="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg">
+                                            <i class="fa-solid fa-trash-can text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-4 mt-8 pt-6 border-t border-[var(--border-color)]">
+                        <button @click="editing = false" class="btn btn-ghost text-[var(--text-muted)] hover:text-white">Cancel</button>
+                        <button @click="saveProfile()" :disabled="uploading" class="btn bg-[var(--primary-color)] text-slate-900 border-none hover:bg-[var(--primary-hover)] px-8 shadow-lg">
+                            <i class="fa-solid fa-spinner fa-spin mr-2" x-show="uploading"></i>
+                            <span x-text="uploading ? 'Saving...' : 'Save Profile'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Not Found State -->
+        <div x-show="!loading && !profile && !isOwnProfile" class="text-center py-20 bg-[var(--surface-color)] rounded-3xl border border-[var(--border-color)] shadow-2xl">
+            <i class="fa-solid fa-user-slash text-6xl text-[var(--text-muted)] mb-4 opacity-50"></i>
+            <h2 class="text-2xl font-bold text-white mb-2">Profile Not Found</h2>
+            <p class="text-[var(--text-muted)]">This user hasn't set up their profile yet.</p>
+        </div>
+
+    </div>
+</section>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('profileApp', () => ({
+        isLoggedIn: false,
+        currentUserEmail: '',
+        targetEmail: '',
+        profile: null,
+        loading: true,
+        isOwnProfile: false,
+        editing: false,
+        activeTab: 'public_view',
+        form: { name: '', bio: '', skills: '', position: '', team: '', height: '', weight: '', profile_image: '', gallery: [] },
+        uploading: false,
+        myConnections: [],
+        athletesMap: {},
+
+        async initApp() {
+            const urlParams = new URLSearchParams(window.location.search);
+            this.targetEmail = urlParams.get('user');
+
+            const token = localStorage.getItem('session_token');
+            if (token) {
+                try {
+                    const check = await window.LoginSystem.checkSession(token);
+                    if (check && check.logged_in) {
+                        this.isLoggedIn = true;
+                        this.currentUserEmail = check.email;
+                    }
+                } catch(e) {
+                    console.error("Auth error", e);
+                }
+            }
+
+            if (!this.targetEmail && this.isLoggedIn) {
+                this.targetEmail = this.currentUserEmail;
+            }
+
+            this.isOwnProfile = (this.isLoggedIn && this.targetEmail === this.currentUserEmail);
+
+            await this.loadProfile();
+            
+            if (this.isOwnProfile) {
+                await this.loadAthletesMap();
+                await this.loadConnections();
+            }
+        },
+
+        async loadAthletesMap() {
+            try {
+                const res = await window.DataSystem.list('athletes');
+                if (res && res.success && res.keys) {
+                    res.keys.forEach(r => {
+                        try {
+                            this.athletesMap[r.key_txt] = JSON.parse(r.data_json);
+                        } catch(e) {}
+                    });
+                }
+            } catch(e) {}
+        },
+
+        async loadConnections() {
+            try {
+                const res = await window.DataSystem.list('rosters', { user_id: this.currentUserEmail });
+                if (res && res.success && res.keys) {
+                    this.myConnections = res.keys.map(r => {
+                        let parsed = {};
+                        try { parsed = JSON.parse(r.data_json); } catch(e) {}
+                        return { ...parsed, key: r.key_txt };
+                    });
+                }
+            } catch(e) {}
+        },
+
+        async loadProfile() {
+            this.loading = true;
+            try {
+                const res = await window.DataSystem.list('user_profiles', { limit: 50 });
+                if (res && res.success && res.keys) {
+                    const prof = res.keys.find(r => {
+                        try {
+                            const d = JSON.parse(r.data_json);
+                            return d.email === this.targetEmail;
+                        } catch(e) { return false; }
+                    });
+                    
+                    if (prof) {
+                        const d = JSON.parse(prof.data_json);
+                        this.profile = { ...d, key: prof.key_txt };
+                        this.form = {
+                            name: d.name || '',
+                            bio: d.bio || '',
+                            skills: d.skills || '',
+                            position: d.position || '',
+                            team: d.team || '',
+                            height: d.height || '',
+                            weight: d.weight || '',
+                            profile_image: d.profile_image || '',
+                            gallery: d.gallery || []
+                        };
+                    } else if (this.isOwnProfile) {
+                        this.form.name = this.currentUserEmail.split('@')[0];
+                    }
+                }
+            } catch(e) {
+                console.error("Failed to load profile", e);
+            }
+            this.loading = false;
+        },
+
+        async saveProfile() {
+            this.uploading = true;
+            try {
+                const key = this.profile ? this.profile.key : 'prof-' + Date.now();
+                const data = {
+                    email: this.currentUserEmail,
+                    name: this.form.name,
+                    bio: this.form.bio,
+                    skills: this.form.skills,
+                    position: this.form.position,
+                    team: this.form.team,
+                    height: this.form.height,
+                    weight: this.form.weight,
+                    profile_image: this.form.profile_image,
+                    gallery: this.form.gallery
+                };
+                
+                const res = await window.DataSystem.set('user_profiles', key, data);
+                if (res && res.success) {
+                    this.profile = { ...data, key };
+                    this.editing = false;
+                } else {
+                    alert("Error saving profile. Please try again.");
+                }
+            } catch(e) { 
+                alert("Error saving profile."); 
+            }
+            this.uploading = false;
+        },
+
+        async handleAvatarUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            this.uploading = true;
+            try {
+                const r = await window.PluginsSystem.sendRequest('upload_file', { file });
+                if (r.success) {
+                    this.form.profile_image = r.file_url;
+                } else {
+                    alert("Upload failed.");
+                }
+            } catch(e) {
+                alert("Upload failed.");
+            }
+            this.uploading = false;
+        },
+
+        async handleGalleryUpload(e) {
+            const files = e.target.files;
+            if (!files.length) return;
+            this.uploading = true;
+            
+            for (let i = 0; i < files.length; i++) {
+                try {
+                    const r = await window.PluginsSystem.sendRequest('upload_file', { file: files[i] });
+                    if (r.success) {
+                        this.form.gallery.push(r.file_url);
+                    }
+                } catch(e) {
+                    console.error("Failed to upload a file", e);
+                }
+            }
+            
+            this.uploading = false;
+            e.target.value = '';
+        },
+
+        removeGalleryImage(index) {
+            this.form.gallery.splice(index, 1);
+        }
+    }));
+});
+</script><!-- /twig-include:sections/profile.main.html -->
+    </main>
+    <!-- twig-include:global/footer.html --><!-- Explain: Shared site footer with branding, navigation, and copyright. - -->
+<footer class="border-t border-[var(--border-color)] bg-[var(--surface-color)]">
+    <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+            <div class="flex items-center justify-center md:justify-start gap-2 text-xl font-bold uppercase tracking-wide text-white" style="font-family: var(--font-heading);">
+                <i class="fa-solid fa-bolt text-[var(--primary-color)]"></i>
+                Verve & Vigor
+            </div>
+            <div class="flex flex-wrap justify-center md:justify-end gap-6 text-sm text-[var(--text-muted)]">
+                <a href="#top" class="hover:text-[var(--primary-color)]">Privacy Policy</a>
+                <a href="#top" class="hover:text-[var(--primary-color)]">Terms of Service</a>
+                <a href="#top" class="hover:text-[var(--primary-color)]">Contact Us</a>
+            </div>
+        </div>
+        <div class="mt-8 text-center text-sm text-[var(--text-muted)] border-t border-[var(--border-color)] pt-8">
+            &copy; 2026 Verve & Vigor - The Talent Graph. All rights reserved.
+        </div>
+    </div>
+</footer><!-- /twig-include:global/footer.html -->
+    <script src="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/js/app.js?t=1789210548&w=12379368&edit=1"></script>
+<script>var packageNUM=1;</script><script src="https://cdn-cms-s-8-4.f-static.net/versions/2/system_mini/js/minimize_appBuilder_scripts_v3.js?v=vc1788865112" crossorigin="anonymous"></script></body>
+</html>

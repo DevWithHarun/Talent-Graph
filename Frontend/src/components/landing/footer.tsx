@@ -188,13 +188,13 @@ export function Footer() {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="https://twitter.com/verve.vigor.fitness" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+            <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
               <Twitter className="h-5 w-5 hover:text-primary transition-colors" />
             </Link>
-            <Link href="https://www.linkedin.com/company/verve-vigor/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <Link href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
               <Linkedin className="h-5 w-5 hover:text-primary transition-colors" />
             </Link>
-            <Link href="https://instagram.com/_verve_vigor" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <Instagram className="h-5 w-5 hover:text-primary transition-colors" />
             </Link>
           </div>

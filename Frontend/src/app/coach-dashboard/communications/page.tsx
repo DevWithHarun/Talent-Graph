@@ -11,7 +11,7 @@ export default function CoachCommunicationsPage() {
           Club group chat &amp; direct messages
         </p>
       </div>
-      <div style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
+      <div style={{ height: 'calc(100dvh - 220px)', minHeight: '500px' }}>
         <MessagesHub />
       </div>
     </div>

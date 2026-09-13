@@ -81,9 +81,9 @@ export default function LoginPage() {
         const userDocRef = doc(firestore, "users", user.uid);
         getDoc(userDocRef).then((snap) => {
           const data = snap.data() as UserAccount | undefined;
-          router.push(data?.role === 'coach' ? '/coach-dashboard' : data?.role === 'scout' ? '/scout-dashboard' : '/');
+          router.push(data?.role === 'coach' ? '/coach-dashboard' : data?.role === 'scout' ? '/scout-dashboard' : '/feed');
         }).catch(() => {
-          router.push('/');
+          router.push('/feed');
         });
       } else {
         router.push('/verify-email');

@@ -114,7 +114,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       limit(50)
     ) : null
   ), [firestore, athleteProfile?.uid]);
-  const { data: unreadNotifs } = useCollection<{ id: string; isRead: boolean }>(notifsQuery);
+  const { data: unreadNotifs } = useCollection<{ id: string; isRead: boolean; type?: string }>(notifsQuery);
 
   const announcementsQuery = useMemoFirebase(() => (
     firestore && athleteProfile?.affiliatedClubId && athleteProfile.clubStatus === 'active'
@@ -764,11 +764,9 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             <User className="h-4 w-4 text-primary" />
             View Profile
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-3 h-12 font-bold text-sm" asChild>
-            <Link href="/dashboard/settings">
-              <Settings2 className="h-4 w-4 text-primary" />
-              Edit Profile
-            </Link>
+          <Button variant="outline" className="w-full justify-start gap-3 h-12 font-bold text-sm" onClick={() => setDialogTab('edit')}>
+            <Settings2 className="h-4 w-4 text-primary" />
+            Edit Profile
           </Button>
           <Button variant="outline" className="w-full justify-start gap-3 h-12 font-bold text-sm" asChild>
             <Link href={`/${athleteProfile.username}`}>
@@ -881,10 +879,12 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                 className="h-11 w-full rounded-full border bg-background pl-10 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
               />
             </div>
-            <button className="relative shrink-0 text-foreground" aria-label="Messages">
+            <Link href="/chat" className="relative shrink-0 text-foreground" aria-label="Messages">
               <MessageSquare className="h-6 w-6" />
-              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-primary" />
-            </button>
+              {unreadNotifs?.some(notification => notification.type === 'new_message') && (
+                <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary" />
+              )}
+            </Link>
             <button
               className="relative shrink-0 text-foreground"
               aria-label="Notifications"
@@ -938,12 +938,24 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
               </Button>
               <SupportDialog />
               <EditProfileMediaDialog profile={athleteProfile} />
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/${athleteProfile.username}`}>
+              {athleteProfile.username ? (
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/${athleteProfile.username}`}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Public View
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  title="Finish onboarding to get your username and unlock your public profile"
+                >
                   <Eye className="mr-2 h-4 w-4" />
                   Public View
-                </Link>
-              </Button>
+                </Button>
+              )}
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard/injury-tracker">
                   <Shield className="mr-2 h-4 w-4" />
@@ -1055,8 +1067,12 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                     <Button
                       variant="ghost"
                       className="w-full justify-start gap-3 h-12 font-bold text-sm"
-                      asChild
+                      onClick={() => { setMoreOpen(false); setDialogTab('edit'); }}
                     >
+                      <Settings2 className="h-4 w-4 text-primary" />
+                      Edit Profile
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start gap-3 h-12 font-bold text-sm" asChild>
                       <Link href="/dashboard/settings" onClick={() => setMoreOpen(false)}>
                         <Settings2 className="h-4 w-4 text-primary" />
                         Settings
@@ -1112,7 +1128,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       </div>
 
       {/* ── Main Content ── */}
-      <main className="container mx-auto space-y-5 p-4 sm:p-6 lg:space-y-8 lg:p-8">
+      <main className="container mx-auto space-y-5 p-4 pb-24 sm:p-6 sm:pb-24 lg:space-y-8 lg:p-8">
         {currentTab === 'overview' && renderOverview()}
         {currentTab === 'recruitment' && renderRecruitment()}
         {currentTab === 'progress' && renderProgress()}
@@ -1219,7 +1235,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       />
 
       {/* ── Quick-Action FAB ── */}
-      <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end gap-2 md:bottom-6">
+      <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end gap-2 md:bottom-6">
         <div
           className={cn(
             'flex flex-col items-end gap-2 transition-all duration-200 origin-bottom',
@@ -1273,7 +1289,7 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       )}
 
       {/* ── Mobile Bottom Tab Bar ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden h-16 items-stretch border-t bg-background/95 backdrop-blur shadow-[0_-1px_12px_rgba(0,0,0,0.08)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden h-16 items-stretch border-t bg-background/95 backdrop-blur shadow-[0_-1px_12px_rgba(0,0,0,0.08)] bottom-nav-safe tab-bar">
         {tabs.map((tab) => (
           <button
             key={tab.id}

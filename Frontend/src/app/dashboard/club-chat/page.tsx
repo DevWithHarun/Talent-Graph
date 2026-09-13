@@ -1,28 +1,23 @@
 'use client';
 
-import { MessagesHub } from '@/components/messaging/messages-hub';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'wouter';
+import { useEffect } from 'react';
+import { useRouter } from '@/lib/navigation';
 
+/**
+ * Legacy route — Club Chat has been removed from the athlete dashboard
+ * and replaced by the Career workspace. Keep this file as a redirect
+ * so old deep-links/bookmarks don't 404.
+ */
 export default function AthleteClubChatPage() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/dashboard/career');
+  }, [router]);
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 bg-background border-b">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Button asChild variant="ghost" size="icon" className="shrink-0">
-            <Link href="/dashboard"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="font-black uppercase tracking-tight text-lg leading-none">Messages</h1>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-              Club group chat &amp; direct messages
-            </p>
-          </div>
-        </div>
-      </header>
-      <div className="max-w-6xl mx-auto px-4 py-4" style={{ height: 'calc(100vh - 80px)' }}>
-        <MessagesHub demo />
+    <div className="flex min-h-[50vh] items-center justify-center p-8 text-center">
+      <div>
+        <p className="text-sm font-black uppercase tracking-widest text-muted-foreground">Redirecting…</p>
+        <p className="mt-2 text-sm text-muted-foreground">Club Chat has moved to <span className="font-bold text-foreground">Career</span>.</p>
       </div>
     </div>
   );

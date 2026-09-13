@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface SupportDialogProps {
   open?: boolean;
@@ -39,6 +40,7 @@ const PRIORITY_SLA: Record<string, number> = { high: 1, medium: 4, low: 24 };
 export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpenChange, trigger }: SupportDialogProps = {}) {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [internalOpen, setInternalOpen] = useState(false);
   const [view, setView] = useState<View>('menu');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
@@ -46,12 +48,16 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // New ticket form state
+  const isGuest = !user;
+  // New ticket form state (guest-capable)
   const [form, setForm] = useState({
     subject: '',
     message: '',
     priority: 'medium',
     tag: 'technical',
+    guestName: '',
+    guestEmail: '',
+    guestPhone: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -90,37 +96,48 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
     setSelectedTicketId(null);
     setReplyText('');
     setSubmitted(false);
-    setForm({ subject: '', message: '', priority: 'medium', tag: 'technical' });
+    setForm({ subject: '', message: '', priority: 'medium', tag: 'technical', guestName: '', guestEmail: '', guestPhone: '' });
   };
 
   const handleSubmitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !form.subject.trim() || !form.message.trim()) return;
+    if (!form.subject.trim() || !form.message.trim()) return;
+    if (isGuest && !form.guestEmail.trim()) return;
+    if (isGuest && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.guestEmail.trim())) return;
     setSubmitting(true);
 
     try {
-      const idToken = await user.getIdToken();
+      const idToken = user ? await user.getIdToken() : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (idToken) headers.Authorization = `Bearer ${idToken}`;
+      const senderEmail = isGuest ? form.guestEmail.trim() : (user?.email ?? '');
+      const senderName = isGuest ? (form.guestName.trim() || form.guestEmail.trim().split('@')[0] || 'Guest') : (user?.displayName ?? user?.email ?? 'User');
       const res = await fetch('/api/support/tickets', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
+        headers,
         body: JSON.stringify({
-          senderEmail: user.email ?? '',
-          senderName: user.displayName ?? user.email ?? 'User',
+          senderEmail,
+          senderName,
+          senderPhone: isGuest ? form.guestPhone.trim() || null : null,
           subject: form.subject,
           message: form.message,
           priority: form.priority,
           tag: form.tag,
-          source: 'in_app',
+          source: isGuest ? 'public_guest' : 'in_app',
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to submit');
+      if (!res.ok) {
+        const j = await res.json().catch(async () => {
+          const t = await res.text().catch(() => '');
+          return { error: t || `HTTP ${res.status}` };
+        });
+        throw new Error(j?.error || j?.details || `Failed to submit (${res.status})`);
+      }
       setSubmitted(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[SupportDialog] ticket submit failed', err);
+      toast({ variant: 'destructive', title: 'Failed to create ticket', description: err?.message || 'Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -254,7 +271,7 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold">My Requests</p>
                     <p className="text-xs text-muted-foreground">
-                      {ticketsLoading ? 'Loading…' : myTickets?.length ? `${myTickets.length} ticket${myTickets.length !== 1 ? 's' : ''}` : 'No open tickets'}
+                      {isGuest ? 'Sign in to view history' : ticketsLoading ? 'Loading…' : myTickets?.length ? `${myTickets.length} ticket${myTickets.length !== 1 ? 's' : ''}` : 'No open tickets'}
                     </p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary shrink-0" />
@@ -272,11 +289,17 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
                 </div>
                 <div>
                   <p className="font-black text-lg">Ticket submitted!</p>
-                  <p className="text-sm text-muted-foreground mt-1">Our team will respond within {PRIORITY_SLA[form.priority]}h. Check <strong>My Requests</strong> for updates.</p>
+                  <p className="text-sm text-muted-foreground mt-1">{isGuest ? `We’ll reply to ${form.guestEmail} within ${PRIORITY_SLA[form.priority]}h. Save your email for updates.` : `Our team will respond within ${PRIORITY_SLA[form.priority]}h. Check My Requests for updates.`}</p>
                 </div>
-                <Button onClick={() => setView('my-tickets')} size="sm">
-                  <MessageSquare className="h-3.5 w-3.5 mr-2" />View My Tickets
-                </Button>
+                {isGuest ? (
+                  <Button onClick={handleReset} size="sm" variant="outline">
+                    Done
+                  </Button>
+                ) : (
+                  <Button onClick={() => setView('my-tickets')} size="sm">
+                    <MessageSquare className="h-3.5 w-3.5 mr-2" />View My Tickets
+                  </Button>
+                )}
               </div>
             ) : (
               <form onSubmit={handleSubmitTicket} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -327,7 +350,44 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={submitting || !form.subject.trim() || !form.message.trim()}>
+                {isGuest && (
+                  <div className="space-y-3 p-3 rounded-xl border bg-amber-50/50">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-amber-700">Your contact — no login needed</p>
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Your email *</label>
+                      <Input
+                        type="email"
+                        value={form.guestEmail}
+                        onChange={e => setForm(f => ({ ...f, guestEmail: e.target.value }))}
+                        placeholder="you@email.com"
+                        required
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">We’ll reply here.</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Your name (optional)</label>
+                      <Input
+                        value={form.guestName}
+                        onChange={e => setForm(f => ({ ...f, guestName: e.target.value }))}
+                        placeholder="Jane Doe"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 block">Phone (optional — SMS follow-up)</label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          value={form.guestPhone}
+                          onChange={e => setForm(f => ({ ...f, guestPhone: e.target.value }))}
+                          placeholder="0712 345 678 or +254712345678"
+                          className="pl-8"
+                        />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">Get SMS with ref + reply alerts via BulkSMS.</p>
+                    </div>
+                  </div>
+                )}
+                <Button type="submit" className="w-full" disabled={submitting || !form.subject.trim() || !form.message.trim() || (isGuest && !form.guestEmail.trim())}>
                   {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                   Submit Ticket
                 </Button>
@@ -338,7 +398,21 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
           {/* MY TICKETS LIST */}
           {view === 'my-tickets' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {ticketsLoading ? (
+              {isGuest ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+                  <MessageSquare className="h-10 w-10 opacity-20" />
+                  <p className="text-sm font-bold">Sign in to track tickets</p>
+                  <p className="text-xs text-muted-foreground">Guests get email replies. Sign in to see history and chat live.</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => setView('new-ticket')}>
+                      <Plus className="h-3.5 w-3.5 mr-1.5" />Submit as guest
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setView('menu')}>
+                      Back
+                    </Button>
+                  </div>
+                </div>
+              ) : ticketsLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin" /></div>
               ) : !myTickets?.length ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center gap-3">

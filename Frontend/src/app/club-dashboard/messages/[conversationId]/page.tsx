@@ -81,7 +81,7 @@ export default function ClubChatPage() {
     if (convLoading || msgLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin" /></div>;
 
     return (
-        <div className="flex flex-col h-[calc(100vh-120px)] bg-muted/20 border rounded-xl overflow-hidden">
+        <div className="flex flex-col h-[calc(100dvh-200px)] bg-muted/20 border rounded-xl overflow-hidden">
             <header className="bg-background border-b p-4 flex items-center gap-4">
                 <Button variant="ghost" size="icon" onClick={() => router.back()}><ArrowLeft /></Button>
                 <Avatar>

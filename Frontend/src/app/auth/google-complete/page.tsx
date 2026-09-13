@@ -85,7 +85,7 @@ export default function GoogleCompletePage() {
           trackEvent('login', { method: 'google' });
 
           const role = data?.role;
-          router.replace(role === 'coach' ? '/coach-dashboard' : role === 'scout' ? '/scout-dashboard' : '/');
+          router.replace(role === 'coach' ? '/coach-dashboard' : role === 'scout' ? '/scout-dashboard' : '/feed');
         }
       } catch (err: any) {
         console.error('[google-complete] error:', err);

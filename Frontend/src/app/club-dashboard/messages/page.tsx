@@ -94,7 +94,7 @@ function MessagesContent() {
         </Button>
       </div>
 
-      <div style={{ height: 'calc(100vh - 220px)', minHeight: '500px' }}>
+      <div style={{ height: 'calc(100dvh - 220px)', minHeight: '500px' }}>
         <MessagesHub defaultConversationId={convId} />
       </div>
 

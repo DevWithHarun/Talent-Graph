@@ -1,4 +1,6 @@
 
+'use client';
+
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Zap, Mail } from 'lucide-react';

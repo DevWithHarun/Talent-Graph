@@ -1,0 +1,489 @@
+<!-- Explain: Page to display a list of verified athletes. - -->
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+    <head>
+        <script src="https://cdn-cms-s-8-4.f-static.net/versions/2/system_mini/js/minimize_appBuilderPreviewIframe_scripts_v3.js?v=vc1788865112" crossorigin="anonymous"></script>
+        <script>
+            window.isManagment = "2";
+        </script>
+        <base href="/.preview-f87407ec6247b10313c72a071401f413/">
+        <script>
+            window.IsManagment = "2";
+            window.APP_PROJECT_ID = "f87407ec6247b10313c72a071401f413";
+            window.__CDN_BASE_URL__ = "https:\/\/cdn-cms-s-8-4.f-static.net\/manager\/ai_app_builder\/v3\/assets\/";
+            window.APP_CURRENCIES = {
+                "isActive": false,
+                "currencies": {
+                    "KES": {
+                        "code": "KES",
+                        "label": "Kenyan Shilling",
+                        "symbol": "\u0026#75;\u0026#83;\u0026#104;",
+                        "symbolFirst": true,
+                        "rate": 1,
+                        "isDefault": true
+                    }
+                }
+            };
+            window.APP_TAX = {
+                "productsTax": "",
+                "regions": [{
+                    "id": 383736900,
+                    "regionName": "Rest of the World",
+                    "countries": {
+                        "REST_WORLD": {}
+                    },
+                    "tax": {
+                        "option": "differentTax",
+                        "differentTax": {
+                            "REST_WORLD": 0
+                        },
+                        "basedOn": "shippingAddress",
+                        "taxCalAfterShipping": false
+                    }
+                }, {
+                    "id": 383736901,
+                    "regionName": "Kenya",
+                    "countries": {
+                        "KEN": {}
+                    },
+                    "tax": {
+                        "option": "differentTax",
+                        "differentTax": {
+                            "KEN": 0
+                        },
+                        "basedOn": "shippingAddress",
+                        "taxCalAfterShipping": false
+                    }
+                }],
+                "countryOptions": [{
+                    "code": "KEN",
+                    "name": "Kenya",
+                    "states": [],
+                    "requiresState": false
+                }, {
+                    "code": "REST_WORLD",
+                    "name": "REST_WORLD",
+                    "states": [],
+                    "requiresState": false
+                }]
+            };
+            window.APP_BUILDER_BASE_PATH = "\/manager\/ai_app_builder\/v3";
+        </script>
+        <link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/versions/2/system_mini/css/minimize_appBuilder_v3.css?v=vc1788865112" type="text/css" crossorigin="anonymous">
+        <link rel="preconnect" href="https://cdn.jsdelivr.net">
+        <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+        <!-- Regular Meta Info -->
+        <title>Verified Athletes | The Talent Graph</title>
+        <meta name="description" content="Browse top sports talent on The Talent Graph.">
+        <meta name="keywords" content="athletes, scouting, talent graph">
+        <link rel="canonical" href="https://app.site123.com/.preview-f87407ec6247b10313c72a071401f413/athletes.html"/>
+        <!-- Facebook Meta Info -->
+        <meta property="og:url" content="https://app.site123.com/.preview-f87407ec6247b10313c72a071401f413/athletes.html">
+        <meta property="og:image" content="">
+        <meta property="og:description" content="Browse top sports talent on The Talent Graph.">
+        <meta property="og:title" content="Verified Athletes | The Talent Graph">
+        <meta property="og:site_name" content="Verified Athletes | The Talent Graph">
+        <meta property="og:see_also" content="https://app.site123.com">
+        <!-- Google+ Meta Info -->
+        <meta itemprop="name" content="Verified Athletes | The Talent Graph">
+        <meta itemprop="description" content="Browse top sports talent on The Talent Graph.">
+        <meta itemprop="image" content="">
+        <!-- Twitter Meta Info -->
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:url" content="https://app.site123.com/.preview-f87407ec6247b10313c72a071401f413/athletes.html">
+        <meta name="twitter:title" content="Verified Athletes | The Talent Graph">
+        <meta name="twitter:description" content="Browse top sports talent on The Talent Graph.">
+        <meta name="twitter:image" content="">
+        <meta name="robots" content="noindex, nofollow">
+        <!-- twig-include:global/head.html -->
+        <!-- Explain: Shared head content with fonts, Tailwind, daisyUI, and app CSS links. - -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/daisyui@5.5.20" rel="stylesheet" type="text/css"/>
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.0"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.12/dist/cdn.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/theme.css?t=1789209502&w=12379368&edit=1">
+        <link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/main.css?t=1789209502&w=12379368&edit=1">
+        <link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/components.css?t=1789209502&w=12379368&edit=1">
+        <link rel="stylesheet" href="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/css/layout.css?t=1789209502&w=12379368&edit=1">
+        <!-- /twig-include:global/head.html -->
+    </head>
+    <body class="min-h-screen flex flex-col bg-[var(--background-color)] text-[var(--text-color)] antialiased selection:bg-[var(--primary-color)] selection:text-slate-900" style="font-family: var(--font-body);">
+        <!-- twig-include:global/header.html -->
+        <!-- Explain: Shared site header with navigation, user notifications, and a global search bar. - -->
+        <header class="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--background-color)]/90 backdrop-blur-md">
+            <nav x-data="notificationNav" x-cloak class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+                <a href="" class="flex items-center gap-2 text-xl font-bold uppercase tracking-wide text-[var(--text-color)]" style="font-family: var(--font-heading);">
+                    <i class="fa-solid fa-bolt text-[var(--primary-color)]"></i>
+                    Verve & Vigor
+        
+                </a>
+                <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+                    <a href="index.html#pillars" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Features</a>
+                    <a href="athletes.html" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Athletes</a>
+                    <a href="scout-discovery.html" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Scout Discovery</a>
+                    <a href="feed.html" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Feed</a>
+                    <a href="profile.html" id="nav-profile-desktop" class="hidden text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">My Profile</a>
+                    <a href="login.html" id="nav-portal-desktop" class="text-[var(--text-muted)] hover:text-[var(--primary-color)] transition-colors">Portal</a>
+                    <a href="join.html" class="rounded-full bg-[var(--primary-color)] px-5 py-2 text-slate-900 font-semibold hover:bg-[var(--primary-hover)] transition-colors">Join the Graph</a>
+                    <!-- Desktop Search -->
+                    <div x-data="globalSearch()" class="relative hidden lg:block ml-2 group" @click.away="isOpen = false">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--primary-color)] transition-colors z-10"></i>
+                        <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="isOpen = true" placeholder="Search..." class="input input-sm pl-9 bg-[var(--surface-color)] text-white border-[var(--border-color)] focus:border-[var(--primary-color)] rounded-full w-32 transition-all focus:w-64 relative z-10">
+                        <div x-show="isOpen && query.length > 0" x-cloak class="absolute top-full mt-2 right-0 w-80 bg-[var(--surface-color)] border border-[var(--border-color)] rounded-xl shadow-2xl overflow-hidden z-50">
+                            <div x-show="loading" class="p-4 text-center text-[var(--text-muted)]">
+                                <span class="loading loading-spinner loading-sm"></span>
+                            </div>
+                            <div x-show="!loading && results.length === 0" class="p-4 text-center text-[var(--text-muted)] text-sm">
+                                No results found for "<span x-text="query"></span>
+                                "
+                    
+                            </div>
+                            <ul x-show="!loading && results.length > 0" class="max-h-96 overflow-y-auto">
+                                <template x-for="res in results" :key="res.id">
+                                    <li>
+                                        <a :href="res.url" class="flex flex-col p-3 border-b border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors text-left">
+                                            <div class="flex justify-between items-start mb-1">
+                                                <span class="font-bold text-white text-sm truncate" x-text="res.title"></span>
+                                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0" :class="res.type === 'Athlete' ? 'bg-[var(--primary-color)]/20 text-[var(--primary-color)]' : 'bg-blue-500/20 text-blue-400'" x-text="res.type"></span>
+                                            </div>
+                                            <span class="text-xs text-[var(--text-muted)] truncate block" x-text="res.subtitle"></span>
+                                        </a>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Notifications Bell (Desktop) -->
+                    <template x-if="isLoggedIn">
+                        <div class="dropdown dropdown-end ml-2">
+                            <button tabindex="0" class="btn btn-ghost btn-circle">
+                                <div class="indicator">
+                                    <i class="fa-solid fa-bell text-lg text-[var(--text-muted)]"></i>
+                                    <span class="indicator-item badge badge-xs badge-error shadow-sm animate-pulse" x-show="unreadCount > 0" x-text="unreadCount"></span>
+                                </div>
+                            </button>
+                            <ul tabindex="0" class="menu dropdown-content z-50 p-2 shadow-2xl bg-[var(--surface-color)] rounded-box w-80 mt-4 border border-[var(--border-color)]">
+                                <li class="menu-title px-4 py-2 font-bold text-white uppercase tracking-wide border-b border-[var(--border-color)]">Notifications</li>
+                                <template x-for="n in notifications" :key="n.key">
+                                    <li>
+                                        <a :href="n.link" @click="markRead(n)" class="flex flex-col items-start gap-1 py-3 border-b border-[var(--border-color)]/50" :class="!n.read ? 'bg-[var(--primary-color)]/5' : ''">
+                                            <span class="text-sm font-medium" :class="!n.read ? 'text-[var(--primary-color)]' : 'text-white'" x-text="n.message"></span>
+                                            <span class="text-xs text-[var(--text-muted)]" x-text="new Date(n.timestamp).toLocaleDateString() + ' ' + new Date(n.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"></span>
+                                        </a>
+                                    </li>
+                                </template>
+                                <li x-show="notifications.length === 0">
+                                    <span class="text-[var(--text-muted)] py-4 text-center block">No notifications yet.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </template>
+                </div>
+                <div class="md:hidden flex items-center gap-2">
+                    <!-- Notifications Bell (Mobile) -->
+                    <template x-if="isLoggedIn">
+                        <div class="dropdown dropdown-end">
+                            <button tabindex="0" class="btn btn-ghost btn-circle">
+                                <div class="indicator">
+                                    <i class="fa-solid fa-bell text-lg text-[var(--text-muted)]"></i>
+                                    <span class="indicator-item badge badge-xs badge-error shadow-sm animate-pulse" x-show="unreadCount > 0" x-text="unreadCount"></span>
+                                </div>
+                            </button>
+                            <ul tabindex="0" class="menu dropdown-content z-50 p-2 shadow-2xl bg-[var(--surface-color)] rounded-box w-72 mt-4 border border-[var(--border-color)]">
+                                <li class="menu-title px-4 py-2 font-bold text-white uppercase tracking-wide border-b border-[var(--border-color)]">Notifications</li>
+                                <template x-for="n in notifications" :key="n.key">
+                                    <li>
+                                        <a :href="n.link" @click="markRead(n)" class="flex flex-col items-start gap-1 py-3 border-b border-[var(--border-color)]/50" :class="!n.read ? 'bg-[var(--primary-color)]/5' : ''">
+                                            <span class="text-sm font-medium" :class="!n.read ? 'text-[var(--primary-color)]' : 'text-white'" x-text="n.message"></span>
+                                            <span class="text-xs text-[var(--text-muted)]" x-text="new Date(n.timestamp).toLocaleDateString()"></span>
+                                        </a>
+                                    </li>
+                                </template>
+                                <li x-show="notifications.length === 0">
+                                    <span class="text-[var(--text-muted)] py-4 text-center block">No notifications yet.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </template>
+                    <div class="dropdown dropdown-end">
+                        <div tabindex="0" role="button" class="btn btn-ghost p-2" aria-label="Open menu">
+                            <i class="fa-solid fa-bars text-2xl text-[var(--text-color)]"></i>
+                        </div>
+                        <ul tabindex="0" class="menu dropdown-content z-[1] p-4 shadow-2xl bg-[var(--surface-color)] rounded-box w-64 mt-4 border border-[var(--border-color)] gap-2">
+                            <li class="mb-2" x-data="globalSearch()" @click.away="isOpen = false">
+                                <div class="relative w-full p-0">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10"></i>
+                                    <input type="text" x-model="query" @input.debounce.300ms="search()" @focus="isOpen = true" placeholder="Search..." class="input input-sm w-full pl-9 bg-[var(--background-color)] text-white border-[var(--border-color)] rounded-full focus:border-[var(--primary-color)] z-10 relative">
+                                </div>
+                                <div x-show="isOpen && query.length > 0" x-cloak class="absolute top-full left-0 right-0 mt-2 bg-[var(--surface-color)] border border-[var(--border-color)] rounded-xl shadow-2xl overflow-hidden z-50">
+                                    <div x-show="loading" class="p-4 text-center text-[var(--text-muted)]">
+                                        <span class="loading loading-spinner loading-sm"></span>
+                                    </div>
+                                    <div x-show="!loading && results.length === 0" class="p-4 text-center text-[var(--text-muted)] text-sm whitespace-normal">
+                                        No results found for "<span x-text="query"></span>
+                                        "
+                            
+                                    </div>
+                                    <ul x-show="!loading && results.length > 0" class="max-h-64 overflow-y-auto w-full block">
+                                        <template x-for="res in results" :key="res.id">
+                                            <li class="block w-full">
+                                                <a :href="res.url" class="flex flex-col p-3 border-b border-[var(--border-color)] hover:bg-[var(--surface-hover)] transition-colors whitespace-normal rounded-none">
+                                                    <div class="flex justify-between items-start mb-1 w-full gap-2">
+                                                        <span class="font-bold text-white text-sm line-clamp-1 flex-1" x-text="res.title"></span>
+                                                        <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shrink-0" :class="res.type === 'Athlete' ? 'bg-[var(--primary-color)]/20 text-[var(--primary-color)]' : 'bg-blue-500/20 text-blue-400'" x-text="res.type"></span>
+                                                    </div>
+                                                    <span class="text-xs text-[var(--text-muted)] line-clamp-1 block w-full" x-text="res.subtitle"></span>
+                                                </a>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li>
+                                <a href="index.html#pillars" class="py-3 text-base">Features</a>
+                            </li>
+                            <li>
+                                <a href="athletes.html" class="py-3 text-base">Athletes</a>
+                            </li>
+                            <li>
+                                <a href="scout-discovery.html" class="py-3 text-base">Scout Discovery</a>
+                            </li>
+                            <li>
+                                <a href="feed.html" class="py-3 text-base">Feed</a>
+                            </li>
+                            <li id="nav-profile-mobile-container" class="hidden">
+                                <a href="profile.html" id="nav-profile-mobile" class="py-3 text-base">My Profile</a>
+                            </li>
+                            <li>
+                                <a href="login.html" id="nav-portal-mobile" class="py-3 text-base">Portal</a>
+                            </li>
+                            <li>
+                                <a href="join.html" class="py-3 text-base text-[var(--primary-color)] font-bold">Join the Graph</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <!-- /twig-include:global/header.html -->
+        <main class="flex-1">
+            <!-- twig-include:sections/athletes.list.html -->
+            <!-- Explain: List of athletes with a verified badge icon and connection status. - -->
+            <section class="py-16 sm:py-24 bg-[var(--surface-color)]">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-12 gap-6 text-center md:text-left">
+                        <div>
+                            <h1 class="text-3xl font-bold uppercase text-white mb-2" style="font-family: var(--font-heading);">Verified Athletes</h1>
+                            <p class="text-[var(--text-muted)]">Browse top talent and view their highlight reels.</p>
+                        </div>
+                        <a href="join.html" class="w-full md:w-auto inline-flex items-center justify-center rounded-lg bg-[var(--primary-color)] px-6 py-3 md:py-2.5 text-base md:text-sm font-bold text-slate-900 hover:bg-[var(--primary-hover)] transition-all">
+                Submit Your Profile
+            </a>
+                    </div>
+                    <div x-data="athleteList()" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <a href="michael-omondi" class="group flex flex-col bg-[var(--background-color)] border border-[var(--border-color)] rounded-2xl overflow-hidden hover:border-[var(--primary-color)] transition-all h-full relative" data-ai-namespace="athletes" data-ai-record-id="2144377">
+                            <div class="aspect-[4/5] w-full overflow-hidden relative bg-[var(--surface-color)]">
+                                <div class="absolute top-3 left-3 z-10 flex flex-col gap-2">
+                                    <span x-show="!loading && isConnected('athlete-f8e9d0c1b2')" x-cloak class="badge bg-[var(--primary-color)] text-slate-900 border-none shadow-lg gap-1.5 font-bold text-xs px-3 py-3">
+                                        <i class="fa-solid fa-handshake"></i>
+                                        Connected
+                                    </span>
+                                    <span x-show="!loading && !isConnected('athlete-f8e9d0c1b2')" x-cloak class="badge bg-black/60 backdrop-blur-md text-white border-white/20 shadow-lg gap-1.5 font-medium text-xs px-3 py-3">
+                                        <i class="fa-solid fa-envelope-open text-[var(--primary-color)]"></i>
+                                        Open
+                                    </span>
+                                </div>
+                                <img alt="Michael Omondi" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src="https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa449a232d7f.jpg?format=avif" srcset="https://files.cdn-files-a.com/uploads/12379368/100_gi-6aa449a232d7f.jpg?format=avif 100w, https://files.cdn-files-a.com/uploads/12379368/400_gi-6aa449a232d7f.jpg?format=avif 400w, https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa449a232d7f.jpg?format=avif 800w, https://files.cdn-files-a.com/uploads/12379368/1200_gi-6aa449a232d7f.jpg?format=avif 1200w, https://files.cdn-files-a.com/uploads/12379368/1600_gi-6aa449a232d7f.jpg?format=avif 1600w, https://files.cdn-files-a.com/uploads/12379368/2000_gi-6aa449a232d7f.jpg?format=avif 2000w" data-sizes-auto="1">
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2" style="font-family: var(--font-heading);">
+                                    Michael Omondi
+                        <i class="fa-solid fa-circle-check text-blue-400 text-sm" title="Verified Athlete"></i>
+                                </h3>
+                                <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
+                                    <span>Football</span>
+                                    <span class="w-1 h-1 rounded-full bg-[var(--border-color)]"></span>
+                                    <span>Striker</span>
+                                </div>
+                                <div class="mt-auto inline-flex items-center text-sm font-semibold text-[var(--primary-color)] group-hover:text-[var(--primary-hover)]">
+                                    View Profile <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="james-njoroge" class="group flex flex-col bg-[var(--background-color)] border border-[var(--border-color)] rounded-2xl overflow-hidden hover:border-[var(--primary-color)] transition-all h-full relative" data-ai-namespace="athletes" data-ai-record-id="2133514">
+                            <div class="aspect-[4/5] w-full overflow-hidden relative bg-[var(--surface-color)]">
+                                <div class="absolute top-3 left-3 z-10 flex flex-col gap-2">
+                                    <span x-show="!loading && isConnected('athlete-b5a1c3e4f2')" x-cloak class="badge bg-[var(--primary-color)] text-slate-900 border-none shadow-lg gap-1.5 font-bold text-xs px-3 py-3">
+                                        <i class="fa-solid fa-handshake"></i>
+                                        Connected
+                                    </span>
+                                    <span x-show="!loading && !isConnected('athlete-b5a1c3e4f2')" x-cloak class="badge bg-black/60 backdrop-blur-md text-white border-white/20 shadow-lg gap-1.5 font-medium text-xs px-3 py-3">
+                                        <i class="fa-solid fa-envelope-open text-[var(--primary-color)]"></i>
+                                        Open
+                                    </span>
+                                </div>
+                                <img alt="James Njoroge" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src="https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa41f1b61dc2.jpg?format=avif" srcset="https://files.cdn-files-a.com/uploads/12379368/100_gi-6aa41f1b61dc2.jpg?format=avif 100w, https://files.cdn-files-a.com/uploads/12379368/400_gi-6aa41f1b61dc2.jpg?format=avif 400w, https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa41f1b61dc2.jpg?format=avif 800w, https://files.cdn-files-a.com/uploads/12379368/1200_gi-6aa41f1b61dc2.jpg?format=avif 1200w, https://files.cdn-files-a.com/uploads/12379368/1600_gi-6aa41f1b61dc2.jpg?format=avif 1600w, https://files.cdn-files-a.com/uploads/12379368/2000_gi-6aa41f1b61dc2.jpg?format=avif 2000w" data-sizes-auto="1">
+                                <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white border border-white/20 flex items-center gap-1.5 shadow-xl">
+                                    <i class="fa-solid fa-play text-[var(--primary-color)]"></i>
+                                    Video
+                    
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2" style="font-family: var(--font-heading);">
+                                    James Njoroge
+                        <i class="fa-solid fa-circle-check text-blue-400 text-sm" title="Verified Athlete"></i>
+                                </h3>
+                                <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
+                                    <span>Basketball</span>
+                                    <span class="w-1 h-1 rounded-full bg-[var(--border-color)]"></span>
+                                    <span>Point Guard</span>
+                                </div>
+                                <div class="mt-auto inline-flex items-center text-sm font-semibold text-[var(--primary-color)] group-hover:text-[var(--primary-hover)]">
+                                    View Profile <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="sarah-mutuku" class="group flex flex-col bg-[var(--background-color)] border border-[var(--border-color)] rounded-2xl overflow-hidden hover:border-[var(--primary-color)] transition-all h-full relative" data-ai-namespace="athletes" data-ai-record-id="2133513">
+                            <div class="aspect-[4/5] w-full overflow-hidden relative bg-[var(--surface-color)]">
+                                <div class="absolute top-3 left-3 z-10 flex flex-col gap-2">
+                                    <span x-show="!loading && isConnected('athlete-c7e2d4f1a9')" x-cloak class="badge bg-[var(--primary-color)] text-slate-900 border-none shadow-lg gap-1.5 font-bold text-xs px-3 py-3">
+                                        <i class="fa-solid fa-handshake"></i>
+                                        Connected
+                                    </span>
+                                    <span x-show="!loading && !isConnected('athlete-c7e2d4f1a9')" x-cloak class="badge bg-black/60 backdrop-blur-md text-white border-white/20 shadow-lg gap-1.5 font-medium text-xs px-3 py-3">
+                                        <i class="fa-solid fa-envelope-open text-[var(--primary-color)]"></i>
+                                        Open
+                                    </span>
+                                </div>
+                                <img alt="Sarah Mutuku" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src="https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa41f17316ca.jpg?format=avif" srcset="https://files.cdn-files-a.com/uploads/12379368/100_gi-6aa41f17316ca.jpg?format=avif 100w, https://files.cdn-files-a.com/uploads/12379368/400_gi-6aa41f17316ca.jpg?format=avif 400w, https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa41f17316ca.jpg?format=avif 800w, https://files.cdn-files-a.com/uploads/12379368/1200_gi-6aa41f17316ca.jpg?format=avif 1200w, https://files.cdn-files-a.com/uploads/12379368/1600_gi-6aa41f17316ca.jpg?format=avif 1600w, https://files.cdn-files-a.com/uploads/12379368/2000_gi-6aa41f17316ca.jpg?format=avif 2000w" data-sizes-auto="1">
+                                <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white border border-white/20 flex items-center gap-1.5 shadow-xl">
+                                    <i class="fa-solid fa-play text-[var(--primary-color)]"></i>
+                                    Video
+                    
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2" style="font-family: var(--font-heading);">
+                                    Sarah Mutuku
+                        <i class="fa-solid fa-circle-check text-blue-400 text-sm" title="Verified Athlete"></i>
+                                </h3>
+                                <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
+                                    <span>Athletics</span>
+                                    <span class="w-1 h-1 rounded-full bg-[var(--border-color)]"></span>
+                                    <span>100m Sprint</span>
+                                </div>
+                                <div class="mt-auto inline-flex items-center text-sm font-semibold text-[var(--primary-color)] group-hover:text-[var(--primary-hover)]">
+                                    View Profile <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="david-ochieng" class="group flex flex-col bg-[var(--background-color)] border border-[var(--border-color)] rounded-2xl overflow-hidden hover:border-[var(--primary-color)] transition-all h-full relative" data-ai-namespace="athletes" data-ai-record-id="2133512">
+                            <div class="aspect-[4/5] w-full overflow-hidden relative bg-[var(--surface-color)]">
+                                <div class="absolute top-3 left-3 z-10 flex flex-col gap-2">
+                                    <span x-show="!loading && isConnected('athlete-8f3a9b2e1d')" x-cloak class="badge bg-[var(--primary-color)] text-slate-900 border-none shadow-lg gap-1.5 font-bold text-xs px-3 py-3">
+                                        <i class="fa-solid fa-handshake"></i>
+                                        Connected
+                                    </span>
+                                    <span x-show="!loading && !isConnected('athlete-8f3a9b2e1d')" x-cloak class="badge bg-black/60 backdrop-blur-md text-white border-white/20 shadow-lg gap-1.5 font-medium text-xs px-3 py-3">
+                                        <i class="fa-solid fa-envelope-open text-[var(--primary-color)]"></i>
+                                        Open
+                                    </span>
+                                </div>
+                                <img alt="David Ochieng" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src="https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa41f11385d9.jpg?format=avif" srcset="https://files.cdn-files-a.com/uploads/12379368/100_gi-6aa41f11385d9.jpg?format=avif 100w, https://files.cdn-files-a.com/uploads/12379368/400_gi-6aa41f11385d9.jpg?format=avif 400w, https://files.cdn-files-a.com/uploads/12379368/800_gi-6aa41f11385d9.jpg?format=avif 800w, https://files.cdn-files-a.com/uploads/12379368/1200_gi-6aa41f11385d9.jpg?format=avif 1200w, https://files.cdn-files-a.com/uploads/12379368/1600_gi-6aa41f11385d9.jpg?format=avif 1600w, https://files.cdn-files-a.com/uploads/12379368/2000_gi-6aa41f11385d9.jpg?format=avif 2000w" data-sizes-auto="1">
+                                <div class="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-bold text-white border border-white/20 flex items-center gap-1.5 shadow-xl">
+                                    <i class="fa-solid fa-play text-[var(--primary-color)]"></i>
+                                    Video
+                    
+                                </div>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2" style="font-family: var(--font-heading);">
+                                    David Ochieng
+                        <i class="fa-solid fa-circle-check text-blue-400 text-sm" title="Verified Athlete"></i>
+                                </h3>
+                                <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-4">
+                                    <span>Football</span>
+                                    <span class="w-1 h-1 rounded-full bg-[var(--border-color)]"></span>
+                                    <span>Center Back</span>
+                                </div>
+                                <div class="mt-auto inline-flex items-center text-sm font-semibold text-[var(--primary-color)] group-hover:text-[var(--primary-hover)]">
+                                    View Profile <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+            <script>
+                document.addEventListener('alpine:init', () => {
+                    Alpine.data('athleteList', () => ({
+                        roster: [],
+                        loading: true,
+                        async init() {
+                            const token = localStorage.getItem('session_token');
+                            if (token) {
+                                try {
+                                    const check = await window.LoginSystem.checkSession(token);
+                                    if (check && check.logged_in) {
+                                        const res = await window.DataSystem.list('rosters', {
+                                            user_id: check.email
+                                        });
+                                        if (res && res.success && res.keys) {
+                                            this.roster = res.keys.map(k => {
+                                                try {
+                                                    return JSON.parse(k.data_json).athlete;
+                                                } catch (e) {
+                                                    return null;
+                                                }
+                                            }
+                                            ).filter(Boolean);
+                                        }
+                                    }
+                                } catch (e) {}
+                            }
+                            this.loading = false;
+                        },
+                        isConnected(id) {
+                            return this.roster.includes(id);
+                        }
+                    }));
+                }
+                );
+            </script>
+            <!-- /twig-include:sections/athletes.list.html -->
+        </main>
+        <!-- twig-include:global/footer.html -->
+        <!-- Explain: Shared site footer with branding, navigation, and copyright. - -->
+        <footer class="border-t border-[var(--border-color)] bg-[var(--surface-color)]">
+            <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-2 text-xl font-bold uppercase tracking-wide text-white" style="font-family: var(--font-heading);">
+                        <i class="fa-solid fa-bolt text-[var(--primary-color)]"></i>
+                        Verve & Vigor
+            
+                    </div>
+                    <div class="flex flex-wrap justify-center md:justify-end gap-6 text-sm text-[var(--text-muted)]">
+                        <a href="#top" class="hover:text-[var(--primary-color)]">Privacy Policy</a>
+                        <a href="#top" class="hover:text-[var(--primary-color)]">Terms of Service</a>
+                        <a href="#top" class="hover:text-[var(--primary-color)]">Contact Us</a>
+                    </div>
+                </div>
+                <div class="mt-8 text-center text-sm text-[var(--text-muted)] border-t border-[var(--border-color)] pt-8">
+            &copy; 2026 Verve & Vigor - The Talent Graph. All rights reserved.
+        </div>
+            </div>
+        </footer>
+        <!-- /twig-include:global/footer.html -->
+        <script src="https://cdn-cms-s-8-4.f-static.net/manager/ai_app_builder/v3/assets/js/app.js?t=1789209502&w=12379368&edit=1"></script>
+        <script>
+            var packageNUM = 1;
+        </script>
+        <script src="https://cdn-cms-s-8-4.f-static.net/versions/2/system_mini/js/minimize_appBuilder_scripts_v3.js?v=vc1788865112" crossorigin="anonymous"></script>
+    </body>
+</html>

@@ -16,6 +16,29 @@ export function ShareProfileCard({ username, firstName }: ShareProfileCardProps)
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
+  if (!username) {
+    return (
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-primary via-cyan-400 to-emerald-400" />
+        <CardContent className="p-4 space-y-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-0.5">Your Profile Link</p>
+            <p className="text-sm font-bold">Finish onboarding to unlock your shareable link.</p>
+          </div>
+          <Button size="sm" className="w-full gap-2 font-bold h-9" asChild>
+            <Link href="/onboarding">
+              <ExternalLink className="w-3.5 h-3.5" />
+              Complete Onboarding
+            </Link>
+          </Button>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Your public link appears here once your username is set — then anyone, even without an account, can view your profile.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const profileUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/${username}`
     : `https://talentgraph.ke/${username}`;

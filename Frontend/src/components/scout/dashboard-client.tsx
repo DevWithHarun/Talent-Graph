@@ -213,7 +213,7 @@ export function ScoutDashboardClient({ scoutProfile }: { scoutProfile: ScoutProf
   );
 
   return (
-    <div className="flex min-h-screen w-full bg-[#0A0E1A] text-white">
+    <div className="flex min-h-screen w-full bg-white text-slate-900">
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-[260px] border-r border-[#1E293B] bg-[#111827] shrink-0 fixed top-0 left-0 h-screen z-40">

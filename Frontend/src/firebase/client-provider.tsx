@@ -24,6 +24,10 @@ function buildServices(): FirebaseServices {
   return getSdks(firebaseApp);
 }
 
+export function handleFirebaseError(error: unknown) {
+  console.error('[TG] Firebase error handled', error);
+}
+
 // These substrings appear in the Firebase Logger message for the Firestore
 // internal stream assertion failure. Firebase logs via console.error (through
 // its Logger class), NOT as an uncaught exception, so window.addEventListener
@@ -109,7 +113,12 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   // ── Bootstrap ────────────────────────────────────────────────────────────
   useEffect(() => {
     setIsMounted(true);
-    setServices(buildServices());
+    try {
+      setServices(buildServices());
+    } catch (e) {
+      console.error('[TG] Firebase initialization error', e);
+      setServices(null);
+    }
   }, []);
 
   // Stream transport is configured in firebase/index.ts. Do not tear down

@@ -372,7 +372,7 @@ export function EditProfileMediaDialog({ profile, externalOpen, onExternalOpenCh
       )}
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-1rem)] max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="font-black">Edit Your Profile</DialogTitle>
             <DialogDescription>

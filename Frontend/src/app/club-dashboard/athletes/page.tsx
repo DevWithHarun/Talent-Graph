@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import {
   Search,
   MoreHorizontal,
@@ -18,7 +19,7 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, doc, updateDoc, getDoc, writeBatch, setDoc, deleteDoc } from 'firebase/firestore';
 import type { AthleteProfile, ClubMember } from '@/lib/types';
 
 const POSITIONS = ['Goalkeeper', 'Defence', 'Midfield', 'Wingers', 'Forwards', 'Strikers'];
@@ -540,7 +541,7 @@ function PlayerRow({ player, selected, onToggle, onAction }: { player: any; sele
           <span style={{ fontSize: 13.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{player.name}</span>
           {player.verified && <ShieldCheck size={12} color="#3DDC84" style={{ flexShrink: 0 }} />}
         </div>
-        <div style={{ fontSize: 11.5, color: '#8A9699', marginTop: 1 }}>{player.age}y</div>
+        <div style={{ fontSize: 11.5, color: '#8A9699', marginTop: 1 }}>{player.age}y{player.jersey ? ` · #${player.jersey}` : ''}</div>
       </div>
       <CSIring value={player.csi} />
       <button onClick={() => setMenuOpen((open) => !open)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, flexShrink: 0 }}>
@@ -551,15 +552,188 @@ function PlayerRow({ player, selected, onToggle, onAction }: { player: any; sele
   );
 }
 
-function PositionGroup({ tierId, position, players, selected, onToggle, onAction, onAddPlayer }: { tierId: string; position: string; players: any[]; selected: Set<string>; onToggle: (id: string) => void; onAction: (action: string, player: any, tierId: string, position: string) => void; onAddPlayer: (tierId: string, position: string) => void }) {
+function AddPlayerInline({ position, candidates, onAddExisting, onAddNew, onClose }: { position: string; candidates: AthleteProfile[]; onAddExisting: (athlete: AthleteProfile) => void; onAddNew: (data: { name: string; age: string; jersey: string }) => void; onClose: () => void }) {
+  const firestore = useFirestore();
+  const [queryTerm, setQueryTerm] = useState('');
+  const [remoteResults, setRemoteResults] = useState<AthleteProfile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [jersey, setJersey] = useState('');
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const localMatches = useMemo(() => {
+    const term = queryTerm.trim().toLowerCase();
+    if (!term) return candidates.slice(0, 6);
+    return candidates.filter((athlete) => {
+      const full = `${athlete.firstName || ''} ${athlete.lastName || ''} ${athlete.username || ''}`.toLowerCase();
+      return full.includes(term);
+    });
+  }, [candidates, queryTerm]);
+
+  useEffect(() => {
+    if (!firestore) return;
+    const term = queryTerm.trim();
+    if (!term) {
+      setRemoteResults([]);
+      return;
+    }
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const words = term.split(/\s+/).filter(Boolean);
+        const allTerms = [...new Set([term, ...words])];
+        const jobs: Promise<any>[] = [];
+        for (const w of allTerms) {
+          const variants = [w, w.toLowerCase(), w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(), w.toUpperCase()];
+          for (const v of variants) {
+            jobs.push(
+              getDocs(query(collection(firestore, 'athletes'), where('firstName', '>=', v), where('firstName', '<=', v + '\uf8ff'), limit(5))),
+              getDocs(query(collection(firestore, 'athletes'), where('lastName', '>=', v), where('lastName', '<=', v + '\uf8ff'), limit(5))),
+            );
+          }
+        }
+        const snaps = await Promise.all(jobs);
+        const seen = new Set<string>();
+        const merged: AthleteProfile[] = [];
+        for (const snap of snaps) {
+          for (const item of snap.docs) {
+            if (seen.has(item.id)) continue;
+            seen.add(item.id);
+            merged.push(item.data() as AthleteProfile);
+          }
+        }
+        const lower = term.toLowerCase();
+        const filtered = merged.filter((athlete) => {
+          const full = `${athlete.firstName ?? ''} ${athlete.lastName ?? ''}`.toLowerCase();
+          return words.every((word) => full.includes(word.toLowerCase())) || full.includes(lower);
+        });
+        setRemoteResults(filtered.slice(0, 10));
+      } catch {
+        setRemoteResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 350);
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, [firestore, queryTerm]);
+
+  const canAddNew = name.trim().length > 0;
+  const candidateRowStyle: CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+    background: 'transparent',
+    border: '1px solid #1E2629',
+    borderRadius: 9,
+    padding: '8px 10px',
+    marginBottom: 5,
+    color: '#F2F5F4',
+    cursor: 'pointer',
+    textAlign: 'left',
+  };
+
+  return (
+    <div style={{ background: '#0D1214', border: '1px solid #232B2E', borderRadius: 12, padding: 12, marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div style={{ fontSize: 11.5, color: '#8A9699', fontWeight: 600 }}>ADD PLAYER · {position.toUpperCase()}</div>
+        <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#5C6669', display: 'flex' }}>
+          <X size={16} />
+        </button>
+      </div>
+
+      <div style={{ position: 'relative', marginBottom: 10 }}>
+        <Search size={14} color="#5C6669" style={{ position: 'absolute', left: 10, top: 10 }} />
+        <input autoFocus value={queryTerm} onChange={(event) => setQueryTerm(event.target.value)} placeholder="Search available players…" style={{ width: '100%', background: '#12181B', border: '1px solid #1E2629', borderRadius: 9, padding: '8px 10px 8px 32px', color: '#F2F5F4', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+      </div>
+
+      {(localMatches.length > 0 || remoteResults.length > 0 || isSearching) && (
+        <div style={{ marginBottom: 10 }}>
+          {localMatches.length > 0 && (
+            <>
+              <div style={{ fontSize: 10, color: '#5C6669', fontWeight: 700, letterSpacing: 0.5, marginBottom: 5 }}>YOUR SQUAD</div>
+              {localMatches.map((athlete) => (
+                <button key={`local-${athlete.uid}`} onClick={() => onAddExisting(athlete)} style={candidateRowStyle}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {getPlayerName(athlete)}
+                    {athlete.position ? <span style={{ color: '#5C6669', fontWeight: 500, fontSize: 11 }}> · {athlete.position}</span> : null}
+                  </span>
+                  <Plus size={14} color="#3DDC84" style={{ flexShrink: 0 }} />
+                </button>
+              ))}
+            </>
+          )}
+          {remoteResults.length > 0 && (
+            <>
+              <div style={{ fontSize: 10, color: '#5C6669', fontWeight: 700, letterSpacing: 0.5, margin: '8px 0 5px' }}>AVAILABLE ON PLATFORM</div>
+              {remoteResults.map((athlete) => (
+                <button key={`remote-${athlete.uid}`} onClick={() => onAddExisting(athlete)} style={candidateRowStyle}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {getPlayerName(athlete)}
+                    {athlete.position ? <span style={{ color: '#5C6669', fontWeight: 500, fontSize: 11 }}> · {athlete.position}</span> : null}
+                  </span>
+                  <Plus size={14} color="#3DDC84" style={{ flexShrink: 0 }} />
+                </button>
+              ))}
+            </>
+          )}
+          {isSearching && <div style={{ fontSize: 11, color: '#5C6669', textAlign: 'center', padding: '6px 0' }}>Searching…</div>}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0 8px' }}>
+        <div style={{ flex: 1, height: 1, background: '#1E2629' }} />
+        <div style={{ fontSize: 10, color: '#5C6669', fontWeight: 700, letterSpacing: 0.5 }}>OR ADD NEW PLAYER</div>
+        <div style={{ flex: 1, height: 1, background: '#1E2629' }} />
+      </div>
+
+      <div>
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 10.5, color: '#8A9699', marginBottom: 4 }}>FULL NAME</div>
+          <input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Brian Otieno" onKeyDown={(event) => event.key === 'Enter' && canAddNew && onAddNew({ name: name.trim(), age, jersey })} style={{ width: '100%', background: '#12181B', border: '1px solid #1E2629', borderRadius: 9, padding: '9px 10px', color: '#F2F5F4', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10.5, color: '#8A9699', marginBottom: 4 }}>AGE</div>
+            <input value={age} onChange={(event) => setAge(event.target.value.replace(/\D/g, ''))} placeholder="e.g. 20" style={{ width: '100%', background: '#12181B', border: '1px solid #1E2629', borderRadius: 9, padding: '9px 10px', color: '#F2F5F4', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10.5, color: '#8A9699', marginBottom: 4 }}>JERSEY #</div>
+            <input value={jersey} onChange={(event) => setJersey(event.target.value.replace(/\D/g, ''))} placeholder="e.g. 9" style={{ width: '100%', background: '#12181B', border: '1px solid #1E2629', borderRadius: 9, padding: '9px 10px', color: '#F2F5F4', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+        </div>
+        <button onClick={() => onAddNew({ name: name.trim(), age, jersey })} disabled={!canAddNew} style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: canAddNew ? '#3DDC84' : '#1E2629', color: canAddNew ? '#04120A' : '#5C6669', fontSize: 13, fontWeight: 700, cursor: canAddNew ? 'pointer' : 'default' }}>
+          Add player
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PositionGroup({ tierId, position, players, candidates, selected, onToggle, onAction, onAddExisting, onAddNew }: { tierId: string; position: string; players: any[]; candidates: AthleteProfile[]; selected: Set<string>; onToggle: (id: string) => void; onAction: (action: string, player: any, tierId: string, position: string) => void; onAddExisting: (athlete: AthleteProfile, tierId: string, position: string) => void; onAddNew: (data: { name: string; age: string; jersey: string }, tierId: string, position: string) => void }) {
+  const [showAdd, setShowAdd] = useState(false);
+
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
         <span style={{ fontSize: 11.5, color: '#5C6669', fontWeight: 600 }}>{position.toUpperCase()} · {players.length}</span>
-        <button onClick={() => onAddPlayer(tierId, position)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: '1px dashed #2A3336', borderRadius: 7, padding: '3px 8px', cursor: 'pointer', color: '#8A9699', fontSize: 11 }}>
-          <Plus size={11} /> Add player
+        <button onClick={() => setShowAdd((open) => !open)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: '1px dashed #2A3336', borderRadius: 7, padding: '3px 8px', cursor: 'pointer', color: '#8A9699', fontSize: 11 }}>
+          {showAdd ? <><X size={11} /> Close</> : <><Plus size={11} /> Add player</>}
         </button>
       </div>
+      {showAdd && (
+        <AddPlayerInline
+          position={position}
+          candidates={candidates}
+          onClose={() => setShowAdd(false)}
+          onAddExisting={(athlete) => { onAddExisting(athlete, tierId, position); setShowAdd(false); }}
+          onAddNew={(data) => { onAddNew(data, tierId, position); setShowAdd(false); }}
+        />
+      )}
       {players.length === 0 ? (
         <div style={{ border: '1px dashed #1E2629', borderRadius: 12, padding: '12px', textAlign: 'center', color: '#4A5457', fontSize: 12 }}>No {position.toLowerCase()} yet</div>
       ) : (
@@ -589,6 +763,7 @@ export default function SquadListPage() {
   const [transferCtx, setTransferCtx] = useState<{ tierId: string; position: string; playerIds: string[] } | null>(null);
   const [extraTeams, setExtraTeams] = useState<any[]>([]);
   const [extraStaff, setExtraStaff] = useState<any[]>([]);
+  const [extraPlayers, setExtraPlayers] = useState<{ id: string; tierId: string; position: string; player: any }[]>([]);
 
   const clubMemberQuery = useMemoFirebase(
     () => (firestore && user ? query(collection(firestore, 'club_members'), where('userId', '==', user.uid)) : null),
@@ -627,8 +802,58 @@ export default function SquadListPage() {
   const { data: athletes, isLoading: athletesLoading } = useCollection<AthleteProfile>(athletesQuery);
   const athleteList = athletes ?? [];
 
+  const squadRosterQuery = useMemoFirebase(
+    () => (firestore && clubId ? collection(firestore, 'clubs', clubId, 'squad') : null),
+    [firestore, clubId],
+  );
+  const { data: squadRoster } = useCollection<any>(squadRosterQuery);
+  const manualRoster = useMemo(() => (squadRoster ?? []).filter((entry) => entry.manualAdded === true), [squadRoster]);
+
   const baseTiers = useMemo(() => buildTeamTiers(athleteList), [athleteList]);
-  const allTiers = useMemo(() => [...baseTiers, ...extraTeams], [baseTiers, extraTeams]);
+  const allTiers = useMemo(() => {
+    const tiers: any[] = [...baseTiers, ...extraTeams].map((tier) => ({ ...tier, players: { ...tier.players } }));
+    const tiersById = new Map<string, any>();
+    tiers.forEach((tier) => tiersById.set(tier.id, tier));
+
+    const ensureTier = (name: string) => {
+      const key = name || 'First XI / Team A';
+      let tier = tiersById.get(key);
+      if (!tier) {
+        tier = { id: key, name: key, players: emptyPositionMap() };
+        tiersById.set(key, tier);
+        tiers.push(tier);
+      }
+      return tier;
+    };
+
+    for (const roster of manualRoster) {
+      const tier = ensureTier(roster.team || '');
+      const normalized = normalizePosition(roster.position);
+      tier.players[normalized] = [
+        ...(tier.players[normalized] || []),
+        {
+          id: `manual-${roster.id}`,
+          rosterId: roster.id,
+          name: roster.fullName || 'Unknown Player',
+          age: roster.age || 0,
+          csi: 0,
+          verified: false,
+          status: 'knock',
+          tint: '#3FB6C9',
+          photoUrl: '',
+          jersey: roster.jerseyNumber || undefined,
+        },
+      ];
+    }
+
+    for (const entry of extraPlayers) {
+      const tier = tiersById.get(entry.tierId);
+      if (!tier) continue;
+      tier.players[entry.position] = [...(tier.players[entry.position] || []), entry.player];
+    }
+
+    return tiers;
+  }, [baseTiers, extraTeams, manualRoster, extraPlayers]);
 
   useEffect(() => {
     const nextExpanded: Record<string, boolean> = {};
@@ -692,11 +917,135 @@ export default function SquadListPage() {
       showToast(`Opening ${player.name}...`);
       return;
     }
+    if (action === 'delete' && player.rosterId && firestore && clubId) {
+      deleteDoc(doc(firestore, 'clubs', clubId, 'squad', player.rosterId))
+        .then(() => showToast(`Deleted ${player.name}`))
+        .catch((err) => showToast(`Could not delete: ${err?.message || 'please retry'}`));
+      return;
+    }
     showToast(`Deleting ${player.name}...`);
   };
 
-  const handleAddPlayer = (tierId: string, position: string) => {
-    showToast(`Add player → ${position} in ${tierId}`);
+  const candidatesFor = (tierId: string, position: string) => {
+    const tier = allTiers.find((team) => team.id === tierId);
+    const existingIds = new Set<string>((tier?.players[position] || []).map((player: any) => player.id));
+    return athleteList.filter((athlete) => !existingIds.has(athlete.uid));
+  };
+
+  const addExistingPlayer = async (athlete: AthleteProfile, tierId: string, position: string) => {
+    const tier = allTiers.find((team) => team.id === tierId);
+    const tierName = tier?.name || tierId;
+    const isMember = athleteList.some((candidate) => candidate.uid === athlete.uid);
+
+    if (!firestore || !clubId) {
+      const player = {
+        id: `existing-${athlete.uid}-${Date.now()}`,
+        name: getPlayerName(athlete),
+        age: athlete.age || 0,
+        csi: getCsiValue(athlete),
+        verified: Boolean(athlete.isVerified),
+        status: athlete.isVerified ? 'fit' : 'knock',
+        tint: '#3FB6C9',
+        photoUrl: athlete.photoUrl || '',
+      };
+      setExtraPlayers((current) => [...current, { id: player.id, tierId, position, player }]);
+      setExpanded((current) => ({ ...current, [tierId]: true }));
+      showToast(`${player.name} added to ${tierName}`);
+      return;
+    }
+
+    try {
+      if (isMember) {
+        await updateDoc(doc(firestore, 'athletes', athlete.uid), {
+          team: tierName,
+          position,
+          updatedAt: new Date().toISOString(),
+        });
+        showToast(`${getPlayerName(athlete)} assigned to ${tierName}`);
+      } else {
+        const clubSnap = await getDoc(doc(firestore, 'clubs', clubId));
+        const resolvedClubName = (clubSnap.data() as any)?.clubName || '';
+        const batch = writeBatch(firestore);
+
+        batch.set(doc(firestore, 'clubs', clubId, 'squad', athlete.uid), {
+          uid: athlete.uid,
+          fullName: getPlayerName(athlete),
+          email: (athlete as any).email ?? null,
+          position,
+          team: tierName,
+          jerseyNumber: athlete.jerseyNumber || null,
+          age: athlete.age || 0,
+          status: 'active',
+          joinedAt: new Date().toISOString(),
+        });
+
+        batch.update(doc(firestore, 'athletes', athlete.uid), {
+          affiliatedClubId: clubId,
+          clubName: resolvedClubName,
+          clubStatus: 'active',
+          team: tierName,
+          position,
+          updatedAt: new Date().toISOString(),
+        });
+
+        batch.set(doc(firestore, 'club_members', `${athlete.uid}_${clubId}`), {
+          userId: athlete.uid,
+          clubId,
+          clubName: resolvedClubName,
+          displayName: getPlayerName(athlete),
+          role: 'athlete',
+          status: 'active',
+          joinedAt: new Date().toISOString(),
+        });
+
+        await batch.commit();
+        showToast(`${getPlayerName(athlete)} added to ${tierName} squad`);
+      }
+    } catch (err) {
+      showToast(`Could not save: ${(err as any)?.message || 'please retry'}`);
+    }
+  };
+
+  const addNewPlayer = async (data: { name: string; age: string; jersey: string }, tierId: string, position: string) => {
+    const tier = allTiers.find((team) => team.id === tierId);
+    const tierName = tier?.name || tierId;
+    const id = `manual_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const player = {
+      id,
+      name: data.name,
+      age: Number(data.age) || 0,
+      csi: 0,
+      verified: false,
+      status: 'knock',
+      tint: '#3FB6C9',
+      photoUrl: '',
+      jersey: data.jersey || undefined,
+    };
+    setExtraPlayers((current) => [...current, { id, tierId, position, player }]);
+    setExpanded((current) => ({ ...current, [tierId]: true }));
+
+    if (!firestore || !clubId) {
+      showToast(`${player.name} added to ${tierName}`);
+      return;
+    }
+
+    try {
+      await setDoc(doc(firestore, 'clubs', clubId, 'squad', id), {
+        uid: id,
+        fullName: data.name,
+        position,
+        team: tierName,
+        jerseyNumber: data.jersey || null,
+        age: Number(data.age) || 0,
+        status: 'active',
+        manualAdded: true,
+        joinedAt: new Date().toISOString(),
+      });
+      setExtraPlayers((current) => current.filter((entry) => entry.id !== id));
+      showToast(`${player.name} added to ${tierName}`);
+    } catch (err) {
+      showToast(`Could not save: ${(err as any)?.message || 'please retry'}`);
+    }
   };
 
   const movePlayers = (tierId: string, fromPosition: string, playerIds: string[], toPosition: string) => {
@@ -751,7 +1100,7 @@ export default function SquadListPage() {
   const totalTeams = allTiers.length;
 
   return (
-    <div style={{ background: '#0A0E10', minHeight: '100vh', color: '#F2F5F4', fontFamily: 'Inter, system-ui, sans-serif', maxWidth: 420, margin: '0 auto', paddingBottom: 40 }}>
+    <div style={{ background: '#0A0E10', minHeight: '100vh', color: '#F2F5F4', fontFamily: 'Inter, system-ui, sans-serif', maxWidth: 420, margin: '0 auto', paddingBottom: 96 }}>
       <div style={{ padding: '20px 18px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Squad</div>
@@ -849,7 +1198,7 @@ export default function SquadListPage() {
                     {isExpanded && (
                       <div style={{ padding: '12px 12px 4px', background: '#0D1214' }}>
                         {POSITIONS.map((position) => (
-                          <PositionGroup key={`${tier.id}-${position}`} tierId={tier.id} position={position} players={tier.players[position]} selected={selectedSet} onToggle={toggleSelect} onAction={handleAction} onAddPlayer={handleAddPlayer} />
+                          <PositionGroup key={`${tier.id}-${position}`} tierId={tier.id} position={position} players={tier.players[position]} candidates={candidatesFor(tier.id, position)} selected={selectedSet} onToggle={toggleSelect} onAction={handleAction} onAddExisting={addExistingPlayer} onAddNew={addNewPlayer} />
                         ))}
                       </div>
                     )}

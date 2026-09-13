@@ -11,8 +11,8 @@ export default function CoachMessagesPage() {
           Direct messages &amp; squad group chat
         </p>
       </div>
-      <div style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
-        <MessagesHub demo />
+      <div style={{ height: 'calc(100dvh - 220px)', minHeight: '500px' }}>
+        <MessagesHub />
       </div>
     </div>
   );

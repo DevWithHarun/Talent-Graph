@@ -16,6 +16,8 @@ const PATH_MIME_RULES: { prefix: string; allowed: string[] }[] = [
   { prefix: 'profile-videos/', allowed: ALLOWED_MIME_TYPES.video },
   { prefix: 'club-logos/', allowed: ALLOWED_MIME_TYPES.image },
   { prefix: 'club-media/', allowed: [...ALLOWED_MIME_TYPES.image, ...ALLOWED_MIME_TYPES.video] },
+  { prefix: 'feed/', allowed: [...ALLOWED_MIME_TYPES.image, ...ALLOWED_MIME_TYPES.video] },
+  { prefix: 'stories/', allowed: [...ALLOWED_MIME_TYPES.image, ...ALLOWED_MIME_TYPES.video] },
 ];
 
 const CANDIDATE_BUCKETS = [
@@ -116,6 +118,8 @@ export async function POST(request: NextRequest) {
       `profile-videos/${uid}/`,
       `club-logos/`,
       `club-media/`,
+      `feed/${uid}/`,
+      `stories/${uid}/`,
     ];
     if (!allowedPrefixes.some((prefix) => storagePath.startsWith(prefix))) {
       return NextResponse.json({ error: 'Forbidden: path not allowed' }, { status: 403 });

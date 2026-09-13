@@ -654,7 +654,7 @@ ${teamStats.matchReport ? `<h2>📋 Match Report</h2><div class="report">${escHt
       <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #0a0a20 0%, #0d1635 100%)', borderBottom: '2px solid #00d4aa', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div style={{ background: 'linear-gradient(135deg, #0a0a20 0%, #0d1635 100%)', borderBottom: '2px solid #00d4aa', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 56, zIndex: 40 }}>
         <div>
           <div style={{ fontSize: 11, color: '#00d4aa', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Talent Graph</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>Match Entry</div>
@@ -710,7 +710,7 @@ ${teamStats.matchReport ? `<h2>📋 Match Report</h2><div class="report">${escHt
         </div>
       )}
 
-      <div style={{ padding: '0 16px 120px' }}>
+      <div style={{ padding: '0 16px 96px' }}>
 
         {/* ── PAGE 1: MATCH DETAILS ── */}
         {page === 1 && (
@@ -1147,8 +1147,8 @@ ${teamStats.matchReport ? `<h2>📋 Match Report</h2><div class="report">${escHt
         )}
       </div>
 
-      {/* Bottom Navigation */}
-      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 520, background: '#080818', borderTop: '1px solid #1a1a3a', padding: '12px 16px', display: 'flex', gap: 10, zIndex: 40 }}>
+      {/* Bottom Navigation — sits above the app tab bar on mobile */}
+      <div className="match-entry-wizard-bar" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 520, background: '#080818', borderTop: '1px solid #1a1a3a', padding: '12px 16px', display: 'flex', gap: 10, zIndex: 40 }}>
         {page > 1 && (
           <button onClick={() => setPage(page - 1)} style={{ flex: 1, padding: '14px 0', background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 10, color: '#888', fontWeight: 800, fontSize: 14, cursor: 'pointer', letterSpacing: 1, fontFamily: "'Rajdhani', sans-serif" }}>
             ← BACK
@@ -1164,6 +1164,11 @@ ${teamStats.matchReport ? `<h2>📋 Match Report</h2><div class="report">${escHt
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @media (max-width: 767px) {
+          .match-entry-wizard-bar {
+            bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+          }
+        }
       `}</style>
     </div>
   );

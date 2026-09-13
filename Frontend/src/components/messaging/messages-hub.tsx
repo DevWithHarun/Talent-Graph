@@ -77,16 +77,28 @@ function getInitials(name: string) {
 
 function getRolePrefixedName(name: string, role?: string): string {
   if (!name || name === 'Unknown') return name || 'Unknown';
+  const normalized = name.trim().toLowerCase();
+  if (role === 'scout' && (normalized === 'scout scout' || normalized === 'club scout')) return 'Club Scout';
+  if (role === 'coach' && (normalized === 'coach coach' || normalized === 'club coach')) return 'Club Coach';
+  if ((role === 'club' || role === 'club_admin') && (normalized === 'club club' || normalized === 'club admin' || normalized === 'admin')) return 'Club Admin';
   switch (role) {
-    case 'coach': return `Coach ${name}`;
-    case 'assistant_coach': return `Asst. Coach ${name}`;
-    case 'gk_coach': return `GK Coach ${name}`;
-    case 'scout': return `Scout ${name}`;
+    case 'coach': return name.toLowerCase().startsWith('club coach') ? name : name.toLowerCase() === 'coach' ? 'Club Coach' : name;
+    case 'assistant_coach': return name;
+    case 'gk_coach': return name;
+    case 'scout': return name.toLowerCase().startsWith('club scout') ? name : name.toLowerCase() === 'scout' ? 'Club Scout' : name;
     case 'analyst': return `Analyst ${name}`;
     case 'club':
-    case 'club_admin': return `Club Admin ${name}`;
+    case 'club_admin': return name.toLowerCase().startsWith('club admin') ? name : name.toLowerCase() === 'club' || name.toLowerCase() === 'admin' ? 'Club Admin' : name;
     default: return name;
   }
+}
+
+function getClubContactName(name: string, role?: string): string {
+  const cleanName = (name || '').trim();
+  if (role === 'scout') return cleanName.toLowerCase().includes('scout') ? 'Club Scout' : cleanName || 'Club Scout';
+  if (role === 'coach' || role === 'assistant_coach' || role === 'gk_coach') return cleanName.toLowerCase().includes('coach') ? 'Club Coach' : cleanName || 'Club Coach';
+  if (role === 'club' || role === 'club_admin' || role === 'admin') return 'Club Admin';
+  return cleanName || 'Athlete';
 }
 
 function formatConvTime(ts?: string) {
@@ -493,8 +505,8 @@ function ChatThread({
   const groups = groupByDate(displayMessages);
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0E1A]">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[#1E293B] bg-[#111827] shrink-0">
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-white shrink-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="text-[#94A3B8] hover:text-white h-8 w-8 shrink-0">
           <ArrowLeft className="h-4 w-4" />
         </Button>
@@ -507,7 +519,7 @@ function ChatThread({
           </Avatar>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-black text-sm text-white truncate">{displayName}</p>
+          <p className="font-black text-sm text-slate-900 truncate">{displayName}</p>
           {isGroup && (
             <p className="text-[10px] text-[#94A3B8]">{conv.participants.length} members</p>
           )}
@@ -517,7 +529,7 @@ function ChatThread({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6 bg-slate-50">
         {isLoading && (
           <div className="flex justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-[#00C853]" />
@@ -685,7 +697,7 @@ function ChatThread({
         <div ref={bottomRef} />
       </div>
 
-      <div className="px-4 py-3 border-t border-[#1E293B] bg-[#111827] shrink-0">
+      <div className="px-4 py-3 border-t border-slate-200 bg-white shrink-0">
         <div className="flex items-end gap-2">
           <div className="flex-1 relative">
             <textarea
@@ -697,7 +709,7 @@ function ChatThread({
               }}
               placeholder="Type message..."
               rows={1}
-              className="w-full bg-[#1C2333] border border-[#1E293B] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-[#4B5563] resize-none focus:outline-none focus:border-[#00C853] max-h-32 overflow-y-auto transition-colors"
+              className="w-full bg-slate-100 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 resize-none focus:outline-none focus:border-[#00C853] max-h-32 overflow-y-auto transition-colors"
               style={{ minHeight: '44px' }}
               onInput={e => {
                 const t = e.target as HTMLTextAreaElement;
@@ -833,7 +845,7 @@ export function MessagesHub({ defaultConversationId, demo = false }: MessagesHub
             if (data.userId === user.uid) continue;
             entries.push({
               uid: data.userId,
-              name: data.displayName || 'Member',
+              name: getClubContactName(data.displayName || data.name || '', data.role),
               role: data.role || 'athlete',
               photoUrl: data.photoUrl || data.avatarUrl,
               convId: [user.uid, data.userId].sort().join('_dm_'),
@@ -857,7 +869,7 @@ export function MessagesHub({ defaultConversationId, demo = false }: MessagesHub
               if (data.userId === user.uid) continue;
               entries.push({
                 uid: data.userId,
-                name: data.displayName || 'Member',
+                name: getClubContactName(data.displayName || data.name || '', data.role),
                 role: data.role || 'athlete',
                 photoUrl: data.photoUrl || data.avatarUrl,
                 convId: [user.uid, data.userId].sort().join('_dm_'),
@@ -901,6 +913,22 @@ export function MessagesHub({ defaultConversationId, demo = false }: MessagesHub
           ));
           if (!memberSnap.empty) {
             foundClubId = memberSnap.docs[0].data().clubId as string;
+            const clubSnap = await getDocs(query(
+              collection(firestore, 'club_members'),
+              where('clubId', '==', foundClubId),
+              where('status', '==', 'active'),
+            ));
+            for (const d of clubSnap.docs) {
+              const data = d.data() as any;
+              if (!data.userId || data.userId === user.uid || entries.some(entry => entry.uid === data.userId)) continue;
+              entries.push({
+                uid: data.userId,
+                name: getClubContactName(data.displayName || data.name || '', data.role),
+                role: data.role || 'athlete',
+                photoUrl: data.photoUrl || data.avatarUrl,
+                convId: [user.uid, data.userId].sort().join('_dm_'),
+              });
+            }
           }
         }
 
@@ -959,17 +987,22 @@ export function MessagesHub({ defaultConversationId, demo = false }: MessagesHub
           type: 'direct',
           participants: [effectiveUserId, conn.uid],
           participantInfo: {
-            [effectiveUserId]: { name: effectiveProfile.name, role: effectiveProfile.role },
-            [conn.uid]: { name: conn.name, role: conn.role, photoUrl: conn.photoUrl },
+            [effectiveUserId]: { name: effectiveProfile.name || 'User', role: effectiveProfile.role || 'user' },
+            [conn.uid]: { name: conn.name || 'Member', role: conn.role || 'member', ...(conn.photoUrl ? { photoUrl: conn.photoUrl } : {}) },
           },
         });
       }
       addedIds.add(conn.convId);
     }
 
-    // 3. Any remaining live convs not yet listed (e.g. from "New DM" search)
+    const allowedContactIds = new Set(connections.map(connection => connection.uid));
+
+    // 3. Existing conversations are shown only when they belong to an allowed
+    // relationship. This keeps old or unrelated conversations out of the inbox.
     for (const c of live) {
-      if (!addedIds.has(c.id)) {
+      const otherParticipantId = c.participants.find(participantId => participantId !== effectiveUserId);
+      const isAllowedGroup = c.type === 'group' && c.clubId === clubId;
+      if (!addedIds.has(c.id) && (isAllowedGroup || (!!otherParticipantId && allowedContactIds.has(otherParticipantId)))) {
         result.push(c);
         addedIds.add(c.id);
       }
@@ -1007,10 +1040,17 @@ export function MessagesHub({ defaultConversationId, demo = false }: MessagesHub
     if (!stub) { setActiveConvId(convId); return; }
     try {
       const now = new Date().toISOString();
+      setActiveConvId(convId);
       await setDoc(doc(firestore, 'conversations', convId), {
         type: stub.type || 'direct',
         participants: stub.participants,
-        participantInfo: stub.participantInfo || {},
+        participantInfo: Object.fromEntries(
+          Object.entries(stub.participantInfo || {}).map(([uid, info]) => [uid, {
+            name: info?.name || 'Member',
+            role: info?.role || 'member',
+            ...(info?.photoUrl ? { photoUrl: info.photoUrl } : {}),
+          }])
+        ),
         createdAt: now,
         updatedAt: now,
         lastMessage: '',
@@ -1018,8 +1058,8 @@ export function MessagesHub({ defaultConversationId, demo = false }: MessagesHub
         lastReadAt: {},
       });
       setActiveConvId(convId);
-    } catch {
-      toast({ variant: 'destructive', title: 'Could not open conversation' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Could not open conversation', description: error?.message || 'Please try again.' });
     }
   };
 
