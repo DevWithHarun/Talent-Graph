@@ -30,6 +30,34 @@ export interface InjuryRecord {
   dateOccurred: string;
   recoveryDate?: string;
   notes?: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+}
+
+export interface MedicalScreening {
+  id: string;
+  date: string;
+  clinic: string;
+  officer: string;
+  type: 'cardiac' | 'musculoskeletal' | 'general' | 'other';
+  result: 'pass' | 'flag' | 'fail';
+  verifiedBy?: string;
+  verifiedAt?: string;
+  notes?: string;
+  attachmentUrl?: string;
+}
+
+export interface GpsTrainingLoad {
+  id: string;
+  date: string;
+  sessionId?: string;
+  distanceKm: number;
+  durationMinutes: number;
+  load?: number;
+  deviceId?: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  source: 'gps' | 'manual';
 }
 
 export interface PreviousTeam {
@@ -102,6 +130,12 @@ export interface AthleteProfile {
   country?: string;
   county?: string;
   nationality?: string;
+  // Insurance-verified passport extensions
+  gpsDeviceId?: string;
+  medicalScreenings?: MedicalScreening[];
+  trainingLoads?: GpsTrainingLoad[];
+  verifiedMinutes?: number;
+  passportStatus?: 'incomplete' | 'pending' | 'verified';
 
   minutesPlayed: number;
   leagueCoefficient: number;

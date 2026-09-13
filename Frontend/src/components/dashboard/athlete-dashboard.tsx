@@ -9,6 +9,7 @@ import {
   CheckCircle2, Home, Pencil, Headphones, User, MoreHorizontal, Trash2,
   Plus, Flame, Clock, ShieldCheck, ShieldX, Building2, Bell, CheckCheck,
   Trophy, Settings2, Shield, Activity, Sparkles, Search, MessageSquare, Ruler, Scale, ChevronRight,
+  Heart, AlertCircle, MapPin,
   type LucideIcon
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -69,6 +70,7 @@ import { AthleteTrainingSessions } from './athlete-training-sessions';
 import { Progress } from '@/components/ui/progress';
 import { MarketplaceSettings } from './marketplace-settings';
 import { ShareProfileCard } from './share-profile-card';
+import { VerifiedPassportCard } from './verified-passport-card';
 
 const PerformanceRadarChart = lazy(
   () => import('./performance-radar-chart').then((mod) => ({ default: mod.PerformanceRadarChart }))
@@ -85,7 +87,7 @@ interface AthleteDashboardProps {
   athleteProfile?: AthleteProfile;
 }
 
-type DashboardTab = 'overview' | 'recruitment' | 'progress' | 'settings';
+type DashboardTab = 'overview' | 'health' | 'proof' | 'showcase';
 type DialogTab = 'home' | 'edit' | 'support' | 'notifications';
 
 export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboardProps) {
@@ -288,74 +290,21 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     ? { label: 'Log a Match', href: '/dashboard/add-match' }
     : null;
 
-  // ── Tab definitions ──
+  // ── Tab definitions — Insurance passport + Showcase split
   const tabs: { id: DashboardTab; label: string; icon: LucideIcon }[] = [
     { id: 'overview', label: 'Overview', icon: Home },
-    { id: 'recruitment', label: 'Recruitment', icon: Target },
-    { id: 'progress', label: 'Progress', icon: Activity },
-    { id: 'settings', label: 'Settings', icon: Settings2 },
+    { id: 'health', label: 'Health', icon: Heart },
+    { id: 'proof', label: 'Proof', icon: ShieldCheck },
+    { id: 'showcase', label: 'Showcase', icon: Play },
   ];
 
   // ── Render functions ──
   const renderOverview = () => (
     <div className="space-y-8">
-      {/* Profile completion banner */}
-      <div className={`hidden rounded-xl border p-4 md:block ${bannerBg}`}>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <BannerIcon className={`h-5 w-5 shrink-0 ${bannerIconColor}`} />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-black">
-                  {isComplete ? 'Profile Complete' : `Profile ${profileScore}% Complete`}
-                </span>
-                <Badge
-                  variant="outline"
-                  className={`text-[9px] font-black uppercase tracking-widest px-1.5 ${
-                    isComplete ? 'border-green-400 text-green-600' :
-                    profileScore >= 50 ? 'border-primary/40 text-primary' :
-                    'border-yellow-400 text-yellow-700'
-                  }`}
-                >
-                  {isComplete ? 'Fully Indexed' : profileScore >= 50 ? 'Indexing' : 'Incomplete'}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {isComplete
-                  ? 'Your profile is fully optimised — visible to all scouts and Talent Call searches.'
-                  : profileScore >= 75
-                  ? 'Almost there — complete the remaining items to maximise your discovery rate.'
-                  : profileScore >= 50
-                  ? 'Good start — complete more items to increase your visibility in Talent Calls.'
-                  : 'Your profile needs more data before scouts can fully evaluate you.'}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    isComplete ? 'bg-green-500' : profileScore >= 50 ? 'bg-primary' : 'bg-yellow-500'
-                  }`}
-                  style={{ width: `${profileScore}%` }}
-                />
-              </div>
-              <span className="text-xs font-black tabular-nums">{profileScore}/100</span>
-            </div>
-            {bannerTopAction && !isComplete && (
-              <Button size="sm" variant="outline" className="text-xs font-black h-8 gap-1.5" asChild>
-                <Link href={bannerTopAction.href}>
-                  {bannerTopAction.label}
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Verified Passport — insurer turning point, replaces completion banner */}
+      <VerifiedPassportCard profile={athleteProfile} />
 
-      {/* Squad Readiness (desktop) */}
+      {/* Squad Readiness (desktop) — kept as secondary, insurer uses Health tab */}
       <div className={`hidden rounded-xl border p-4 md:block ${availabilityTone}`}>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
@@ -639,105 +588,169 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     </div>
   );
 
-  const renderRecruitment = () => (
+  const renderHealth = () => (
     <div className="space-y-8">
+      {/* Health Passport — insurer core */}
+      <div className={cn('rounded-xl border p-4', availabilityTone)}>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Squad Readiness</p>
+            <h2 className="text-sm font-black uppercase tracking-widest">{availabilityLabel}</h2>
+            <p className="text-xs mt-1 opacity-80">Verified health for insurer — injuries + medical + GPS.</p>
+          </div>
+          <div className="min-w-[180px] w-full max-w-xs">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-1">
+              <span>Readiness</span><span>{readiness}%</span>
+            </div>
+            <Progress value={readiness} className="h-2" />
+          </div>
+        </div>
+      </div>
+
+      {/* Injury History — verified */}
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><Shield className="h-4 w-4 text-primary" /> Injury History {athleteProfile.injuryHistory?.some(i=>i.verifiedBy) && <Badge className="bg-green-500/10 text-green-700 border-green-400/30 text-[9px]">Verified</Badge>}</CardTitle>
+          <CardDescription className="text-xs">Verified entries only count for insurance. Self-reported = 0 weight.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!athleteProfile.injuryHistory?.length ? (
+            <div className="rounded-xl border border-dashed p-6 text-center">
+              <p className="text-sm font-bold">No injuries logged</p>
+              <p className="text-xs text-muted-foreground mt-1">Clean sheet — insurer friendly. Log via Injury Tracker.</p>
+              <Button size="sm" variant="outline" className="mt-3" asChild><Link href="/dashboard/injury-tracker"><Shield className="mr-2 h-4 w-4" />Open Tracker</Link></Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {athleteProfile.injuryHistory.map(rec => (
+                <div key={rec.id} className="rounded-xl border p-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold">{rec.type} — {rec.bodyPart} <span className="text-xs font-normal text-muted-foreground">({rec.severity})</span></p>
+                    <p className="text-xs text-muted-foreground">{rec.dateOccurred}{rec.recoveryDate ? ` → ${rec.recoveryDate}` : ' → ongoing'} {rec.verifiedBy ? `• Verified by ${rec.verifiedBy.slice(0,8)}` : '• Unverified'}</p>
+                  </div>
+                  {rec.verifiedBy ? <CheckCircle2 className="h-5 w-5 text-green-600" /> : <AlertCircle className="h-5 w-5 text-amber-500" />}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Medical Screenings — new insurer requirement */}
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><Heart className="h-4 w-4 text-primary" /> Medical Screenings</CardTitle>
+          <CardDescription className="text-xs">Cardiac / musculoskeletal / general — clinic + officer signature required.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!athleteProfile.medicalScreenings?.length ? (
+            <div className="rounded-xl border border-dashed p-6 text-center">
+              <p className="text-sm font-bold">No screenings yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Book with club medical officer to unlock passport.</p>
+              <Button size="sm" variant="outline" className="mt-3" asChild><Link href="/dashboard/verify"><ShieldCheck className="mr-2 h-4 w-4" />Verify Now</Link></Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {athleteProfile.medicalScreenings.map(m => (
+                <div key={m.id} className="rounded-xl border p-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold capitalize">{m.type} — {m.result} <span className="text-xs font-normal capitalize">{m.clinic}</span></p>
+                    <p className="text-xs text-muted-foreground">{m.date} • Officer {m.officer} {m.verifiedBy ? `• Verified` : '• Pending'}</p>
+                  </div>
+                  {m.verifiedBy ? <ShieldCheck className="h-5 w-5 text-green-600" /> : <Clock className="h-5 w-5 text-amber-500" />}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AthleteTrainingSessions athleteId={athleteProfile.uid} affiliatedClubId={athleteProfile.affiliatedClubId} />
+      {athleteProfile.gpsDeviceId && <Badge variant="outline" className="text-[10px]"><MapPin className="h-3 w-3 mr-1" />GPS {athleteProfile.gpsDeviceId.slice(0,8)} linked</Badge>}
+    </div>
+  );
+
+  const renderShowcase = () => (
+    <div className="space-y-8">
+      <Card className="border-dashed bg-amber-50/20">
+        <CardContent className="p-3 flex items-center gap-2 text-xs text-muted-foreground">
+          <AlertCircle className="h-4 w-4 text-amber-600" />
+          Showcase = skills only — <strong>not verified</strong>, insurer ignores. Verified Proof is in Health + Proof tabs.
+        </CardContent>
+      </Card>
+      {athleteProfile.highlightVideoUrl ? (
+        <Card className="shadow-lg border overflow-hidden">
+          <CardHeader className="bg-muted/50 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-black uppercase tracking-[0.3em] flex items-center gap-2">
+                <Play className="w-4 h-4 text-primary fill-primary" /> Highlight Reel — Showcase
+              </CardTitle>
+              {athleteProfile.highlightVideoTitle && <p className="text-xs font-bold text-muted-foreground mt-0.5">{athleteProfile.highlightVideoTitle}</p>}
+            </div>
+            <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-amber-400 text-amber-700">Unverified • Scout only</Badge>
+          </CardHeader>
+          <CardContent className="p-0 bg-black">
+            <div className="aspect-video w-full"><video src={athleteProfile.highlightVideoUrl} controls className="w-full h-full object-contain" preload="metadata" /></div>
+          </CardContent>
+          <VideoEngagement videoId={`${athleteProfile.uid}_highlight`} athleteId={athleteProfile.uid} athleteName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerRole="athlete" />
+        </Card>
+      ) : (
+        <Card className="border-dashed p-6 text-center">
+          <p className="text-sm font-bold">No highlight yet</p>
+          <p className="text-xs text-muted-foreground">Add a 60-90s reel — kept here, never counts for insurance.</p>
+        </Card>
+      )}
+      {athleteProfile.showcaseVideos?.length ? (
+        <div className="space-y-4">
+          <h3 className="text-sm font-black uppercase tracking-[0.3em] flex items-center gap-2"><Play className="w-4 h-4 text-primary fill-primary" /> More Clips — Showcase</h3>
+          {athleteProfile.showcaseVideos.map(vid => (
+            <Card key={vid.id} className="shadow-lg border overflow-hidden">
+              <CardHeader className="bg-muted/50 py-3 px-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-black uppercase tracking-widest flex-1">{vid.title || 'Showcase Clip'}</CardTitle>
+                <Badge variant="outline" className="text-[9px]">Unverified</Badge>
+                <button onClick={() => setConfirmDeleteVideo(vid)} className="ml-3 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></button>
+              </CardHeader>
+              <CardContent className="p-0 bg-black"><div className="aspect-video w-full"><video src={vid.url} controls className="w-full h-full object-contain" preload="metadata" /></div></CardContent>
+              <VideoEngagement videoId={`${athleteProfile.uid}_showcase_${vid.id}`} athleteId={athleteProfile.uid} athleteName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerRole="athlete" />
+            </Card>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const renderProof = () => {
+    const verifiedMinutesLocal = athleteProfile.matchHistory?.filter(m=>m.isVerified).reduce((s,m)=>s+(m.minutes||0),0) ?? 0;
+    return (
+    <div className="space-y-8">
+      <Card className="border shadow-sm bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Verified Proof — Insurer Reads Only Verified Rows</CardTitle>
+          <CardDescription className="text-xs">Self-logged minutes = 0 weight until coach/club confirms. {verifiedMinutesLocal}′ verified of {athleteProfile.matchHistory?.reduce((s,m)=>s+(m.minutes||0),0) || 0}′ total.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center gap-3">
+          <Badge className={verifiedMinutesLocal>=90 ? 'bg-green-500/10 text-green-700 border-green-400/30' : 'bg-amber-500/10 text-amber-700 border-amber-400/30'}>{verifiedMinutesLocal}′ verified</Badge>
+          <span className="text-xs text-muted-foreground">Need 90′+ verified for quote</span>
+        </CardContent>
+      </Card>
+      {(athleteProfile.matchHistory?.length ?? 0) > 0 && <MatchPerformanceChart matchHistory={athleteProfile.matchHistory || []} />}
+      <Card className="shadow-lg border">
+        <CardHeader><CardTitle className="text-lg font-black uppercase tracking-widest">Match Statistics — Verified ✓ on top</CardTitle><CardDescription className="text-xs">Verified rows count for insurance. Unverified greyed.</CardDescription></CardHeader>
+        <CardContent><MatchStatisticsTable matchHistory={athleteProfile.matchHistory || []} onEdit={(id)=>router.push(`/dashboard/add-match?id=${id}`)} onDelete={(id)=>setConfirmDeleteMatch(id)} /></CardContent>
+      </Card>
+      <CareerHistoryCard profile={athleteProfile} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ProfileStrengthCard profile={athleteProfile} />
+        <TierProgressionCard profile={athleteProfile} />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <RecruitmentPipelineTracker athleteId={athleteProfile.uid} />
         <ProfileViewsCard athleteId={athleteProfile.uid} />
       </div>
       <ScoutRequests athleteId={athleteProfile.uid} />
-      <AthleteTrainingSessions
-        athleteId={athleteProfile.uid}
-        affiliatedClubId={athleteProfile.affiliatedClubId}
-      />
-      <Card className="bg-muted/30 border shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Award className="w-5 h-5 text-primary" />
-            Scouting Pipeline
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Update your professional data points to influence your CSI rating.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button variant="outline" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
-            <Link href="/onboarding/metrics">
-              <Layers className="mr-3 h-4 w-4" />
-              1. Update Master Index
-            </Link>
-          </Button>
-          <Button variant="outline" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
-            <Link href="/dashboard/update-attributes">
-              <GitGraph className="mr-3 h-4 w-4" />
-              2. Refine Attributes
-            </Link>
-          </Button>
-          <Button variant="default" className="w-full justify-start font-black text-[10px] uppercase tracking-widest h-12" asChild>
-            <Link href="/dashboard/add-match">
-              <PlusCircle className="mr-3 h-4 w-4" />
-              3. Log Independent Match
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-      <MarketplaceSettings profile={athleteProfile} />
     </div>
   );
-
-  const renderProgress = () => (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ProfileStrengthCard profile={athleteProfile} />
-        <TierProgressionCard profile={athleteProfile} />
-      </div>
-      <EngagementLoop profile={athleteProfile} />
-      <ActivitySummary userAccount={userAccount} athleteProfile={athleteProfile} />
-      {/* Streak Card */}
-      {matchStreak > 0 ? (
-        <div className="rounded-xl border border-orange-400/30 bg-gradient-to-r from-orange-500/10 to-amber-500/5 p-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-orange-500/15 flex items-center justify-center shrink-0">
-              <Flame className="h-5 w-5 text-orange-500" />
-            </div>
-            <div>
-              <p className="text-sm font-black text-orange-600">
-                {matchStreak === 1 ? 'Streak started!' : `${matchStreak}-week streak`}
-                {matchStreak >= 4 && ' 🔥'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {matchStreak === 1
-                  ? 'You logged a match this week — keep it going next week.'
-                  : matchStreak < 4
-                  ? `You've logged matches ${matchStreak} weeks running. Keep the momentum.`
-                  : `${matchStreak} consecutive weeks of match data — scouts love consistency.`}
-              </p>
-            </div>
-          </div>
-          <div className="shrink-0 flex flex-col items-center">
-            <span className="text-3xl font-black text-orange-500 tabular-nums leading-none">{matchStreak}</span>
-            <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">weeks</span>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-muted-foreground/20 p-4 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-            <Flame className="h-4 w-4 text-muted-foreground/50" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-black text-muted-foreground">No active streak yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-0.5">Log a match this week to start your streak — consistency builds scout confidence.</p>
-          </div>
-          <Button size="sm" variant="outline" className="shrink-0 text-xs font-black h-8 gap-1.5" asChild>
-            <Link href="/dashboard/add-match">
-              Log Match
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </Button>
-        </div>
-      )}
-    </div>
-  );
+  };
 
   const renderSettings = () => (
     <div className="space-y-8">
@@ -1130,9 +1143,9 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
       {/* ── Main Content ── */}
       <main className="container mx-auto space-y-5 p-4 pb-24 sm:p-6 sm:pb-24 lg:space-y-8 lg:p-8">
         {currentTab === 'overview' && renderOverview()}
-        {currentTab === 'recruitment' && renderRecruitment()}
-        {currentTab === 'progress' && renderProgress()}
-        {currentTab === 'settings' && renderSettings()}
+        {currentTab === 'health' && renderHealth()}
+        {currentTab === 'proof' && renderProof()}
+        {currentTab === 'showcase' && renderShowcase()}
       </main>
 
       {/* ── Notifications Sheet ── */}
