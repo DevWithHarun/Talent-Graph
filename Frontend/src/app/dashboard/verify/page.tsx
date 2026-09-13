@@ -309,14 +309,21 @@ export default function VerifyPage() {
   const filledBarCount = step + 1;
 
   return (
-    <div className="min-h-screen bg-[#07131f] text-white flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-[420px] rounded-[34px] border border-[#1d3557] bg-[#0d1b2a] shadow-[0_35px_90px_-30px_rgba(9,18,30,0.95)] overflow-hidden">
-        <div className="px-4 pt-4 pb-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-[#07131f] to-indigo-900 text-white flex items-center justify-center px-4 py-6 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2" />
+      <div className="w-full max-w-[440px] rounded-[32px] border border-white/10 bg-[#0d1b2a]/80 backdrop-blur-xl shadow-[0_35px_90px_-30px_rgba(9,18,30,0.95),0_0_0_1px_rgba(255,255,255,0.05)] overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5 pointer-events-none" />
+        <div className="relative px-5 pt-5 pb-0">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">World-Class Verification</span>
+            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary">{Math.round((filledBarCount/progressLength)*100)}%</span>
+          </div>
           <div className="flex gap-2">
             {Array.from({ length: progressLength }).map((_, idx) => (
               <span
                 key={idx}
-                className={`h-2 flex-1 rounded-full ${idx < filledBarCount ? 'bg-[#4f8ef7]' : 'bg-[#1d3557]'}`}
+                className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${idx < filledBarCount ? 'bg-gradient-to-r from-primary to-indigo-500 shadow-sm' : 'bg-white/10'}`}
               />
             ))}
           </div>
