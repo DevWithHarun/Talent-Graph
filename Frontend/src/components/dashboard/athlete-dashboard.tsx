@@ -298,11 +298,73 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     { id: 'showcase', label: 'Showcase', icon: Play },
   ];
 
-  // ── Render functions ──
+  // ── Render functions — world-class restyle (re-added removed features)
   const renderOverview = () => (
     <div className="space-y-8">
-      {/* Verified Passport — insurer turning point, replaces completion banner */}
+      {/* Verified Passport — insurer turning point */}
       <VerifiedPassportCard profile={athleteProfile} />
+
+      {/* World-class Profile Completion — re-added with premium styling */}
+      <div className={cn('relative overflow-hidden rounded-2xl border p-5 backdrop-blur shadow-sm', isComplete ? 'bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-teal-500/10 border-green-500/20' : profileScore >= 50 ? 'bg-gradient-to-br from-primary/10 via-indigo-500/5 to-violet-500/10 border-primary/20' : 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-yellow-500/10 border-amber-500/20')}>
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+        <div className="relative flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner', isComplete ? 'bg-green-500 text-white' : profileScore >= 50 ? 'bg-primary text-primary-foreground' : 'bg-amber-500 text-white')}>
+              <BannerIcon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-black tracking-tight">{isComplete ? 'Profile Complete' : `Profile ${profileScore}% Complete`}</span>
+                <Badge variant="outline" className={cn('text-[9px] font-black uppercase tracking-widest px-2 py-0.5 backdrop-blur', isComplete ? 'border-green-400 text-green-700 bg-green-500/10' : profileScore >= 50 ? 'border-primary/40 text-primary bg-primary/10' : 'border-amber-400 text-amber-700 bg-amber-500/10')}>
+                  {isComplete ? 'Fully Indexed' : profileScore >= 50 ? 'Indexing' : 'Incomplete'}
+                </Badge>
+                {isComplete && <Sparkles className="h-3.5 w-3.5 text-green-600" />}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                {isComplete ? 'Fully optimised — visible to scouts + insurer-ready.' : profileScore >= 75 ? 'Almost there — finish to maximise discovery + insurance.' : profileScore >= 50 ? 'Good start — complete to boost visibility.' : 'Add data to unlock scouting + insurance.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="hidden sm:flex flex-col items-end gap-1">
+              <div className="flex items-center gap-2">
+                <div className="w-28 h-2.5 rounded-full bg-background/60 backdrop-blur overflow-hidden border shadow-inner">
+                  <div className={cn('h-full rounded-full transition-all duration-1000 ease-out', isComplete ? 'bg-gradient-to-r from-green-500 to-emerald-500' : profileScore >= 50 ? 'bg-gradient-to-r from-primary to-indigo-500' : 'bg-gradient-to-r from-amber-500 to-orange-500')} style={{ width: `${profileScore}%` }} />
+                </div>
+                <span className="text-xs font-black tabular-nums">{profileScore}/100</span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{isComplete ? 'Elite' : profileScore >= 75 ? 'Advanced' : 'Building'}</span>
+            </div>
+            {bannerTopAction && !isComplete && <Button size="sm" className="rounded-full shadow-md font-black text-xs h-8 px-4" asChild><Link href={bannerTopAction.href}>{bannerTopAction.label} <ArrowRight className="w-3 h-3 ml-1" /></Link></Button>}
+          </div>
+        </div>
+      </div>
+
+      {/* Height/Weight — re-added as world-class compact stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
+          <CardContent className="relative p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white/60"><Ruler className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-widest">Height</span></div>
+              <Badge variant="outline" className="bg-white/10 border-white/20 text-white text-[9px]">Verified</Badge>
+            </div>
+            <p className="text-2xl font-black tracking-tight mt-2">{athleteProfile.heightCm ? `${athleteProfile.heightCm}` : '--'} <span className="text-sm font-bold text-white/60">cm</span></p>
+            <p className="text-[10px] text-white/50 mt-1">Elite avg 178cm</p>
+          </CardContent>
+        </Card>
+        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-transparent" />
+          <CardContent className="relative p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white/60"><Scale className="h-4 w-4" /><span className="text-[10px] font-black uppercase tracking-widest">Weight</span></div>
+              <Badge variant="outline" className="bg-white/10 border-white/20 text-white text-[9px]">Verified</Badge>
+            </div>
+            <p className="text-2xl font-black tracking-tight mt-2">{athleteProfile.weightKg ? `${athleteProfile.weightKg}` : '--'} <span className="text-sm font-bold text-white/60">kg</span></p>
+            <p className="text-[10px] text-white/50 mt-1">Peak 72–80kg</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Squad Readiness (desktop) — kept as secondary, insurer uses Health tab */}
       <div className={`hidden rounded-xl border p-4 md:block ${availabilityTone}`}>
@@ -716,6 +778,17 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           ))}
         </div>
       ) : null}
+      {/* Re-added Marketplace — world-class glass */}
+      <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-slate-900 via-indigo-900 to-violet-900 text-white">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+        <CardHeader className="relative border-b border-white/10">
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-white"><Sparkles className="h-4 w-4 text-violet-300" /> Marketplace — Availability & Value</CardTitle>
+          <CardDescription className="text-white/60 text-xs">Set availability for scouts — showcased here, not in Health.</CardDescription>
+        </CardHeader>
+        <CardContent className="relative pt-6 bg-white/[0.02] backdrop-blur">
+          <MarketplaceSettings profile={athleteProfile} />
+        </CardContent>
+      </Card>
     </div>
   );
 
@@ -739,9 +812,24 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         <CardContent><MatchStatisticsTable matchHistory={athleteProfile.matchHistory || []} onEdit={(id)=>router.push(`/dashboard/add-match?id=${id}`)} onDelete={(id)=>setConfirmDeleteMatch(id)} /></CardContent>
       </Card>
       <CareerHistoryCard profile={athleteProfile} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ProfileStrengthCard profile={athleteProfile} />
-        <TierProgressionCard profile={athleteProfile} />
+      {/* Re-added Attribute Radars — world-class glass */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="shadow-xl border-0 bg-gradient-to-br from-card via-card to-muted/20 overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b"><CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><GitGraph className="h-4 w-4 text-primary" /> Attributes — Verified vs Self</CardTitle><CardDescription className="text-xs">Scout-verified attributes weigh 3× for insurance.</CardDescription></CardHeader>
+          <CardContent className="p-6">
+            <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+              <AttributeRadarCharts profile={athleteProfile} />
+            </Suspense>
+          </CardContent>
+        </Card>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ProfileStrengthCard profile={athleteProfile} />
+            <TierProgressionCard profile={athleteProfile} />
+          </div>
+          <EngagementLoop profile={athleteProfile} />
+          <ActivitySummary userAccount={userAccount} athleteProfile={athleteProfile} />
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <RecruitmentPipelineTracker athleteId={athleteProfile.uid} />
@@ -802,9 +890,9 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     </div>
   );
 
-  // ── Main Render ──
+  // ── Main Render — world-class polish
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0 text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 pb-20 md:pb-0 text-foreground selection:bg-primary/20">
       {showVerificationReminder && (
         <div className="border-b border-amber-500/20 bg-amber-500/10">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -867,8 +955,8 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         </DialogContent>
       </Dialog>
 
-      {/* ── Top Header ── */}
-      <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      {/* ── Top Header — world-class glass */}
+      <header className="sticky top-0 z-30 border-b bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-[72px] items-center gap-3 md:hidden">
             {/* Avatar with photo – clickable */}
@@ -911,14 +999,25 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
               )}
             </button>
           </div>
-          <div className="hidden h-14 items-center justify-between md:flex md:h-16">
+          <div className="hidden h-14 items-center justify-between md:flex md:h-16 gap-6">
             {/* Logo */}
-            <div className="flex items-center gap-3">
-              <Zap className="h-5 w-5 text-primary shrink-0" />
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-md">
+                <Zap className="h-4 w-4 text-white" />
+              </div>
               <h1 className="text-base md:text-xl font-black tracking-tight uppercase">Talent Graph</h1>
-              <Badge variant="outline" className="hidden md:block text-[9px] font-black uppercase tracking-widest">
+              <Badge variant="outline" className="hidden lg:block text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5">
                 Athlete Console
               </Badge>
+            </div>
+
+            {/* World-class command search — re-added */}
+            <div className="hidden lg:flex items-center flex-1 max-w-md">
+              <div className="relative w-full group">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <input aria-label="Search" placeholder="Search athletes, clubs, matches…" className="h-9 w-full rounded-full border bg-background/60 backdrop-blur pl-10 pr-16 text-sm outline-none placeholder:text-muted-foreground focus:bg-background focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" />
+                <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">⌘K</kbd>
+              </div>
             </div>
 
             {/* Desktop actions */}
@@ -1117,8 +1216,8 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         </div>
       </header>
 
-      {/* ── Desktop Tab Navigation ── */}
-      <div className="hidden md:block border-b bg-card/50 sticky top-[65px] z-10">
+      {/* ── Desktop Tab Navigation — world-class pill */}
+      <div className="hidden md:block border-b bg-card/40 backdrop-blur-xl sticky top-[65px] z-10 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-0 overflow-x-auto">
             {tabs.map((tab) => (
