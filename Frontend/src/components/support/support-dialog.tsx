@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, query, orderBy, where, addDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, where, addDoc, getFirestore } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { SupportThread, SupportMessage, UserAccount } from '@/lib/types';
 import {
@@ -139,14 +139,19 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
       } catch (apiErr: any) {
         const msg = apiErr?.message || '';
         const isHtmlFallback = msg === 'API_HTML_FALLBACK' || msg.includes('<!DOCTYPE') || msg.includes('Unexpected token');
-        if (isHtmlFallback || msg.includes('Failed to fetch')) {
-          // Fallback: direct Firestore (Hosting has no /api)
-          if (!firestore) throw apiErr;
+        if (isHtmlFallback || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+          // Fallback: direct Firestore (Hosting has no /api) — use getFirestore() if hook is null
+          const db = firestore || (() => { try { return getFirestore(); } catch { return null; } })();
+          if (!db) {
+            console.error('[SupportDialog] Firestore unavailable for fallback', apiErr);
+            toast({ variant: 'destructive', title: 'Could not create ticket', description: 'Firestore not ready — please refresh and try again' });
+            return;
+          }
           console.warn('[SupportDialog] API unavailable, fallback to Firestore', msg);
           const now = new Date().toISOString();
           const slaHours = form.priority === 'high' ? 1 : form.priority === 'medium' ? 4 : 24;
           const slaDeadline = new Date(Date.now() + slaHours * 3600 * 1000).toISOString();
-          const ticketRef = await addDoc(collection(firestore, 'support_tickets'), {
+          const ticketRef = await addDoc(collection(db as any, 'support_tickets'), {
             senderUserId: user?.uid || 'anonymous',
             senderEmail,
             senderName,
@@ -166,7 +171,7 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
             updatedAt: now,
             isAnonymous: isGuest,
           });
-          await addDoc(collection(firestore, 'support_tickets', ticketRef.id, 'messages'), {
+          await addDoc(collection(db as any, 'support_tickets', ticketRef.id, 'messages'), {
             senderType: 'user',
             senderName,
             body: form.message,

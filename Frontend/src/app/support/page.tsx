@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'wouter';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, query, orderBy, where, addDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, where, addDoc, doc, getDoc, getFirestore } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useRouter } from '@/lib/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -241,9 +241,13 @@ export default function MySupportPage() {
       } catch (apiErr: any) {
         const msg = apiErr?.message || '';
         const isHtmlFallback = msg === 'API_HTML_FALLBACK' || msg.includes('<!DOCTYPE') || msg.includes('Unexpected token');
-        if (isHtmlFallback || msg.includes('Failed to fetch')) {
+        if (isHtmlFallback || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
           // Fallback: direct Firestore (static hosting has no /api). Rules allow create: if true
-          if (!firestore) throw apiErr;
+          const db = firestore || (() => { try { return getFirestore(); } catch { return null; } })();
+          if (!db) {
+            console.error('[support] Firestore unavailable for fallback', apiErr);
+            throw new Error('Firestore not ready — please refresh and try again');
+          }
           console.warn('[support] API unavailable, falling back to direct Firestore', msg);
           const now = new Date().toISOString();
           const slaHours = apiPriority === 'high' ? 1 : apiPriority === 'medium' ? 4 : 24;
@@ -271,8 +275,8 @@ export default function MySupportPage() {
             attachmentName: attachmentName || null,
           };
           // Remove nulls where Firestore expects nullValue vs omit
-          const ticketRef = await addDoc(collection(firestore, 'support_tickets'), directData);
-          await addDoc(collection(firestore, 'support_tickets', ticketRef.id, 'messages'), {
+          const ticketRef = await addDoc(collection(db as any, 'support_tickets'), directData);
+          await addDoc(collection(db as any, 'support_tickets', ticketRef.id, 'messages'), {
             senderType: 'user',
             senderName,
             body: form.description.trim(),
