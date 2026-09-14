@@ -2,29 +2,28 @@
 
 import { Link } from 'wouter';
 import {
-  Home, PlusCircle, Activity, Mail, MoreHorizontal, X,
+  Home, PlusCircle, X,
   Trophy, Shield, ShieldCheck, GitGraph, Settings2,
-  Layers, Headphones, LogOut, ChevronRight,
+  Layers, Headphones, LogOut, ChevronRight, BarChart3, Heart, Users, Plus,
 } from 'lucide-react';
 import { usePathname, useRouter } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useAuth, useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useState, useEffect } from 'react';
 import { SupportDialog } from '@/components/support/support-dialog';
 import { DashboardErrorBoundary } from '@/components/coach/dashboard-error-boundary';
 
 const bottomNavItems = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/dashboard/add-match', label: 'Log Match', icon: PlusCircle },
-  { href: '/dashboard/career', label: 'Career', icon: Activity },
-  { href: '/dashboard/invites', label: 'Invites', icon: Mail, inviteBadge: true },
-  { href: '#', label: 'More', icon: MoreHorizontal, isMore: true },
+  { href: '/?tab=home', tab: 'home', label: 'Home', icon: Home },
+  { href: '/?tab=matches', tab: 'matches', label: 'Matches', icon: BarChart3 },
+  { href: '/?tab=health', tab: 'health', label: 'Health', icon: Heart },
+  { href: '/?tab=network', tab: 'network', label: 'Network', icon: Users },
 ];
 
 const moreNavItems = [
+  { href: '/dashboard/add-match', label: 'Log a Match', icon: PlusCircle },
   { href: '/dashboard/achievements', label: 'Achievements', icon: Trophy },
   { href: '/dashboard/injury-tracker', label: 'Injury Tracker', icon: Shield },
   { href: '/dashboard/verify', label: 'Verify Profile', icon: ShieldCheck },
@@ -34,29 +33,18 @@ const moreNavItems = [
 ];
 
 export default function AthleteDashboardLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const loc = usePathname();
   const auth = useAuth();
   const router = useRouter();
-  const { user } = useUser();
-  const firestore = useFirestore();
   const [moreOpen, setMoreOpen] = useState(false);
-
-  const invitesQuery = useMemoFirebase(() => (
-    firestore && user?.uid
-      ? query(
-          collection(firestore, 'squad_invites'),
-          where('athleteId', '==', user.uid),
-          where('status', '==', 'pending')
-        )
-      : null
-  ), [firestore, user?.uid]);
-  const { data: pendingInvites } = useCollection<{ id: string }>(invitesQuery);
-  const inviteCount = pendingInvites?.length ?? 0;
 
   useEffect(() => {
     document.body.classList.toggle('bottom-sheet-open', moreOpen);
     return () => document.body.classList.remove('bottom-sheet-open');
   }, [moreOpen]);
+
+  const path = loc.split('?')[0];
+  const activeTab = new URLSearchParams(loc.split('?')[1] || '').get('tab');
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -64,9 +52,16 @@ export default function AthleteDashboardLayout({ children }: { children: React.R
     router.push('/login');
   };
 
-  const isActive = (href: string, exact?: boolean) => {
-    if (exact) return pathname === href;
-    return pathname === href || pathname.startsWith(`${href}/`);
+  const isTabActive = (tab: string) => {
+    if (tab === 'more') return false;
+    if (path !== '/') return false;
+    if (tab === 'home') return !activeTab || activeTab === 'home';
+    return activeTab === tab;
+  };
+
+  const isRouteActive = (href: string) => {
+    const h = href.split('?')[0];
+    return path === h || path.startsWith(`${h}/`);
   };
 
   return (
@@ -75,34 +70,59 @@ export default function AthleteDashboardLayout({ children }: { children: React.R
         {children}
       </DashboardErrorBoundary>
 
-      {/* Spacer so page bottoms clear the fixed tab bar on mobile */}
-      <div aria-hidden className="h-16 safe-bottom md:hidden" />
+      {/* Spacer so page bottoms clear the floating tab bar on mobile */}
+      <div aria-hidden className="h-24 sm:h-24 safe-bottom md:hidden" />
 
-      {/* Bottom Tab Bar (mobile only — desktop keeps each page's own layout) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden items-stretch border-t bg-background/95 backdrop-blur shadow-[0_-1px_12px_rgba(0,0,0,0.08)] bottom-nav-safe tab-bar">
-        <div className="flex w-full">
-          {bottomNavItems.map((item) => {
-            const active = item.isMore ? false : isActive(item.href, item.href === '/');
+      {/* Bottom Tab Bar (mobile only — floating pill, center + opens More) */}
+      <nav className="fixed bottom-4 left-4 right-4 z-40 flex md:hidden h-[72px] items-stretch rounded-2xl border bg-card/95 backdrop-blur-xl shadow-2xl safe-bottom tab-bar">
+        <div className="flex w-full items-stretch">
+          {bottomNavItems.slice(0, 2).map((item) => {
+            const active = isTabActive(item.tab);
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                onClick={(e) => { if (item.isMore) { e.preventDefault(); setMoreOpen(true); } }}
                 className={cn(
-                  'flex flex-1 flex-col items-center justify-center gap-1 py-2 transition-colors relative',
+                  'relative flex flex-1 flex-col items-center justify-center gap-1.5 transition-all duration-200',
                   active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
-                {active && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full active-indicator" />}
                 <span className="relative">
-                  <item.icon className={cn('h-[22px] w-[22px]', active && 'scale-110 transition-transform')} />
-                  {'inviteBadge' in item && inviteCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-primary-foreground leading-none">
-                      {inviteCount > 9 ? '9+' : inviteCount}
-                    </span>
-                  )}
+                  <item.icon className={cn('h-6 w-6 transition-transform duration-200', active && 'scale-110')} />
                 </span>
-                <span className={cn('text-[10px] font-bold uppercase tracking-wide leading-tight', active && 'font-black')}>
+                <span className={cn('text-[10px] font-bold transition-colors', active ? 'font-black text-primary' : 'text-muted-foreground')}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+
+          {/* Center + button — raised, opens More sheet */}
+          <div className="relative flex flex-1 items-center justify-center">
+            <button
+              onClick={() => setMoreOpen(true)}
+              aria-label="More actions"
+              className="absolute -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-600 text-white shadow-xl ring-4 ring-background transition-transform hover:scale-105 active:scale-95"
+            >
+              <Plus className="h-7 w-7" />
+            </button>
+          </div>
+
+          {bottomNavItems.slice(2).map((item) => {
+            const active = isTabActive(item.tab);
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  'relative flex flex-1 flex-col items-center justify-center gap-1.5 transition-all duration-200',
+                  active ? 'text-primary' : 'text-muted-foreground'
+                )}
+              >
+                <span className="relative">
+                  <item.icon className={cn('h-6 w-6 transition-transform duration-200', active && 'scale-110')} />
+                </span>
+                <span className={cn('text-[10px] font-bold transition-colors', active ? 'font-black text-primary' : 'text-muted-foreground')}>
                   {item.label}
                 </span>
               </Link>
@@ -124,7 +144,7 @@ export default function AthleteDashboardLayout({ children }: { children: React.R
             </div>
             <nav className="p-2 space-y-1">
               {moreNavItems.map(item => {
-                const active = isActive(item.href);
+                const active = isRouteActive(item.href);
                 return (
                   <Link
                     key={item.href}

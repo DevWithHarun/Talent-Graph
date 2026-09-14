@@ -2,14 +2,14 @@
 
 import type { UserAccount, AthleteProfile, ShowcaseVideo } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import {
   LogOut, Loader2, Target, TrendingUp, ShieldAlert, BarChart3,
   Eye, Award, Layers, GitGraph, PlusCircle, Play, Zap, ArrowRight,
   CheckCircle2, Home, Pencil, Headphones, User, MoreHorizontal, Trash2,
   Plus, Flame, Clock, ShieldCheck, ShieldX, Building2, Bell, CheckCheck,
   Trophy, Settings2, Shield, Activity, Sparkles, Search, MessageSquare, Ruler, Scale, ChevronRight,
-  Heart, AlertCircle, MapPin,
+  Heart, AlertCircle, MapPin, Users, Mail,
   type LucideIcon
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -49,7 +49,7 @@ import { DeleteAccountDialog } from '@/components/account/delete-account-dialog'
 import { ProfileStrengthCard, countAttributes, countVerifiedAppearances } from './profile-strength-card';
 import { TierProgressionCard } from './tier-progression-card';
 import { EngagementLoop } from './engagement-loop';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useRef, useLayoutEffect, useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -87,8 +87,11 @@ interface AthleteDashboardProps {
   athleteProfile?: AthleteProfile;
 }
 
-type DashboardTab = 'overview' | 'health' | 'proof' | 'showcase';
+type DashboardTab = 'home' | 'matches' | 'health' | 'network';
 type DialogTab = 'home' | 'edit' | 'support' | 'notifications';
+type TabBarVariant = 'mobile' | 'desktop';
+
+const TAB_IDS: DashboardTab[] = ['home', 'matches', 'health', 'network']; // + center button opens More sheet
 
 export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboardProps) {
   const auth = useAuth();
@@ -97,7 +100,12 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   const { toast } = useToast();
 
   // ── State ──
-  const [currentTab, setCurrentTab] = useState<DashboardTab>('overview');
+  const [location] = useLocation();
+  const parseTab = (loc: string): DashboardTab => {
+    const tab = new URLSearchParams(loc.split('?')[1] || '').get('tab');
+    return tab === 'matches' || tab === 'health' || tab === 'network' ? tab : 'home';
+  };
+  const [currentTab, setCurrentTab] = useState<DashboardTab>(() => parseTab(window.location.search));
   const [dialogTab, setDialogTab] = useState<DialogTab>('home');
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -106,6 +114,46 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
   const [isDeletingVideo, setIsDeletingVideo] = useState(false);
   const [confirmDeleteMatch, setConfirmDeleteMatch] = useState<string | null>(null);
   const [isDeletingMatch, setIsDeletingMatch] = useState(false);
+
+  // ── Tab bar sliding indicator ──
+  const tabRefs = useRef<Record<DashboardTab, HTMLButtonElement | null>>({
+    home: null, matches: null, health: null, network: null,
+  });
+  const mobileBarRef = useRef<HTMLDivElement | null>(null);
+  const desktopBarRef = useRef<HTMLDivElement | null>(null);
+  const [indicator, setIndicator] = useState<{ variant: TabBarVariant; left: number; width: number } | null>(null);
+
+  const measureIndicator = (variant: TabBarVariant) => {
+    const el = tabRefs.current[currentTab];
+    const bar = variant === 'mobile' ? mobileBarRef.current : desktopBarRef.current;
+    if (!el || !bar) return;
+    const barRect = bar.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    setIndicator({ variant, left: elRect.left - barRect.left, width: elRect.width });
+  };
+
+  const selectTab = (tab: DashboardTab) => {
+    setCurrentTab(tab);
+    const loc = location.split('?')[0];
+    if (loc === '/') router.replace(tab === 'home' ? '/?tab=home' : `/?tab=${tab}`);
+  };
+
+  // Sync tab from URL (e.g. sub-page nav links -> /?tab=matches)
+  useEffect(() => {
+    setCurrentTab(parseTab(location));
+  }, [location]);
+
+  useLayoutEffect(() => {
+    measureIndicator(window.innerWidth < 768 ? 'mobile' : 'desktop');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTab]);
+
+  useEffect(() => {
+    const onResize = () => measureIndicator(window.innerWidth < 768 ? 'mobile' : 'desktop');
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Firebase Queries ──
   const notifsQuery = useMemoFirebase(() => (
@@ -140,6 +188,15 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     ) : null
   ), [firestore, athleteProfile?.uid]);
   const { data: pendingConfirmations } = useCollection<{ id: string }>(pendingConfirmQuery);
+
+  const invitesQuery = useMemoFirebase(() => (
+    firestore && athleteProfile ? query(
+      collection(firestore, 'squad_invites'),
+      where('athleteId', '==', athleteProfile.uid),
+      where('status', '==', 'pending')
+    ) : null
+  ), [firestore, athleteProfile?.uid]);
+  const { data: pendingInvites } = useCollection<{ id: string }>(invitesQuery);
 
   const unreadCount = (unreadNotifs?.length ?? 0) + (pendingConfirmations?.length ?? 0);
   const showVerificationReminder = !athleteProfile?.isVerified;
@@ -290,16 +347,16 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     ? { label: 'Log a Match', href: '/dashboard/add-match' }
     : null;
 
-  // ── Tab definitions — Insurance passport + Showcase split
+  // ── Tab definitions — Mobile-first unified nav (center + opens More sheet)
   const tabs: { id: DashboardTab; label: string; icon: LucideIcon }[] = [
-    { id: 'overview', label: 'Overview', icon: Home },
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'matches', label: 'Matches', icon: BarChart3 },
     { id: 'health', label: 'Health', icon: Heart },
-    { id: 'proof', label: 'Proof', icon: ShieldCheck },
-    { id: 'showcase', label: 'Showcase', icon: Play },
+    { id: 'network', label: 'Network', icon: Users },
   ];
 
-  // ── Render functions — world-class restyle (re-added removed features)
-  const renderOverview = () => (
+  // ── Render functions — mobile-first tabs (Home / Matches / Health / Network)
+  const renderHome = () => (
     <div className="space-y-8">
       {/* Verified Passport — insurer turning point */}
       <VerifiedPassportCard profile={athleteProfile} />
@@ -528,50 +585,12 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         ))}
       </div>
 
-      {/* Master Index & Attributes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="shadow-xl bg-card border overflow-hidden">
-          <div className="bg-muted/50 p-6 flex justify-between items-center">
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">Master Index</h3>
-              <p className="text-xs font-bold text-muted-foreground/70">Institutional Performance Projection</p>
-            </div>
-            <div className="text-right">
-              <div className="text-5xl font-black tracking-tighter leading-none">{safeRenderValue(athleteProfile.compositeScoutingIndex)}</div>
-              <div className="text-[10px] font-black uppercase text-primary mt-1">CSI RATING</div>
-            </div>
-          </div>
-          <CardContent className="p-8">
-            <div className="h-[450px]">
-              <PerformanceRadarChart profile={athleteProfile} />
-            </div>
-          </CardContent>
-        </Card>
-        <AttributeRadarCharts profile={athleteProfile} />
+      {/* Profile Strength & Progression */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ProfileStrengthCard profile={athleteProfile} />
+        <TierProgressionCard profile={athleteProfile} />
       </div>
-
-      {/* Match Performance Chart */}
-      {(athleteProfile.matchHistory?.length ?? 0) > 0 && (
-        <MatchPerformanceChart matchHistory={athleteProfile.matchHistory || []} />
-      )}
-
-      {/* Match Statistics */}
-      <Card className="shadow-lg border">
-        <CardHeader>
-          <CardTitle className="text-lg font-black uppercase tracking-widest">Match Statistics</CardTitle>
-          <CardDescription>Performance breakdown by official competition.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MatchStatisticsTable
-            matchHistory={athleteProfile.matchHistory || []}
-            onEdit={(id) => router.push(`/dashboard/add-match?id=${id}`)}
-            onDelete={(id) => setConfirmDeleteMatch(id)}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Career History */}
-      <CareerHistoryCard profile={athleteProfile} />
+      <ActivitySummary userAccount={userAccount} athleteProfile={athleteProfile} />
 
       {/* Highlight Reel */}
       {athleteProfile.highlightVideoUrl && (
@@ -732,58 +751,48 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     </div>
   );
 
-  const renderShowcase = () => (
+  const renderNetwork = () => (
     <div className="space-y-8">
-      <Card className="border-dashed bg-amber-50/20">
-        <CardContent className="p-3 flex items-center gap-2 text-xs text-muted-foreground">
-          <AlertCircle className="h-4 w-4 text-amber-600" />
-          Showcase = skills only — <strong>not verified</strong>, insurer ignores. Verified Proof is in Health + Proof tabs.
+      {/* Scout Requests */}
+      <ScoutRequests athleteId={athleteProfile.uid} />
+
+      {/* Recruitment Pipeline & Profile Views */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <RecruitmentPipelineTracker athleteId={athleteProfile.uid} />
+        <ProfileViewsCard athleteId={athleteProfile.uid} />
+      </div>
+
+      {/* Squad Invites */}
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+            <Mail className="h-4 w-4 text-primary" /> Squad Invites
+            {(pendingInvites?.length ?? 0) > 0 && (
+              <Badge className="bg-primary/10 text-primary border-primary/30 text-[9px]">{pendingInvites?.length} pending</Badge>
+            )}
+          </CardTitle>
+          <CardDescription className="text-xs">Invitations from clubs and scouts to join squads.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" className="w-full justify-start gap-3 h-12 font-bold text-sm" asChild>
+            <Link href="/dashboard/invites">
+              <Mail className="h-4 w-4 text-primary" />
+              View Squad Invites
+              {(pendingInvites?.length ?? 0) > 0 && ` (${pendingInvites?.length})`}
+            </Link>
+          </Button>
         </CardContent>
       </Card>
-      {athleteProfile.highlightVideoUrl ? (
-        <Card className="shadow-lg border overflow-hidden">
-          <CardHeader className="bg-muted/50 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-black uppercase tracking-[0.3em] flex items-center gap-2">
-                <Play className="w-4 h-4 text-primary fill-primary" /> Highlight Reel — Showcase
-              </CardTitle>
-              {athleteProfile.highlightVideoTitle && <p className="text-xs font-bold text-muted-foreground mt-0.5">{athleteProfile.highlightVideoTitle}</p>}
-            </div>
-            <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-amber-400 text-amber-700">Unverified • Scout only</Badge>
-          </CardHeader>
-          <CardContent className="p-0 bg-black">
-            <div className="aspect-video w-full"><video src={athleteProfile.highlightVideoUrl} controls className="w-full h-full object-contain" preload="metadata" /></div>
-          </CardContent>
-          <VideoEngagement videoId={`${athleteProfile.uid}_highlight`} athleteId={athleteProfile.uid} athleteName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerRole="athlete" />
-        </Card>
-      ) : (
-        <Card className="border-dashed p-6 text-center">
-          <p className="text-sm font-bold">No highlight yet</p>
-          <p className="text-xs text-muted-foreground">Add a 60-90s reel — kept here, never counts for insurance.</p>
-        </Card>
-      )}
-      {athleteProfile.showcaseVideos?.length ? (
-        <div className="space-y-4">
-          <h3 className="text-sm font-black uppercase tracking-[0.3em] flex items-center gap-2"><Play className="w-4 h-4 text-primary fill-primary" /> More Clips — Showcase</h3>
-          {athleteProfile.showcaseVideos.map(vid => (
-            <Card key={vid.id} className="shadow-lg border overflow-hidden">
-              <CardHeader className="bg-muted/50 py-3 px-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-black uppercase tracking-widest flex-1">{vid.title || 'Showcase Clip'}</CardTitle>
-                <Badge variant="outline" className="text-[9px]">Unverified</Badge>
-                <button onClick={() => setConfirmDeleteVideo(vid)} className="ml-3 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></button>
-              </CardHeader>
-              <CardContent className="p-0 bg-black"><div className="aspect-video w-full"><video src={vid.url} controls className="w-full h-full object-contain" preload="metadata" /></div></CardContent>
-              <VideoEngagement videoId={`${athleteProfile.uid}_showcase_${vid.id}`} athleteId={athleteProfile.uid} athleteName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerName={`${athleteProfile.firstName} ${athleteProfile.lastName}`} viewerRole="athlete" />
-            </Card>
-          ))}
-        </div>
-      ) : null}
-      {/* Re-added Marketplace — world-class glass */}
+
+      {/* Engagement */}
+      <EngagementLoop profile={athleteProfile} />
+
+      {/* Marketplace — Availability & Value */}
       <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-slate-900 via-indigo-900 to-violet-900 text-white">
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
         <CardHeader className="relative border-b border-white/10">
           <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-white"><Sparkles className="h-4 w-4 text-violet-300" /> Marketplace — Availability & Value</CardTitle>
-          <CardDescription className="text-white/60 text-xs">Set availability for scouts — showcased here, not in Health.</CardDescription>
+          <CardDescription className="text-white/60 text-xs">Set your availability and asking price for scouts.</CardDescription>
         </CardHeader>
         <CardContent className="relative pt-6 bg-white/[0.02] backdrop-blur">
           <MarketplaceSettings profile={athleteProfile} />
@@ -792,10 +801,24 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
     </div>
   );
 
-  const renderProof = () => {
+  const renderMatches = () => {
     const verifiedMinutesLocal = athleteProfile.matchHistory?.filter(m=>m.isVerified).reduce((s,m)=>s+(m.minutes||0),0) ?? 0;
     return (
     <div className="space-y-8">
+      {/* Log a Match CTA */}
+      <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-primary/20 via-primary/10 to-indigo-600/10">
+        <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 p-6">
+          <div>
+            <h3 className="text-lg font-black uppercase tracking-widest">Log a Match</h3>
+            <p className="text-xs text-muted-foreground mt-1">Record performance to update your indices and verified proof.</p>
+          </div>
+          <Button className="rounded-full shadow-md font-black" asChild>
+            <Link href="/dashboard/add-match"><PlusCircle className="w-4 h-4 mr-2" /> Log a Match</Link>
+          </Button>
+        </div>
+      </Card>
+
+      {/* Verified Proof — insurer reads only verified rows */}
       <Card className="border shadow-sm bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Verified Proof — Insurer Reads Only Verified Rows</CardTitle>
@@ -806,13 +829,8 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
           <span className="text-xs text-muted-foreground">Need 90′+ verified for quote</span>
         </CardContent>
       </Card>
-      {(athleteProfile.matchHistory?.length ?? 0) > 0 && <MatchPerformanceChart matchHistory={athleteProfile.matchHistory || []} />}
-      <Card className="shadow-lg border">
-        <CardHeader><CardTitle className="text-lg font-black uppercase tracking-widest">Match Statistics — Verified ✓ on top</CardTitle><CardDescription className="text-xs">Verified rows count for insurance. Unverified greyed.</CardDescription></CardHeader>
-        <CardContent><MatchStatisticsTable matchHistory={athleteProfile.matchHistory || []} onEdit={(id)=>router.push(`/dashboard/add-match?id=${id}`)} onDelete={(id)=>setConfirmDeleteMatch(id)} /></CardContent>
-      </Card>
-      <CareerHistoryCard profile={athleteProfile} />
-      {/* Re-added Attribute Radars — world-class glass */}
+
+      {/* Attributes & Master Index */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="shadow-xl border-0 bg-gradient-to-br from-card via-card to-muted/20 overflow-hidden">
           <CardHeader className="bg-muted/30 border-b"><CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><GitGraph className="h-4 w-4 text-primary" /> Attributes — Verified vs Self</CardTitle><CardDescription className="text-xs">Scout-verified attributes weigh 3× for insurance.</CardDescription></CardHeader>
@@ -822,20 +840,31 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
             </Suspense>
           </CardContent>
         </Card>
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ProfileStrengthCard profile={athleteProfile} />
-            <TierProgressionCard profile={athleteProfile} />
+        <Card className="shadow-xl bg-card border overflow-hidden">
+          <div className="bg-muted/50 p-6 flex justify-between items-center">
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">Master Index</h3>
+              <p className="text-xs font-bold text-muted-foreground/70">Institutional Performance Projection</p>
+            </div>
+            <div className="text-right">
+              <div className="text-5xl font-black tracking-tighter leading-none">{safeRenderValue(athleteProfile.compositeScoutingIndex)}</div>
+              <div className="text-[10px] font-black uppercase text-primary mt-1">CSI RATING</div>
+            </div>
           </div>
-          <EngagementLoop profile={athleteProfile} />
-          <ActivitySummary userAccount={userAccount} athleteProfile={athleteProfile} />
-        </div>
+          <CardContent className="p-8">
+            <div className="h-[450px]">
+              <PerformanceRadarChart profile={athleteProfile} />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <RecruitmentPipelineTracker athleteId={athleteProfile.uid} />
-        <ProfileViewsCard athleteId={athleteProfile.uid} />
-      </div>
-      <ScoutRequests athleteId={athleteProfile.uid} />
+
+      {(athleteProfile.matchHistory?.length ?? 0) > 0 && <MatchPerformanceChart matchHistory={athleteProfile.matchHistory || []} />}
+      <Card className="shadow-lg border">
+        <CardHeader><CardTitle className="text-lg font-black uppercase tracking-widest">Match Statistics — Verified ✓ on top</CardTitle><CardDescription className="text-xs">Verified rows count for insurance. Unverified greyed.</CardDescription></CardHeader>
+        <CardContent><MatchStatisticsTable matchHistory={athleteProfile.matchHistory || []} onEdit={(id)=>router.push(`/dashboard/add-match?id=${id}`)} onDelete={(id)=>setConfirmDeleteMatch(id)} /></CardContent>
+      </Card>
+      <CareerHistoryCard profile={athleteProfile} />
     </div>
   );
   };
@@ -1179,6 +1208,16 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                     <Button
                       variant="ghost"
                       className="w-full justify-start gap-3 h-12 font-bold text-sm"
+                      asChild
+                    >
+                      <Link href="/dashboard/verify" onClick={() => setMoreOpen(false)}>
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        Verify Profile
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 h-12 font-bold text-sm"
                       onClick={() => { setMoreOpen(false); setDialogTab('edit'); }}
                     >
                       <Settings2 className="h-4 w-4 text-primary" />
@@ -1192,6 +1231,14 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
                     </Button>
                   </div>
                   <div className="p-4 border-t space-y-1">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 h-12 font-bold text-sm"
+                      onClick={() => { setMoreOpen(false); setDialogTab('support'); }}
+                    >
+                      <Headphones className="h-4 w-4 text-primary" />
+                      Support
+                    </Button>
                     <DeleteAccountDialog
                       trigger={
                         <button className="w-full flex items-center gap-3 h-12 px-3 rounded-xl font-bold text-sm text-destructive hover:bg-destructive/10 transition-colors">
@@ -1216,35 +1263,52 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         </div>
       </header>
 
-      {/* ── Desktop Tab Navigation — world-class pill */}
+      {/* ── Desktop Tab Navigation — mobile-first pill language */}
       <div className="hidden md:block border-b bg-card/40 backdrop-blur-xl sticky top-[65px] z-10 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-0 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setCurrentTab(tab.id)}
-                className={cn(
-                  'flex items-center gap-2 whitespace-nowrap px-5 py-3 text-sm font-semibold border-b-2 transition-colors shrink-0',
-                  currentTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                )}
-              >
-                <tab.icon className="w-4 h-4 shrink-0" />
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex items-center justify-between gap-4">
+            <div ref={desktopBarRef} className="relative flex items-center gap-1 overflow-x-auto">
+              {indicator?.variant === 'desktop' && (
+                <span
+                  className="absolute top-1 bottom-1 rounded-xl bg-primary/10 border border-primary/20 transition-all duration-300"
+                  style={{ left: indicator.left, width: indicator.width, transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+                />
+              )}
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  ref={(el) => { tabRefs.current[tab.id] = el; }}
+                  onClick={() => selectTab(tab.id)}
+                  className={cn(
+                    'relative flex items-center gap-2.5 whitespace-nowrap px-5 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 shrink-0',
+                    currentTab === tab.id
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  )}
+                >
+                  <tab.icon className={cn('w-5 h-5 shrink-0 transition-transform duration-200', currentTab === tab.id && 'scale-110')} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setMoreOpen(true)}
+              className="relative flex items-center gap-2 px-4 py-2 rounded-full border bg-card hover:bg-muted/50 text-sm font-semibold text-muted-foreground hover:text-primary transition-all shrink-0"
+              aria-label="More actions"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden xl:inline">More</span>
+            </button>
           </div>
         </div>
       </div>
 
       {/* ── Main Content ── */}
-      <main className="container mx-auto space-y-5 p-4 pb-24 sm:p-6 sm:pb-24 lg:space-y-8 lg:p-8">
-        {currentTab === 'overview' && renderOverview()}
+      <main className="container mx-auto space-y-5 p-4 pb-32 sm:p-6 sm:pb-32 lg:space-y-8 lg:p-8">
+        {currentTab === 'home' && renderHome()}
+        {currentTab === 'matches' && renderMatches()}
         {currentTab === 'health' && renderHealth()}
-        {currentTab === 'proof' && renderProof()}
-        {currentTab === 'showcase' && renderShowcase()}
+        {currentTab === 'network' && renderNetwork()}
       </main>
 
       {/* ── Notifications Sheet ── */}
@@ -1346,8 +1410,8 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         onOpenChange={(open) => { if (!open) setDialogTab('home'); }}
       />
 
-      {/* ── Quick-Action FAB ── */}
-      <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end gap-2 md:bottom-6">
+      {/* ── Quick-Action FAB — desktop only (mobile uses center + button) ── */}
+      <div className="hidden md:flex fixed bottom-6 right-4 z-50 flex-col items-end gap-2">
         <div
           className={cn(
             'flex flex-col items-end gap-2 transition-all duration-200 origin-bottom',
@@ -1400,26 +1464,65 @@ export function AthleteDashboard({ userAccount, athleteProfile }: AthleteDashboa
         <div className="fixed inset-0 z-40" onClick={() => setFabOpen(false)} />
       )}
 
-      {/* ── Mobile Bottom Tab Bar ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden h-16 items-stretch border-t bg-background/95 backdrop-blur shadow-[0_-1px_12px_rgba(0,0,0,0.08)] bottom-nav-safe tab-bar">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setCurrentTab(tab.id)}
-            className={cn(
-              'flex flex-1 flex-col items-center justify-center gap-1 transition-colors relative',
-              currentTab === tab.id ? 'text-primary' : 'text-muted-foreground'
-            )}
-          >
-            {currentTab === tab.id && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
-            )}
-            <tab.icon className={cn('h-5 w-5 transition-transform', currentTab === tab.id && 'scale-110')} />
-            <span className={cn('text-[10px] font-bold uppercase tracking-wide', currentTab === tab.id && 'font-black')}>
-              {tab.label}
-            </span>
-          </button>
-        ))}
+      {/* ── Mobile Bottom Tab Bar — floating pill, center + opens More ── */}
+      <nav className="fixed bottom-4 left-4 right-4 z-40 flex md:hidden h-[72px] items-stretch rounded-2xl border bg-card/95 shadow-2xl safe-bottom tab-bar" role="tablist">
+        <div ref={mobileBarRef} className="relative flex w-full items-stretch">
+          {indicator?.variant === 'mobile' && (
+            <span
+              className="absolute top-1 bottom-1 rounded-xl bg-primary/10 border border-primary/20 transition-all duration-300"
+              style={{ left: indicator.left, width: indicator.width, transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+            />
+          )}
+
+          {tabs.slice(0, 2).map((tab) => (
+            <button
+              key={tab.id}
+              ref={(el) => { tabRefs.current[tab.id] = el; }}
+              onClick={() => selectTab(tab.id)}
+              role="tab"
+              aria-selected={currentTab === tab.id}
+              className={cn(
+                'relative flex flex-1 flex-col items-center justify-center gap-1.5 transition-all duration-200',
+                currentTab === tab.id ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              <tab.icon className={cn('h-6 w-6 transition-transform duration-200', currentTab === tab.id && 'scale-110')} />
+              <span className={cn('text-[10px] font-bold transition-colors', currentTab === tab.id ? 'font-black text-primary' : 'text-muted-foreground')}>
+                {tab.label}
+              </span>
+            </button>
+          ))}
+
+          {/* Center + button — raised, opens More sheet */}
+          <div className="relative flex flex-1 items-center justify-center">
+            <button
+              onClick={() => setMoreOpen(true)}
+              aria-label="More actions"
+              className="absolute -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-indigo-600 text-white shadow-xl ring-4 ring-background transition-transform hover:scale-105 active:scale-95"
+            >
+              <Plus className="h-7 w-7" />
+            </button>
+          </div>
+
+          {tabs.slice(2).map((tab) => (
+            <button
+              key={tab.id}
+              ref={(el) => { tabRefs.current[tab.id] = el; }}
+              onClick={() => selectTab(tab.id)}
+              role="tab"
+              aria-selected={currentTab === tab.id}
+              className={cn(
+                'relative flex flex-1 flex-col items-center justify-center gap-1.5 transition-all duration-200',
+                currentTab === tab.id ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              <tab.icon className={cn('h-6 w-6 transition-transform duration-200', currentTab === tab.id && 'scale-110')} />
+              <span className={cn('text-[10px] font-bold transition-colors', currentTab === tab.id ? 'font-black text-primary' : 'text-muted-foreground')}>
+                {tab.label}
+              </span>
+            </button>
+          ))}
+        </div>
       </nav>
 
       {/* ── Delete Dialogs ── */}
