@@ -3,7 +3,8 @@
   "services": {
     "frontend": {
       "root": "Frontend",
-      "framework": "nextjs",
+      "framework": "vite",
+      "outputDirectory": "dist/public",
       "bindings": [
         {
           "type": "service",
@@ -15,7 +16,9 @@
     },
     "backend": {
       "root": "Backend",
-      "framework": "express"
+      "framework": "express",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist"
     }
   },
   "rewrites": [
