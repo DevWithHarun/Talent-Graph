@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ShieldCheck, Clock, User, Ruler, Weight, Footprints, MapPin, Play, Globe, Star, Building2 } from 'lucide-react';
+import { safeRenderTier } from '@/lib/utils';
 
 function getInitials(name: string) {
   if (!name) return '??';
@@ -79,7 +80,7 @@ export function ProfileHeader({ profile }: { profile: AthleteProfile }) {
               )}
               <div className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" />{profile.clubName || profile.team || 'No Club'}</div>
               <div className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" />{profile.age} YRS</div>
-              <Badge className="bg-primary text-primary-foreground font-black tracking-[0.2em]">{profile.readinessTier || 'Developing'}</Badge>
+              <Badge className="bg-primary text-primary-foreground font-black tracking-[0.2em]">{safeRenderTier(profile.readinessTier, 'Developing')}</Badge>
               {isVerified ? (
                 <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20 flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5" /> COACH VERIFIED

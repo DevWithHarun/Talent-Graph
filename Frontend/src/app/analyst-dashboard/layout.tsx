@@ -2,7 +2,7 @@
 
 import { Link } from 'wouter';
 import {
-  Home, Users, Trophy, BarChart3,
+  Home, Users, Trophy, BarChart3, MessageSquare,
   Settings, LogOut, Menu, X, Radio, FileText, ChevronRight, Headphones
 } from 'lucide-react';
 import { SupportDialog } from '@/components/support/support-dialog';
@@ -16,12 +16,14 @@ import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { ClubMember } from '@/lib/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ChatNavButton } from '@/components/messaging/chat-nav-button';
 
 const navItems = [
   { href: '/analyst-dashboard', label: 'Overview', icon: Home, exact: true },
   { href: '/analyst-dashboard/squad', label: 'Squad View', icon: Users },
   { href: '/analyst-dashboard/matches', label: 'Match Entry', icon: Trophy },
   { href: '/analyst-dashboard/analytics', label: 'Performance Analytics', icon: BarChart3 },
+  { href: '/chat', label: 'Messages', icon: MessageSquare },
 ];
 
 export default function AnalystDashboardLayout({ children }: { children: React.ReactNode }) {
@@ -157,7 +159,7 @@ export default function AnalystDashboardLayout({ children }: { children: React.R
             <BarChart3 className="w-4 h-4 text-[#00C853]" />
             <span className="font-black text-sm uppercase tracking-widest">Analyst Portal</span>
           </div>
-          <div className="w-9" />
+          <ChatNavButton />
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">

@@ -18,6 +18,7 @@ import { ClubInvitationsCard } from '@/components/scout/club-invitations-card';
 import { CoachClubInvitations } from '@/components/coach/club-invitations';
 import { useMemo } from 'react';
 import { format, parseISO, formatDistanceToNow, isAfter } from 'date-fns';
+import { extractCSI, safeRenderNumber } from '@/lib/utils';
 
 function cn(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(' ');
@@ -83,7 +84,7 @@ export default function CoachOverviewPage() {
     const verified = athletes?.filter(a => a.isVerified).length ?? 0;
     const pending = total - verified;
     const avgCSI = total > 0
-      ? Math.round((athletes ?? []).reduce((s, a) => s + (a.compositeScoutingIndex ?? 0), 0) / total)
+      ? Math.round((athletes ?? []).reduce((s, a) => s + extractCSI(a.compositeScoutingIndex), 0) / total)
       : 0;
     return { total, verified, pending, avgCSI };
   }, [athletes]);
@@ -119,7 +120,7 @@ export default function CoachOverviewPage() {
   const topPerformers = useMemo(() => {
     if (!athletes) return [];
     return [...athletes]
-      .sort((a, b) => (b.compositeScoutingIndex ?? 0) - (a.compositeScoutingIndex ?? 0))
+      .sort((a, b) => extractCSI(b.compositeScoutingIndex) - extractCSI(a.compositeScoutingIndex))
       .slice(0, 3);
   }, [athletes]);
 
@@ -488,7 +489,7 @@ export default function CoachOverviewPage() {
                     </AvatarFallback>
                   </Avatar>
                   <span className="text-sm font-black text-white flex-1">{topPerformers[0].firstName} {topPerformers[0].lastName}</span>
-                  <span className="text-lg font-black text-[#00C853]">{topPerformers[0].compositeScoutingIndex ?? '--'}</span>
+                  <span className="text-lg font-black text-[#00C853]">{safeRenderNumber(topPerformers[0].compositeScoutingIndex, '--')}</span>
                 </div>
               </div>
             )}
@@ -622,7 +623,7 @@ export default function CoachOverviewPage() {
                       <Badge className="bg-[#00C853]/10 text-[#00C853] border-[#00C853]/30 font-black text-[8px] hidden sm:flex">✓ Verified</Badge>
                     )}
                     <div className="text-right">
-                      <p className="text-xl font-black text-[#00C853]">{a.compositeScoutingIndex ?? '--'}</p>
+                      <p className="text-xl font-black text-[#00C853]">{safeRenderNumber(a.compositeScoutingIndex, '--')}</p>
                       <p className="text-[8px] font-bold text-[#94A3B8]">CSI</p>
                     </div>
                   </div>

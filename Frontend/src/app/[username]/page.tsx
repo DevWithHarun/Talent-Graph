@@ -232,8 +232,13 @@ export default function UsernamePage() {
     ];
 
     const safeRenderValue = (val: any) => {
-        if (val === null || val === undefined || isNaN(val)) return '--';
-        return val;
+        if (val === null || val === undefined) return '--';
+        if (typeof val === 'object') {
+            const resolved = val.compositeScoutingIndex ?? val.talentGraphScore ?? val.score ?? 0;
+            return isNaN(resolved) ? '--' : Math.round(resolved);
+        }
+        if (isNaN(val)) return '--';
+        return typeof val === 'number' ? Math.round(val) : val;
     };
 
     const viewerName = currentUserProfile

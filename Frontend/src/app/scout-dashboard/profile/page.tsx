@@ -84,9 +84,11 @@ export default function ScoutProfilePage() {
         }
     }, [user, isUserLoading, router]);
 
+    const { reset } = form;
+
     useEffect(() => {
         if (scoutProfile) {
-            form.reset({
+            reset({
                 name: scoutProfile.name,
                 sports: scoutProfile.sports?.join(', ') || '',
                 website: scoutProfile.website || '',
@@ -94,7 +96,7 @@ export default function ScoutProfilePage() {
             });
             if (scoutProfile.photoUrl) setPhotoPreview(scoutProfile.photoUrl);
         }
-    }, [scoutProfile, form]);
+    }, [scoutProfile, reset]);
 
     const handlePhotoFile = async (file: File) => {
         if (!file.type.startsWith('image/')) {

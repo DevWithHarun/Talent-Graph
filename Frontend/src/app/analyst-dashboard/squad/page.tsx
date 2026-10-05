@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Search, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import type { ClubMember, AthleteProfile } from '@/lib/types';
 import { Link } from 'wouter';
+import { extractCSI, safeRenderNumber } from '@/lib/utils';
 
 const POSITIONS = ['All', 'GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST', 'CF'];
 
@@ -45,13 +46,13 @@ export default function AnalystSquadPage() {
       list = list.filter(a => `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) || (a.position ?? '').toLowerCase().includes(q));
     }
     if (positionFilter !== 'All') list = list.filter(a => a.position === positionFilter || a.altPositions?.includes(positionFilter));
-    return [...list].sort((a, b) => (b.compositeScoutingIndex ?? 0) - (a.compositeScoutingIndex ?? 0));
+    return [...list].sort((a, b) => extractCSI(b.compositeScoutingIndex) - extractCSI(a.compositeScoutingIndex));
   }, [athletes, search, positionFilter]);
 
   const stats = useMemo(() => ({
     total: athletes?.length ?? 0,
     verified: athletes?.filter(a => a.isVerified).length ?? 0,
-    avgCSI: athletes?.length ? Math.round(athletes.reduce((s, a) => s + (a.compositeScoutingIndex ?? 0), 0) / (athletes.length)) : 0,
+    avgCSI: athletes?.length ? Math.round(athletes.reduce((s, a) => s + extractCSI(a.compositeScoutingIndex), 0) / (athletes.length)) : 0,
   }), [athletes]);
 
   if (isLoading) return <div className="flex h-64 items-center justify-center"><Loader2 className="animate-spin" /></div>;
@@ -119,7 +120,7 @@ export default function AnalystSquadPage() {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-black text-lg">{athlete.compositeScoutingIndex ?? '—'}</p>
+                  <p className="font-black text-lg">{safeRenderNumber(athlete.compositeScoutingIndex, '—')}</p>
                   <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">CSI</p>
                   {(athlete.riskIndex ?? 0) > 0 && (
                     <p className={`text-[9px] font-black ${getRiskColor(athlete.riskIndex ?? 0)}`}>

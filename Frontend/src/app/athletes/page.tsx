@@ -89,12 +89,29 @@ export default function AthletesPage() {
   return (
     <div className="min-h-screen bg-[#0A1224] text-white">
       <header className="sticky top-0 z-40 border-b border-[#334155] bg-[#0A1224]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6"><Link href="/" className="text-lg font-black uppercase tracking-wide"><span className="mr-2 text-[#00C853]">⚡</span>Talent Graph</Link><nav className="hidden items-center gap-7 text-sm font-bold text-[#94A3B8] md:flex"><Link href="/feed" className="hover:text-white">Feeds</Link><Link href="/athletes" className="text-[#00C853]">Discover Talent</Link><Link href="/scout-dashboard" className="hover:text-white">Discovery</Link></nav><Button asChild size="sm" className="bg-[#00C853] font-black text-black"><Link href={user ? '/feed' : '/login'}>{user ? 'Back to Feed' : 'Log In'}</Link></Button></div>
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2.5 text-lg font-black tracking-wide text-white no-underline">
+            <img
+              src="/icons/logo-transparent.png"
+              alt="Talent Graph Logo"
+              className="h-8 w-8 object-contain rounded-xl bg-black p-0.5 shadow-sm shrink-0"
+            />
+            <span>Talent Graph</span>
+          </Link>
+          <nav className="hidden items-center gap-7 text-sm font-bold text-[#94A3B8] md:flex">
+            <Link href="/feed" className="hover:text-white">Feeds</Link>
+            <Link href="/athletes" className="text-[#00C853]">Discover Talent</Link>
+            <Link href="/scout-dashboard" className="hover:text-white">Discovery</Link>
+          </nav>
+          <Button asChild size="sm" className="bg-[#00C853] font-black text-black">
+            <Link href={user ? '/feed' : '/login'}>{user ? 'Back to Feed' : 'Log In'}</Link>
+          </Button>
+        </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-12 pb-24 sm:px-6 sm:py-16">
         <div className="mb-10 flex flex-col gap-6 text-center md:flex-row md:items-end md:justify-between md:text-left"><div><h1 className="text-3xl font-black uppercase tracking-tight sm:text-4xl">Verified Athletes</h1><p className="mt-2 text-[#94A3B8]">Browse top talent and view their highlight reels.</p></div><Button asChild className="bg-[#00C853] font-black text-black hover:bg-[#00C853]/90"><Link href={user ? '/onboarding' : '/signup'}>Submit Your Profile</Link></Button></div>
         <div className="mb-8 flex flex-col gap-3 sm:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" /><Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search athletes, sports, or positions..." className="h-11 border-[#334155] bg-[#1E293B] pl-10 text-white placeholder:text-[#94A3B8]" /></div><div className="flex gap-2 overflow-x-auto">{sports.map(item => <button key={item} onClick={() => setSport(item)} className={cn('shrink-0 rounded-full border px-4 py-2 text-sm font-bold capitalize', sport === item ? 'border-[#00C853] bg-[#00C853]/10 text-[#00C853]' : 'border-[#334155] text-[#94A3B8] hover:text-white')}>{item === 'all' ? 'All Sports' : item}</button>)}</div></div>
-        {isLoading ? <div className="py-20 text-center text-[#94A3B8]">Loading verified athletes...</div> : filteredAthletes.length ? <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{filteredAthletes.map(athlete => <AthleteCard key={athlete.uid} athlete={athlete} connected={!!connections?.some(connection => connection.athleteId === athlete.uid)} connecting={connectingId === athlete.uid} onConnect={() => connect(athlete)} />)}</div> : <div className="rounded-2xl border border-[#334155] bg-[#1E293B] py-20 text-center text-[#94A3B8]">No athletes match your search.</div>}
+        {isLoading ? <div className="py-20 text-center text-[#94A3B8]">Loading verified athletes...</div> : filteredAthletes.length ? <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{filteredAthletes.map((athlete, index) => <AthleteCard key={athlete.uid || athlete.id || index} athlete={athlete} connected={!!connections?.some(connection => connection.athleteId === athlete.uid)} connecting={connectingId === athlete.uid} onConnect={() => connect(athlete)} />)}</div> : <div className="rounded-2xl border border-[#334155] bg-[#1E293B] py-20 text-center text-[#94A3B8]">No athletes match your search.</div>}
       </main>
     </div>
   );

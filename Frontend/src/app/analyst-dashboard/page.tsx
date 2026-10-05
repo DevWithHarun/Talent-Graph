@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Users, Trophy, TrendingUp, BarChart3, Target, Activity, FileText, MessageSquare } from 'lucide-react';
 import type { ClubMember, AthleteProfile, ClubProfile } from '@/lib/types';
 import { Link } from 'wouter';
+import { extractCSI, safeRenderNumber } from '@/lib/utils';
 
 export default function AnalystDashboardPage() {
   const { user } = useUser();
@@ -47,7 +48,7 @@ export default function AnalystDashboardPage() {
   }
 
   const avgCSI = athletes?.length
-    ? Math.round(athletes.reduce((s, a) => s + (a.compositeScoutingIndex ?? 0), 0) / athletes.length)
+    ? Math.round(athletes.reduce((s, a) => s + extractCSI(a.compositeScoutingIndex), 0) / athletes.length)
     : 0;
   const verified = athletes?.filter(a => a.isVerified).length ?? 0;
   const totalWins = matches?.filter((m: any) => m.result === 'W').length ?? 0;

@@ -19,6 +19,7 @@ import type { AthleteProfile, GhostPlayer } from '@/lib/types';
 import { useCoachClub } from '@/app/coach-dashboard/coach-context';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+import { extractCSI, safeRenderNumber } from '@/lib/utils';
 
 function cn(...c: (string | boolean | undefined)[]) { return c.filter(Boolean).join(' '); }
 
@@ -95,7 +96,7 @@ export default function CoachSquadPage() {
       list = list.filter(a => getRiskBand(a.riskIndex ?? 0) === riskFilter);
     }
     list = [...list].sort((a, b) => {
-      if (sortBy === 'csi') return (b.compositeScoutingIndex ?? 0) - (a.compositeScoutingIndex ?? 0);
+      if (sortBy === 'csi') return extractCSI(b.compositeScoutingIndex) - extractCSI(a.compositeScoutingIndex);
       if (sortBy === 'name') return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
       if (sortBy === 'age') return (a.age ?? 0) - (b.age ?? 0);
       if (sortBy === 'risk') return (b.riskIndex ?? 0) - (a.riskIndex ?? 0);
@@ -115,7 +116,7 @@ export default function CoachSquadPage() {
       total: list.length,
       verified: list.filter(a => a.isVerified).length,
       selfReported: list.filter(a => !a.isVerified).length,
-      avgCSI: list.length ? Math.round(list.reduce((s, a) => s + (a.compositeScoutingIndex ?? 0), 0) / list.length) : 0,
+      avgCSI: list.length ? Math.round(list.reduce((s, a) => s + extractCSI(a.compositeScoutingIndex), 0) / list.length) : 0,
       avgAge: list.length ? (list.reduce((s, a) => s + (a.age ?? 0), 0) / list.length).toFixed(1) : '—',
       positions,
     };
@@ -636,7 +637,7 @@ function AthleteRow({ athlete: a, removing, onRemove }: {
   removing: boolean;
   onRemove: () => void;
 }) {
-  const csi = a.compositeScoutingIndex ?? 0;
+  const csi = extractCSI(a.compositeScoutingIndex);
   const risk = a.riskIndex ?? 0;
   const riskBand = getRiskBand(risk);
 
@@ -681,7 +682,7 @@ function AthleteRow({ athlete: a, removing, onRemove }: {
         {/* CSI */}
         <div className="text-center hidden sm:block">
           <p className={cn('text-lg font-black', csi >= 70 ? 'text-[#00C853]' : csi >= 50 ? 'text-white' : 'text-[#94A3B8]')}>
-            {csi || '--'}
+            {safeRenderNumber(a.compositeScoutingIndex, '--')}
           </p>
           <p className="text-[8px] font-bold text-[#94A3B8]">CSI</p>
         </div>

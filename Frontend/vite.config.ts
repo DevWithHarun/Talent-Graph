@@ -20,6 +20,7 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname),
   build: {
+    sourcemap: 'inline',
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
     rollupOptions: {
@@ -35,6 +36,12 @@ export default defineConfig({
     allowedHosts: true,
     fs: {
       strict: true,
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
     },
   },
   preview: {

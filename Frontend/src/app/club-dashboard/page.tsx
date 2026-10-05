@@ -16,6 +16,7 @@ import { PerformanceAlerts } from '@/components/club/performance-alerts';
 import { SquadAnalytics } from '@/components/club/squad-analytics';
 import { RecruitmentPipeline } from '@/components/club/recruitment-pipeline';
 import { useToast } from '@/hooks/use-toast';
+import { extractCSI, safeRenderNumber } from '@/lib/utils';
 
 export default function ClubOverviewPage() {
   const { user } = useUser();
@@ -117,7 +118,7 @@ export default function ClubOverviewPage() {
       const matchesTier = tierFilter === 'all' || a.readinessTier?.toLowerCase() === tierFilter.toLowerCase();
       return matchesPos && matchesTier;
     });
-    const totalCSI = filtered.reduce((acc, a) => acc + (a.compositeScoutingIndex || 0), 0);
+    const totalCSI = filtered.reduce((acc, a) => acc + extractCSI(a.compositeScoutingIndex), 0);
     const totalAge = filtered.reduce((acc, a) => acc + (a.age || 0), 0);
     return {
       count: filtered.length,
@@ -524,7 +525,7 @@ export default function ClubOverviewPage() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y">
-                {athletes?.slice(0, 5).sort((a, b) => (b.compositeScoutingIndex || 0) - (a.compositeScoutingIndex || 0)).map(a => (
+                {athletes?.slice(0, 5).sort((a, b) => extractCSI(b.compositeScoutingIndex) - extractCSI(a.compositeScoutingIndex)).map(a => (
                   <div key={a.uid} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <Avatar className="w-9 h-9 rounded-xl shrink-0">
@@ -539,7 +540,7 @@ export default function ClubOverviewPage() {
                       </div>
                     </div>
                     <div className="text-right shrink-0 ml-3">
-                      <p className="text-xl font-black text-primary leading-none">{a.compositeScoutingIndex || '--'}</p>
+                      <p className="text-xl font-black text-primary leading-none">{safeRenderNumber(a.compositeScoutingIndex, '--')}</p>
                       <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter mt-1">CSI</p>
                     </div>
                   </div>

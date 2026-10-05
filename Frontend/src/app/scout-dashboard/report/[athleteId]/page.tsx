@@ -102,13 +102,21 @@ function getConsistencyBand(ci?: number) {
   return 'Poor';
 }
 
-function IndexBar({ value, label }: { value?: number; label: string }) {
-  const v = value ?? 0;
+function IndexBar({ value, label }: { value?: any; label: string }) {
+  let num = 0;
+  if (typeof value === 'number') {
+    num = value;
+  } else if (value && typeof value === 'object') {
+    num = Number(value.talentGraphScore || value.compositeScoutingIndex || value.score || 0);
+  } else {
+    num = Number(value) || 0;
+  }
+  const v = isNaN(num) ? 0 : Math.min(100, Math.max(0, num));
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="text-slate-600 font-medium">{label}</span>
-        <span className="font-bold text-slate-800">{value !== undefined ? Math.round(v) : '–'}</span>
+        <span className="font-bold text-slate-800">{value !== undefined && value !== null ? Math.round(v) : '–'}</span>
       </div>
       <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
         <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${v}%` }} />

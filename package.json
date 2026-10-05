@@ -2,18 +2,24 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {
-    "preinstall": "node -e \"const fs=require('fs');['package-lock.json','yarn.lock'].forEach((file)=>{try{fs.rmSync(file,{force:true});}catch{}}); const userAgent=process.env.npm_config_user_agent||''; if(!userAgent.startsWith('pnpm/')) { console.error('Use pnpm instead'); process.exit(1); }\"",
-    "dev": "pnpm -r --parallel --filter \"./Backend\" --filter \"./Frontend\" run dev",
-    "dev:frontend": "pnpm --filter @workspace/talent-graph run dev",
-    "dev:backend": "pnpm --filter @workspace/backend run dev",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./Frontend\" --filter \"./Backend\" --filter \"./scripts\" --if-present run typecheck"
-  },
   "private": true,
+  "workspaces": [
+    "Frontend",
+    "Backend",
+    "lib/*",
+    "scripts"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=Frontend",
+    "dev:frontend": "npm run dev --workspace=Frontend",
+    "dev:backend": "npm run dev --workspace=Backend",
+    "build": "npm run typecheck && npm run build --workspace=Frontend --if-present",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "npm run typecheck:libs"
+  },
   "devDependencies": {
     "prettier": "^3.9.6",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "tsx": "^4.21.0"
   }
 }

@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, BarChart3, TrendingUp, TrendingDown, Target, Users, ShieldCheck, Activity, Zap } from 'lucide-react';
 import type { ClubMember, AthleteProfile } from '@/lib/types';
+import { extractCSI, safeRenderNumber } from '@/lib/utils';
 
 const POSITIONS = ['All', 'GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST', 'CF'];
 
@@ -54,7 +55,7 @@ export default function AnalystAnalyticsPage() {
     let list = athletes ?? [];
     if (positionFilter !== 'All') list = list.filter(a => a.position === positionFilter || a.altPositions?.includes(positionFilter));
     return [...list].sort((a, b) => {
-      if (sortBy === 'csi') return (b.compositeScoutingIndex ?? 0) - (a.compositeScoutingIndex ?? 0);
+      if (sortBy === 'csi') return extractCSI(b.compositeScoutingIndex) - extractCSI(a.compositeScoutingIndex);
       if (sortBy === 'risk') return (b.riskIndex ?? 0) - (a.riskIndex ?? 0);
       return (a.age ?? 0) - (b.age ?? 0);
     });
@@ -66,8 +67,8 @@ export default function AnalystAnalyticsPage() {
     list.forEach(a => { posMap[a.position ?? 'Unknown'] = (posMap[a.position ?? 'Unknown'] ?? 0) + 1; });
     const topPos = Object.entries(posMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
     const highRisk = list.filter(a => (a.riskIndex ?? 0) >= 75).length;
-    const avgCSI = list.length ? Math.round(list.reduce((s, a) => s + (a.compositeScoutingIndex ?? 0), 0) / list.length) : 0;
-    const maxCSI = list.length ? Math.max(...list.map(a => a.compositeScoutingIndex ?? 0)) : 0;
+    const avgCSI = list.length ? Math.round(list.reduce((s, a) => s + extractCSI(a.compositeScoutingIndex), 0) / list.length) : 0;
+    const maxCSI = list.length ? Math.max(...list.map(a => extractCSI(a.compositeScoutingIndex)), 1) : 1;
 
     const matchList = matches ?? [];
     const wins = matchList.filter((m: any) => m.result === 'W').length;
@@ -203,11 +204,11 @@ export default function AnalystAnalyticsPage() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-black">{a.compositeScoutingIndex ?? '—'}</p>
+                      <p className="font-black">{safeRenderNumber(a.compositeScoutingIndex, '—')}</p>
                       <p className="text-[9px] text-muted-foreground">CSI</p>
                     </div>
                     <div className="w-20 hidden sm:block">
-                      <StatBar value={a.compositeScoutingIndex ?? 0} max={summary.maxCSI || 100} />
+                      <StatBar value={extractCSI(a.compositeScoutingIndex)} max={summary.maxCSI || 100} />
                     </div>
                   </div>
                 );

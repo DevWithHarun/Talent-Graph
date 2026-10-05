@@ -48,7 +48,7 @@ const recordLogin = async (firestore: any, user: User) => {
     setDocumentNonBlocking(userDocRef, { loginHistory: newLoginHistory }, { merge: true });
 
   } catch (error) {
-    console.error("Error recording login:", error);
+    console.debug("Login history record deferred (offline mode):", error);
   }
 };
 

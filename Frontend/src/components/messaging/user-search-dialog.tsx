@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, setDoc, doc, limit, getDoc } from 'firebase/firestore';
 import type { ScoutProfile, AthleteProfile, ClubProfile } from '@/lib/types';
@@ -35,10 +35,10 @@ interface Props {
 }
 
 function getInitials(name: string) {
-  const parts = name.trim().split(' ');
+  const parts = (name || '').trim().split(' ');
   return parts.length > 1
     ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    : name.substring(0, 2).toUpperCase();
+    : (name || '?').substring(0, 2).toUpperCase();
 }
 
 export function UserSearchDialog({
@@ -54,9 +54,54 @@ export function UserSearchDialog({
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [connectedUsers, setConnectedUsers] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingConnected, setIsLoadingConnected] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [startingChat, setStartingChat] = useState<string | null>(null);
+
+  // Fetch connected / directory users when dialog opens
+  useEffect(() => {
+    if (!open || !firestore || !currentUserId) return;
+    (async () => {
+      setIsLoadingConnected(true);
+      try {
+        const [scoutsSnap, athletesSnap, clubsSnap] = await Promise.all([
+          getDocs(query(collection(firestore, 'scouts'), limit(15))),
+          getDocs(query(collection(firestore, 'athletes'), limit(15))),
+          getDocs(query(collection(firestore, 'clubs'), limit(10))),
+        ]);
+
+        const seen = new Set<string>();
+        const list: SearchResult[] = [];
+
+        for (const d of scoutsSnap.docs) {
+          if (seen.has(d.id) || d.id === currentUserId) continue;
+          seen.add(d.id);
+          const p = d.data() as ScoutProfile;
+          list.push({ uid: d.id, name: p.name || 'Scout', username: p.username, role: 'scout', photoUrl: p.photoUrl, isVerified: p.isVerified });
+        }
+        for (const d of athletesSnap.docs) {
+          if (seen.has(d.id) || d.id === currentUserId) continue;
+          seen.add(d.id);
+          const p = d.data() as AthleteProfile;
+          list.push({ uid: d.id, name: `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Athlete', role: 'athlete', photoUrl: p.photoUrl, isVerified: p.isVerified });
+        }
+        for (const d of clubsSnap.docs) {
+          if (seen.has(d.id) || d.id === currentUserId) continue;
+          seen.add(d.id);
+          const p = d.data() as ClubProfile;
+          list.push({ uid: d.id, name: p.clubName || 'Club', role: 'club', photoUrl: p.logoUrl });
+        }
+
+        setConnectedUsers(list);
+      } catch (e) {
+        console.error('[LoadConnectedUsers]', e);
+      } finally {
+        setIsLoadingConnected(false);
+      }
+    })();
+  }, [open, firestore, currentUserId]);
 
   const handleSearch = useCallback(async () => {
     if (!firestore || !searchTerm.trim()) return;
@@ -162,6 +207,8 @@ export function UserSearchDialog({
     coach: 'bg-orange-500/10 text-orange-600 border-none',
   };
 
+  const displayedList = searchTerm.trim() ? results : connectedUsers;
+
   return (
     <Dialog open={open} onOpenChange={v => !v && handleClose()}>
       <DialogContent className="max-w-md">
@@ -171,7 +218,7 @@ export function UserSearchDialog({
             New Message
           </DialogTitle>
           <DialogDescription>
-            Search for any athlete, scout, coach, or club to start a conversation.
+            Select from your connections or search for athletes, scouts, coaches, and clubs.
           </DialogDescription>
         </DialogHeader>
 
@@ -195,60 +242,70 @@ export function UserSearchDialog({
             </Button>
           </div>
 
-          {results.length > 0 && (
-            <div className="space-y-1.5 max-h-80 overflow-y-auto">
-              {results.map(r => (
-                <div
-                  key={r.uid}
-                  className="flex items-center justify-between p-3 rounded-xl border hover:bg-muted/50 transition-colors gap-3"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="h-9 w-9 shrink-0">
-                      <AvatarImage src={r.photoUrl} />
-                      <AvatarFallback className="text-xs font-bold">{getInitials(r.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-semibold text-sm truncate">{r.name}</p>
-                        {r.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        {r.username && <p className="text-xs text-muted-foreground">@{r.username}</p>}
-                        <Badge className={`text-[10px] h-4 px-1.5 font-bold capitalize shrink-0 ${roleBadgeColor[r.role] || ''}`}>
-                          {r.role}
-                        </Badge>
+          <div>
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
+              {searchTerm.trim() ? 'Search Results' : 'Connected People & Directory'}
+            </p>
+
+            {isLoadingConnectionOrSearch(isSearching || isLoadingConnected) && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            )}
+
+            {!isSearching && !isLoadingConnected && displayedList.length > 0 && (
+              <div className="space-y-1.5 max-h-80 overflow-y-auto">
+                {displayedList.map(r => (
+                  <div
+                    key={r.uid}
+                    className="flex items-center justify-between p-3 rounded-xl border hover:bg-muted/50 transition-colors gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-9 w-9 shrink-0">
+                        <AvatarImage src={r.photoUrl} />
+                        <AvatarFallback className="text-xs font-bold">{getInitials(r.name)}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-semibold text-sm truncate">{r.name}</p>
+                          {r.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {r.username && <p className="text-xs text-muted-foreground">@{r.username}</p>}
+                          <Badge className={`text-[10px] h-4 px-1.5 font-bold capitalize shrink-0 ${roleBadgeColor[r.role] || ''}`}>
+                            {r.role}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
+                    <Button
+                      size="sm"
+                      onClick={() => handleStartChat(r)}
+                      disabled={startingChat === r.uid}
+                      className="h-8 shrink-0 font-black uppercase tracking-widest text-xs"
+                    >
+                      {startingChat === r.uid
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <><MessageSquare className="h-3.5 w-3.5 mr-1.5" />Chat</>
+                      }
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleStartChat(r)}
-                    disabled={startingChat === r.uid}
-                    className="h-8 shrink-0 font-black uppercase tracking-widest text-xs"
-                  >
-                    {startingChat === r.uid
-                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      : <><MessageSquare className="h-3.5 w-3.5 mr-1.5" />Chat</>
-                    }
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {hasSearched && !isSearching && results.length === 0 && (
-            <div className="text-center py-8 text-sm text-muted-foreground">
-              No users found for &ldquo;{searchTerm}&rdquo;. Try a different name or username.
-            </div>
-          )}
-
-          {!hasSearched && (
-            <p className="text-xs text-muted-foreground text-center py-4">
-              Type a name or username above and press Search or Enter.
-            </p>
-          )}
+            {!isLoadingConnected && !isSearching && displayedList.length === 0 && (
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                {searchTerm.trim() ? `No users found for "${searchTerm}".` : 'No connected users found.'}
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
+}
+
+function isLoadingConnectionOrSearch(val: boolean) {
+  return val;
 }

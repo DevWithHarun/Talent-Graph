@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, MessageSquare, Plus, Search, ArrowLeft } from 'lucide-react';
+import { Loader2, MessageSquare, Plus, Search, ArrowLeft, Bell } from 'lucide-react';
 import { UserSearchDialog } from '@/components/messaging/user-search-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'wouter';
@@ -28,6 +28,7 @@ export default function ChatPage() {
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [currentUserName, setCurrentUserName] = useState('');
   const [currentUserRole, setCurrentUserRole] = useState('');
@@ -79,7 +80,15 @@ export default function ChatPage() {
 
   const { data: conversations, isLoading } = useCollection<Conversation>(conversationsQuery);
 
+  const unreadCount = conversations?.filter(c => c.lastSenderId && c.lastSenderId !== user?.uid).length ?? 0;
+
   const filteredConversations = conversations?.filter(conv => {
+    // Hide empty conversations that have no messages sent yet
+    if (!conv.lastMessage) return false;
+
+    const isUnread = conv.lastSenderId && conv.lastSenderId !== user?.uid;
+    if (activeTab === 'unread' && !isUnread) return false;
+
     if (!searchTerm.trim()) return true;
     const otherId = conv.participants.find(p => p !== user?.uid);
     const otherInfo = otherId ? conv.participantInfo?.[otherId] : null;
@@ -121,11 +130,39 @@ export default function ChatPage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+        {/* Tabs & Unread Icon */}
+        <div className="flex items-center justify-between border-b pb-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant={activeTab === 'all' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('all')}
+              className="font-bold text-xs h-8 rounded-full px-4"
+            >
+              All Chats
+            </Button>
+            <Button
+              variant={activeTab === 'unread' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab('unread')}
+              className="font-bold text-xs h-8 rounded-full px-4 gap-1.5 relative"
+            >
+              <Bell className="h-3.5 w-3.5" />
+              Unread
+              {unreadCount > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-black text-white ml-0.5">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search conversations…"
+            placeholder="Search chats…"
             className="pl-9"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
@@ -143,15 +180,17 @@ export default function ChatPage() {
               <MessageSquare className="h-8 w-8 text-muted-foreground" />
             </div>
             <p className="font-bold text-lg">
-              {searchTerm ? 'No conversations match' : 'No messages yet'}
+              {searchTerm ? 'No conversations match' : activeTab === 'unread' ? 'No unread messages' : 'No messages yet'}
             </p>
             <p className="text-sm text-muted-foreground max-w-xs">
               {searchTerm
                 ? 'Try a different name'
+                : activeTab === 'unread'
+                ? 'All caught up on your messages'
                 : 'Start a conversation with any athlete, scout, coach, or club.'
               }
             </p>
-            {!searchTerm && (
+            {!searchTerm && activeTab === 'all' && (
               <Button onClick={() => setNewChatOpen(true)} className="font-black uppercase tracking-widest text-xs mt-2">
                 <Plus className="h-4 w-4 mr-2" />
                 Start First Chat
@@ -207,13 +246,13 @@ export default function ChatPage() {
         )}
       </div>
 
-      {user && currentUserName && (
+      {user && (
         <UserSearchDialog
           open={newChatOpen}
           onClose={() => setNewChatOpen(false)}
           currentUserId={user.uid}
-          currentUserName={currentUserName}
-          currentUserRole={currentUserRole}
+          currentUserName={currentUserName || user.displayName || 'User'}
+          currentUserRole={currentUserRole || 'user'}
           currentUserPhoto={currentUserPhoto}
         />
       )}

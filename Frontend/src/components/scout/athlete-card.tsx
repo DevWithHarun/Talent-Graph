@@ -6,6 +6,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { safeRenderNumber, safeRenderTier } from '@/lib/utils';
 
 function getInitials(name: string) {
     if (!name) return '??';
@@ -53,9 +54,9 @@ export function AthleteCard({ athlete }: { athlete: AthleteProfile }) {
                 </div>
             </CardContent>
             <CardFooter className="flex justify-between items-center">
-                 <Badge variant="outline">{athlete.readinessTier || 'Not Scored'}</Badge>
+                 <Badge variant="outline">{safeRenderTier(athlete.readinessTier, 'Not Scored')}</Badge>
                  <div className="text-right">
-                    <div className="text-2xl font-bold">{athlete.talentGraphScore || 'N/A'}</div>
+                    <div className="text-2xl font-bold">{safeRenderNumber(athlete.talentGraphScore, 'N/A')}</div>
                     <div className="text-xs text-muted-foreground">TGS</div>
                  </div>
             </CardFooter>

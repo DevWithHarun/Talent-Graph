@@ -36,6 +36,7 @@ import { Badge } from '@/components/ui/badge';
 import { SupportDialog } from '@/components/support/support-dialog';
 import { PushNotificationToggle, PushNotificationPrompt } from '@/components/club/push-notification-prompt';
 import { DashboardErrorBoundary } from '@/components/coach/dashboard-error-boundary';
+import { ChatNavButton } from '@/components/messaging/chat-nav-button';
 import type { ClubMember } from '@/lib/types';
 
 interface NavItem {
@@ -234,7 +235,8 @@ export default function ClubDashboardLayout({
               </Link>
             )}
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <ChatNavButton />
             <Link href="/club-dashboard/notifications">
               <Button variant="ghost" size="icon" className="h-8 w-8 relative">
                 <Bell className="h-4 w-4" />

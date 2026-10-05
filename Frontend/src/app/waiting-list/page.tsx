@@ -66,6 +66,8 @@ export default function WaitingListPage() {
     },
   });
 
+  const { reset, setValue } = form;
+
   useEffect(() => {
     if (isUserLoading || isWaitingListLoading) return;
     
@@ -77,12 +79,12 @@ export default function WaitingListPage() {
     if (waitingListEntry) {
       setIsSubmitted(true);
     } else {
-      form.reset({
+      reset({
         name: user.displayName || '',
         email: user.email || '',
       });
     }
-  }, [user, isUserLoading, waitingListEntry, isWaitingListLoading, router, form]);
+  }, [user, isUserLoading, waitingListEntry, isWaitingListLoading, reset]);
 
 
   useEffect(() => {
@@ -90,16 +92,16 @@ export default function WaitingListPage() {
     const inches = parseFloat(heightIn);
     if (!isNaN(feet) || !isNaN(inches)) {
       const totalCm = (feet || 0) * 30.48 + (inches || 0) * 2.54;
-      form.setValue('heightCm', totalCm);
+      setValue('heightCm', totalCm);
     }
-  }, [heightFt, heightIn, form]);
+  }, [heightFt, heightIn, setValue]);
 
   useEffect(() => {
     const lbs = parseFloat(weightLbs);
     if (!isNaN(lbs)) {
-      form.setValue('weightKg', lbs * 0.453592);
+      setValue('weightKg', lbs * 0.453592);
     }
-  }, [weightLbs, form]);
+  }, [weightLbs, setValue]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !firestore) return;

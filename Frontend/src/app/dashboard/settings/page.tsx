@@ -20,6 +20,7 @@ import {
 import type { AthleteProfile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteAccountDialog } from '@/components/account/delete-account-dialog';
+import { safeRenderTier } from '@/lib/utils';
 
 interface AthleteSettings {
   notifications: {
@@ -266,7 +267,7 @@ export default function AthleteSettingsPage() {
                     </Badge>
                   )}
                   {profile?.readinessTier && (
-                    <Badge variant="secondary" className="font-black text-[9px]">{profile.readinessTier}</Badge>
+                    <Badge variant="secondary" className="font-black text-[9px]">{safeRenderTier(profile.readinessTier)}</Badge>
                   )}
                 </div>
               </div>

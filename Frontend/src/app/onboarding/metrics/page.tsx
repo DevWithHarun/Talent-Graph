@@ -25,13 +25,19 @@ export default function MetricsPage() {
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [athleteMetrics, setAthleteMetrics] = useState<Metric[]>([]);
   
   const athleteDocRef = useMemoFirebase(
     () => (firestore && user?.uid ? doc(firestore, 'athletes', user.uid) : null),
     [firestore, user?.uid]
   );
   const { data: athleteProfile, isLoading: isAthleteProfileLoading } = useDoc<AthleteProfile>(athleteDocRef);
+
+  const athleteMetrics = useMemo(() => {
+    if (!athleteProfile?.sport || !athleteProfile?.position) return [];
+    const sportMetrics = positionalMetrics[athleteProfile.sport];
+    const allPositionalMetrics = sportMetrics?.[athleteProfile.position] || sportMetrics?.['default'] || [];
+    return allPositionalMetrics.filter(m => m.athleteInput);
+  }, [athleteProfile?.sport, athleteProfile?.position]);
 
   const formSchema = useMemo(() => {
     if (athleteMetrics.length === 0) return z.object({});
@@ -57,23 +63,17 @@ export default function MetricsPage() {
   });
 
   useEffect(() => {
-    if (!isUserLoading && !user) router.push('/login');
+    if (!isUserLoading && !user) {
+      router.push('/login');
+      return;
+    }
     
     if (athleteProfile && !isAthleteProfileLoading) {
-        if (athleteProfile.sport && athleteProfile.position) {
-            const sportMetrics = positionalMetrics[athleteProfile.sport];
-            const allPositionalMetrics = sportMetrics?.[athleteProfile.position] || sportMetrics?.['default'] || [];
-            
-            // FILTER: Only show metrics that athletes are allowed to input
-            const filteredMetrics = allPositionalMetrics.filter(m => m.athleteInput);
-            
-            setAthleteMetrics(filteredMetrics);
-            form.reset({});
-        } else {
-            router.push('/onboarding');
-        }
+      if (!athleteProfile.sport || !athleteProfile.position) {
+        router.push('/onboarding');
+      }
     }
-  }, [user, isUserLoading, athleteProfile, isAthleteProfileLoading, router, form]);
+  }, [user, isUserLoading, athleteProfile, isAthleteProfileLoading, router]);
 
   const handleSkip = async () => {
     if (!user || !firestore) return;

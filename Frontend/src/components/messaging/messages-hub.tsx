@@ -77,28 +77,11 @@ function getInitials(name: string) {
 
 function getRolePrefixedName(name: string, role?: string): string {
   if (!name || name === 'Unknown') return name || 'Unknown';
-  const normalized = name.trim().toLowerCase();
-  if (role === 'scout' && (normalized === 'scout scout' || normalized === 'club scout')) return 'Club Scout';
-  if (role === 'coach' && (normalized === 'coach coach' || normalized === 'club coach')) return 'Club Coach';
-  if ((role === 'club' || role === 'club_admin') && (normalized === 'club club' || normalized === 'club admin' || normalized === 'admin')) return 'Club Admin';
-  switch (role) {
-    case 'coach': return name.toLowerCase().startsWith('club coach') ? name : name.toLowerCase() === 'coach' ? 'Club Coach' : name;
-    case 'assistant_coach': return name;
-    case 'gk_coach': return name;
-    case 'scout': return name.toLowerCase().startsWith('club scout') ? name : name.toLowerCase() === 'scout' ? 'Club Scout' : name;
-    case 'analyst': return `Analyst ${name}`;
-    case 'club':
-    case 'club_admin': return name.toLowerCase().startsWith('club admin') ? name : name.toLowerCase() === 'club' || name.toLowerCase() === 'admin' ? 'Club Admin' : name;
-    default: return name;
-  }
+  return name;
 }
 
 function getClubContactName(name: string, role?: string): string {
-  const cleanName = (name || '').trim();
-  if (role === 'scout') return cleanName.toLowerCase().includes('scout') ? 'Club Scout' : cleanName || 'Club Scout';
-  if (role === 'coach' || role === 'assistant_coach' || role === 'gk_coach') return cleanName.toLowerCase().includes('coach') ? 'Club Coach' : cleanName || 'Club Coach';
-  if (role === 'club' || role === 'club_admin' || role === 'admin') return 'Club Admin';
-  return cleanName || 'Athlete';
+  return (name || '').trim() || 'User';
 }
 
 function formatConvTime(ts?: string) {
@@ -137,69 +120,9 @@ function groupByDate(messages: Message[]) {
 // ─────────────────────────────────────────────────────────────────────────────
 const DEMO_UID = '__demo_me__';
 
-const DEMO_CONVERSATIONS: Conversation[] = [
-  {
-    id: 'demo_coach_muhavi',
-    type: 'direct',
-    participants: [DEMO_UID, 'demo_coach_1'],
-    participantInfo: {
-      [DEMO_UID]:    { name: 'You',          role: 'athlete' },
-      demo_coach_1:  { name: 'Muhavi',        role: 'coach'   },
-    },
-    lastMessage: 'See you at training tomorrow',
-    lastMessageAt: new Date(Date.now() - 5 * 60_000).toISOString(),
-    lastSenderId: 'demo_coach_1',
-    lastReadAt: {},
-    updatedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
-    unreadCount: 2,
-  },
-  {
-    id: 'demo_james',
-    type: 'direct',
-    participants: [DEMO_UID, 'demo_scout_1'],
-    participantInfo: {
-      [DEMO_UID]:   { name: 'You',           role: 'athlete' },
-      demo_scout_1: { name: 'James Otieno',  role: 'scout'   },
-    },
-    lastMessage: 'I reviewed your profile',
-    lastMessageAt: new Date(Date.now() - 30 * 60_000).toISOString(),
-    lastSenderId: 'demo_scout_1',
-    lastReadAt: {},
-    updatedAt: new Date(Date.now() - 30 * 60_000).toISOString(),
-    unreadCount: 1,
-  },
-  {
-    id: 'demo_scout_office',
-    type: 'direct',
-    participants: [DEMO_UID, 'demo_office_1'],
-    participantInfo: {
-      [DEMO_UID]:    { name: 'You',          role: 'athlete' },
-      demo_office_1: { name: 'Scout Office', role: 'scout'   },
-    },
-    lastMessage: 'Your application has been received',
-    lastMessageAt: new Date(Date.now() - 2 * 3_600_000).toISOString(),
-    lastSenderId: DEMO_UID,
-    lastReadAt: { [DEMO_UID]: new Date(Date.now() - 2 * 3_600_000).toISOString() },
-    updatedAt: new Date(Date.now() - 2 * 3_600_000).toISOString(),
-    unreadCount: 0,
-  },
-];
+const DEMO_CONVERSATIONS: Conversation[] = [];
 
-const DEMO_MESSAGES: Record<string, Message[]> = {
-  demo_coach_muhavi: [
-    { id: 'd1', senderId: 'demo_coach_1', senderName: 'Coach Muhavi', senderRole: 'coach',   content: 'Great training session today!',           timestamp: new Date(Date.now() - 2 * 3_600_000).toISOString() },
-    { id: 'd2', senderId: DEMO_UID,       senderName: 'You',           senderRole: 'athlete', content: "Thank you coach, I'll keep working hard",   timestamp: new Date(Date.now() - 1.5 * 3_600_000).toISOString() },
-    { id: 'd3', senderId: 'demo_coach_1', senderName: 'Coach Muhavi', senderRole: 'coach',   content: 'See you at training tomorrow',              timestamp: new Date(Date.now() - 5 * 60_000).toISOString() },
-  ],
-  demo_james: [
-    { id: 'j1', senderId: 'demo_scout_1', senderName: 'James Otieno', senderRole: 'scout',   content: 'Hello! I saw you in the recent match.',     timestamp: new Date(Date.now() - 3_600_000).toISOString() },
-    { id: 'j2', senderId: 'demo_scout_1', senderName: 'James Otieno', senderRole: 'scout',   content: 'I reviewed your profile',                   timestamp: new Date(Date.now() - 30 * 60_000).toISOString() },
-  ],
-  demo_scout_office: [
-    { id: 's1', senderId: DEMO_UID,        senderName: 'You',           senderRole: 'athlete', content: "I'd like to apply for the scouting program", timestamp: new Date(Date.now() - 3 * 3_600_000).toISOString() },
-    { id: 's2', senderId: 'demo_office_1', senderName: 'Scout Office',  senderRole: 'scout',   content: 'Your application has been received',         timestamp: new Date(Date.now() - 2 * 3_600_000).toISOString() },
-  ],
-};
+const DEMO_MESSAGES: Record<string, Message[]> = {};
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getUnreadCount(conv: Conversation, userId: string): number {

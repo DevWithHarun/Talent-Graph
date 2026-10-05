@@ -18,6 +18,7 @@ import { Loader2 } from 'lucide-react';
 import type { ClubMember, UserAccount } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NotificationBell } from '@/components/coach/notification-bell';
+import { ChatNavButton } from '@/components/messaging/chat-nav-button';
 import { useCoachNotifications } from '@/hooks/useCoachNotifications';
 import { SupportDialog } from '@/components/support/support-dialog';
 import { CoachClubContext } from './coach-context';
@@ -227,6 +228,7 @@ export default function CoachDashboardLayout({ children }: { children: React.Rea
         <header className="sticky top-0 z-50 flex h-14 items-center gap-3 border-b border-[#1E293B] bg-[#111827]/95 backdrop-blur px-4 shrink-0">
           <Zap className="h-4 w-4 text-[#00C853] shrink-0" />
           <h1 className="text-sm font-black uppercase tracking-tight text-white flex-1">{currentLabel}</h1>
+          <ChatNavButton />
           <NotificationBell
             notifications={notifications}
             unreadCount={unreadCount}

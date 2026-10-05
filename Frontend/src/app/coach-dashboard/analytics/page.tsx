@@ -23,6 +23,7 @@ import type { AthleteProfile, ClubMatch } from '@/lib/types';
 import { useCoachClub } from '@/app/coach-dashboard/coach-context';
 import { useSearchParams } from '@/lib/navigation';
 import { format, parseISO } from 'date-fns';
+import { extractCSI, extractNumber, safeRenderNumber } from '@/lib/utils';
 
 function cn(...c: (string | boolean | undefined)[]) { return c.filter(Boolean).join(' '); }
 
@@ -150,7 +151,7 @@ export default function CoachAnalyticsPage() {
   // Squad ranking + most improved (need previous benchmarks — use developmentIndex as proxy)
   const squadRanking = useMemo(() => {
     if (!athletes) return [];
-    return [...athletes].sort((a, b) => (b.compositeScoutingIndex ?? 0) - (a.compositeScoutingIndex ?? 0));
+    return [...athletes].sort((a, b) => extractCSI(b.compositeScoutingIndex) - extractCSI(a.compositeScoutingIndex));
   }, [athletes]);
 
   const mostImproved = useMemo(() => {
@@ -190,13 +191,13 @@ export default function CoachAnalyticsPage() {
     let list = [...(athletes ?? [])];
     if (analyticsPositionFilter !== 'All') list = list.filter(a => a.position === analyticsPositionFilter || a.altPositions?.includes(analyticsPositionFilter));
     return list.sort((a, b) => {
-      if (analyticsSortBy === 'csi') return (b.compositeScoutingIndex ?? 0) - (a.compositeScoutingIndex ?? 0);
+      if (analyticsSortBy === 'csi') return extractCSI(b.compositeScoutingIndex) - extractCSI(a.compositeScoutingIndex);
       if (analyticsSortBy === 'risk') return (b.riskIndex ?? 0) - (a.riskIndex ?? 0);
       return (a.age ?? 0) - (b.age ?? 0);
     });
   }, [athletes, analyticsPositionFilter, analyticsSortBy]);
 
-  const maxCSI = useMemo(() => Math.max(...(athletes ?? []).map(a => a.compositeScoutingIndex ?? 0), 1), [athletes]);
+  const maxCSI = useMemo(() => Math.max(...(athletes ?? []).map(a => extractCSI(a.compositeScoutingIndex)), 1), [athletes]);
 
   const isLoading = memberLoading || athletesLoading;
 
@@ -271,7 +272,7 @@ export default function CoachAnalyticsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { label: 'Squad Size', value: athletes?.length ?? 0, color: 'text-white' },
-              { label: 'Avg CSI', value: athletes?.length ? Math.round(athletes.reduce((s, a) => s + (a.compositeScoutingIndex ?? 0), 0) / athletes.length) : 0, color: 'text-[#00C853]' },
+              { label: 'Avg CSI', value: athletes?.length ? Math.round(athletes.reduce((s, a) => s + extractCSI(a.compositeScoutingIndex), 0) / athletes.length) : 0, color: 'text-[#00C853]' },
               { label: 'Verified', value: athletes?.filter(a => a.isVerified).length ?? 0, color: 'text-[#00C853]' },
               { label: 'High Risk', value: athletes?.filter(a => (a.riskIndex ?? 0) >= 60).length ?? 0, color: 'text-red-400' },
             ].map(s => (
@@ -388,9 +389,9 @@ export default function CoachAnalyticsPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="h-1.5 w-20 rounded-full bg-[#1E293B] overflow-hidden">
-                        <div className="h-full bg-[#00C853] rounded-full" style={{ width: `${Math.min(a.compositeScoutingIndex ?? 0, 100)}%` }} />
+                        <div className="h-full bg-[#00C853] rounded-full" style={{ width: `${Math.min(extractCSI(a.compositeScoutingIndex), 100)}%` }} />
                       </div>
-                      <span className="text-sm font-black text-[#00C853] w-8 text-right">{a.compositeScoutingIndex ?? 0}</span>
+                      <span className="text-sm font-black text-[#00C853] w-8 text-right">{safeRenderNumber(a.compositeScoutingIndex, '0')}</span>
                     </div>
                   </button>
                 ))}
@@ -518,12 +519,12 @@ export default function CoachAnalyticsPage() {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="font-black text-[#00C853]">{a.compositeScoutingIndex ?? '—'}</p>
+                          <p className="font-black text-[#00C853]">{safeRenderNumber(a.compositeScoutingIndex, '—')}</p>
                           <p className="text-[9px] text-[#94A3B8]">CSI</p>
                         </div>
                         <div className="w-20 hidden sm:block">
                           <div className="w-full bg-[#1E293B] rounded-full h-1.5 overflow-hidden">
-                            <div className="h-full bg-[#00C853] rounded-full" style={{ width: `${Math.round(((a.compositeScoutingIndex ?? 0) / maxCSI) * 100)}%` }} />
+                            <div className="h-full bg-[#00C853] rounded-full" style={{ width: `${Math.round((extractCSI(a.compositeScoutingIndex) / Math.max(maxCSI, 1)) * 100)}%` }} />
                           </div>
                         </div>
                       </button>
@@ -556,12 +557,12 @@ export default function CoachAnalyticsPage() {
                         <td className="py-2 px-2 text-[#94A3B8] font-bold">{a.position ?? '—'}</td>
                         <td className="py-2 px-2 text-[#94A3B8] font-bold">{a.age}</td>
                         {[a.compositeScoutingIndex, a.performanceIndex, a.efficiencyIndex, a.consistencyIndex, a.developmentIndex].map((v, idx) => (
-                          <td key={idx} className={cn('py-2 px-2 font-black', (v ?? 0) >= 70 ? 'text-[#00C853]' : (v ?? 0) >= 50 ? 'text-white' : 'text-[#94A3B8]')}>
-                            {v ?? '—'}
+                          <td key={idx} className={cn('py-2 px-2 font-black', (extractNumber(v) ?? 0) >= 70 ? 'text-[#00C853]' : (extractNumber(v) ?? 0) >= 50 ? 'text-white' : 'text-[#94A3B8]')}>
+                            {safeRenderNumber(v, '—')}
                           </td>
                         ))}
                         <td className={cn('py-2 px-2 font-black', (a.riskIndex ?? 0) >= 60 ? 'text-red-400' : (a.riskIndex ?? 0) >= 40 ? 'text-[#FF6D00]' : 'text-[#94A3B8]')}>
-                          {a.riskIndex ?? '—'}
+                          {safeRenderNumber(a.riskIndex, '—')}
                         </td>
                       </tr>
                     ))}
@@ -580,12 +581,12 @@ export default function CoachAnalyticsPage() {
           {/* KPI Cards */}
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {[
-              { label: 'CSI', value: selectedAthlete.compositeScoutingIndex ?? '--', color: 'text-[#00C853]' },
-              { label: 'Performance', value: selectedAthlete.performanceIndex ?? '--', color: 'text-white' },
-              { label: 'Efficiency', value: selectedAthlete.efficiencyIndex ?? '--', color: 'text-white' },
-              { label: 'Consistency', value: selectedAthlete.consistencyIndex ?? '--', color: 'text-white' },
-              { label: 'Development', value: selectedAthlete.developmentIndex ?? '--', color: 'text-[#00C853]' },
-              { label: 'Risk', value: selectedAthlete.riskIndex ?? '--', color: (selectedAthlete.riskIndex ?? 0) >= 60 ? 'text-red-400' : 'text-[#94A3B8]' },
+              { label: 'CSI', value: safeRenderNumber(selectedAthlete.compositeScoutingIndex, '--'), color: 'text-[#00C853]' },
+              { label: 'Performance', value: safeRenderNumber(selectedAthlete.performanceIndex, '--'), color: 'text-white' },
+              { label: 'Efficiency', value: safeRenderNumber(selectedAthlete.efficiencyIndex, '--'), color: 'text-white' },
+              { label: 'Consistency', value: safeRenderNumber(selectedAthlete.consistencyIndex, '--'), color: 'text-white' },
+              { label: 'Development', value: safeRenderNumber(selectedAthlete.developmentIndex, '--'), color: 'text-[#00C853]' },
+              { label: 'Risk', value: safeRenderNumber(selectedAthlete.riskIndex, '--'), color: (selectedAthlete.riskIndex ?? 0) >= 60 ? 'text-red-400' : 'text-[#94A3B8]' },
             ].map(s => (
               <Card key={s.label} className="border border-[#1E293B] bg-[#111827]">
                 <CardContent className="p-3 text-center">
