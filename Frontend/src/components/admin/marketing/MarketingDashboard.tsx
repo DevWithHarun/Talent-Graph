@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { format, formatDistanceToNow } from 'date-fns';
 import type { MarketingSegment, MarketingCampaign, MarketingAutomation, CampaignChannel, CampaignStatus } from '@/lib/types';
+import { BulkBroadcastSection } from './BulkBroadcastSection';
 
 const STATUS_CONFIG: Record<CampaignStatus, { label: string; color: string; icon: any }> = {
   draft:     { label: 'Draft',     color: 'bg-slate-100 text-slate-600 border-slate-200',   icon: Clock },
@@ -1174,9 +1175,10 @@ export function MarketingDashboard() {
       </div>
 
       {/* Main Tabs */}
-      <Tabs defaultValue="campaigns">
+      <Tabs defaultValue="broadcast">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <TabsList className="bg-background border">
+            <TabsTrigger value="broadcast"   className="text-xs gap-1.5 font-bold"><Zap className="w-3 h-3 text-amber-500" />Quick Broadcast (SMS & Email)</TabsTrigger>
             <TabsTrigger value="campaigns"   className="text-xs gap-1.5"><Megaphone   className="w-3 h-3" />Campaigns</TabsTrigger>
             <TabsTrigger value="segments"    className="text-xs gap-1.5"><Users       className="w-3 h-3" />Segments</TabsTrigger>
             <TabsTrigger value="automations" className="text-xs gap-1.5"><Zap         className="w-3 h-3" />Automations</TabsTrigger>
@@ -1206,6 +1208,11 @@ export function MarketingDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* ── Quick Broadcast (SMS & Email) ── */}
+        <TabsContent value="broadcast" className="space-y-4">
+          <BulkBroadcastSection />
+        </TabsContent>
 
         {/* ── Campaigns ── */}
         <TabsContent value="campaigns" className="space-y-3">

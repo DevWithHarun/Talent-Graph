@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { queueTicketConfirmationEmailFirebase } from '@/lib/firebase-mail';
 
 interface SupportDialogProps {
   open?: boolean;
@@ -61,6 +62,7 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [lastCreatedTicketCode, setLastCreatedTicketCode] = useState<string | null>(null);
 
   const isControlled = externalOpen !== undefined;
   const isOpen = isControlled ? externalOpen : internalOpen;
@@ -135,6 +137,23 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
         let j: any = {};
         try { j = text ? JSON.parse(text) : {}; } catch { throw new Error(text.slice(0, 200) || `HTTP ${res.status}`); }
         if (!res.ok) throw new Error(j?.error || j?.details || `Failed to submit (${res.status})`);
+        
+        const code = j?.ticketCode || (j?.ticketId ? `TG-${j.ticketId.slice(0, 6).toUpperCase()}` : `TG-${Date.now().toString().slice(-5)}`);
+        setLastCreatedTicketCode(code);
+        
+        // Ensure client-side Firebase mail queueing as well
+        if (firestore) {
+          queueTicketConfirmationEmailFirebase(firestore, {
+            ticketId: j?.ticketId || code,
+            ticketCode: code,
+            senderName,
+            senderEmail,
+            subject: form.subject,
+            message: form.message,
+            category: form.tag,
+            priority: form.priority,
+          }).catch(() => {});
+        }
         setSubmitted(true);
       } catch (apiErr: any) {
         const msg = apiErr?.message || '';
@@ -151,10 +170,16 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
           const now = new Date().toISOString();
           const slaHours = form.priority === 'high' ? 1 : form.priority === 'medium' ? 4 : 24;
           const slaDeadline = new Date(Date.now() + slaHours * 3600 * 1000).toISOString();
+          const fallbackCode = `TG-${Math.floor(10000 + Math.random() * 90000)}`;
+          setLastCreatedTicketCode(fallbackCode);
+
           const ticketRef = await addDoc(collection(db as any, 'support_tickets'), {
+            ticketCode: fallbackCode,
             senderUserId: user?.uid || 'anonymous',
             senderEmail,
             senderName,
+            name: senderName,
+            email: senderEmail,
             senderPhone: isGuest ? form.guestPhone.trim() || null : null,
             source: isGuest ? 'public_guest' : 'in_app',
             subject: form.subject,
@@ -178,6 +203,19 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
             sentVia: isGuest ? 'public_guest' : 'in_app',
             sentAt: now,
           });
+
+          // Queue confirmation & tracking email into Firebase Firestore `mail` collection
+          queueTicketConfirmationEmailFirebase(db as any, {
+            ticketId: ticketRef.id,
+            ticketCode: fallbackCode,
+            senderName,
+            senderEmail,
+            subject: form.subject,
+            message: form.message,
+            category: form.tag,
+            priority: form.priority,
+          }).catch(err => console.warn('[SupportDialog] Firebase mail queue error:', err));
+
           setSubmitted(true);
         } else {
           console.error('[SupportDialog] ticket submit failed', apiErr);
@@ -342,17 +380,48 @@ export function SupportDialog({ open: externalOpen, onOpenChange: externalOnOpen
                   <CheckCircle2 className="h-8 w-8 text-green-500" />
                 </div>
                 <div>
-                  <p className="font-black text-lg">Ticket submitted!</p>
-                  <p className="text-sm text-muted-foreground mt-1">{isGuest ? `We’ll reply to ${form.guestEmail} within ${PRIORITY_SLA[form.priority]}h. Save your email for updates.` : `Our team will respond within ${PRIORITY_SLA[form.priority]}h. Check My Requests for updates.`}</p>
+                  <p className="font-black text-lg">Ticket submitted successfully!</p>
+                  {lastCreatedTicketCode && (
+                    <div className="my-2 inline-block bg-primary/10 border border-primary/20 text-primary px-3 py-1 rounded-lg font-mono font-bold text-sm">
+                      Reference #{lastCreatedTicketCode}
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    📧 A confirmation email with your <strong>Live Tracking Link</strong> has been dispatched to <strong>{isGuest ? form.guestEmail : (user?.email || 'your email')}</strong>.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Our team will review your request within {PRIORITY_SLA[form.priority]}h. You can track real-time progress and Superadmin responses anytime.
+                  </p>
                 </div>
                 {isGuest ? (
-                  <Button onClick={handleReset} size="sm" variant="outline">
-                    Done
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full justify-center">
+                    {lastCreatedTicketCode && (
+                      <Button
+                        onClick={() => {
+                          const url = `${window.location.origin}/?trackTicket=${lastCreatedTicketCode}`;
+                          navigator.clipboard?.writeText(url);
+                          toast({ title: 'Tracking Link Copied!', description: `Direct link: ${url}` });
+                        }}
+                        size="sm"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                      >
+                        <Search className="h-3.5 w-3.5 mr-2" />
+                        Copy Live Tracking Link
+                      </Button>
+                    )}
+                    <Button onClick={handleReset} size="sm" variant="outline">
+                      Done
+                    </Button>
+                  </div>
                 ) : (
-                  <Button onClick={() => setView('my-tickets')} size="sm">
-                    <MessageSquare className="h-3.5 w-3.5 mr-2" />View My Tickets
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setView('my-tickets')} size="sm">
+                      <MessageSquare className="h-3.5 w-3.5 mr-2" />View My Tickets
+                    </Button>
+                    <Button onClick={handleReset} size="sm" variant="outline">
+                      Done
+                    </Button>
+                  </div>
                 )}
               </div>
             ) : (

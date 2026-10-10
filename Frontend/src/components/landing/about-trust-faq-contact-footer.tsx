@@ -5,6 +5,7 @@ import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
 import { addDoc, collection } from 'firebase/firestore';
+import { queueTicketConfirmationEmailFirebase } from '@/lib/firebase-mail';
 
 interface LandingAboutTrustFaqContactFooterProps {
   onOpenAuth: () => void;
@@ -26,19 +27,45 @@ export function LandingAboutTrustFaqContactFooter({ onOpenAuth }: LandingAboutTr
     if (!name || !email || !message) return;
     setIsSending(true);
     try {
+      const ticketCode = `TG-${Math.floor(10000 + Math.random() * 90000)}`;
+      const ticketData = {
+        name: name.trim(),
+        senderName: name.trim(),
+        email: email.trim(),
+        senderEmail: email.trim(),
+        reason,
+        category: reason,
+        message: message.trim(),
+        subject: `Enquiry from ${name.trim()} (${reason})`,
+        ticketCode,
+        status: 'open',
+        priority: 'medium',
+        source: 'landing_contact_footer',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
       if (firestore) {
-        await addDoc(collection(firestore, 'support_tickets'), {
-          name,
-          email,
-          reason,
-          message,
-          subject: `Enquiry from ${name} (${reason})`,
-          status: 'open',
-          createdAt: new Date().toISOString(),
-        });
+        const docRef = await addDoc(collection(firestore, 'support_tickets'), ticketData);
+        queueTicketConfirmationEmailFirebase(firestore, {
+          ticketId: docRef.id,
+          ticketCode,
+          senderName: name.trim(),
+          senderEmail: email.trim(),
+          subject: ticketData.subject,
+          message: message.trim(),
+          category: reason,
+        }).catch(() => {});
       }
-      setStatusMessage({ type: 'success', text: 'Thank you! Your message has been sent successfully.' });
-      toast({ title: 'Message Sent', description: 'Our team will get back to you shortly.' });
+
+      fetch('/api/support/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ticketData),
+      }).catch(() => {});
+
+      setStatusMessage({ type: 'success', text: `Thank you! Ticket #${ticketCode} created. A confirmation email with your live tracking link has been sent to ${email.trim()}.` });
+      toast({ title: 'Message Sent', description: `Reference #${ticketCode}. Confirmation email dispatched.` });
       setName('');
       setEmail('');
       setMessage('');

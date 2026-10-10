@@ -38,9 +38,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   // (notably "Unexpected state ... {ve:-1}") while retaining realtime updates.
   let firestore;
   try {
-    firestore = initializeFirestore(firebaseApp, {
-      experimentalForceLongPolling: true,
-    });
+    firestore = initializeFirestore(firebaseApp, { experimentalForceLongPolling: true });
   } catch {
     // initializeFirestore throws when another module has already initialized
     // this app's Firestore instance during HMR.

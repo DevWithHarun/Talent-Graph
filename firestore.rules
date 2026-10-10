@@ -9,11 +9,13 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    // TEMPORARY MVP rules: authenticated users can access their own data and
-    // the platform data needed for the app to work while the project is being
-    // matured. This is intentionally permissive to unblock real app workflows.
+    // Users: authenticated users can read; owner or platform admin can write
     match /users/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if signedIn();
+      allow write: if isOwner(uid) || (signedIn() && (
+        request.auth.token.email == 'nzaiharun28@gmail.com' ||
+        request.auth.token.email == 'admin@talentgraph.africa'
+      ));
     }
 
     // Public reads: athlete profiles + club profiles are shareable via link
@@ -104,27 +106,32 @@ service cloud.firestore {
       allow update, delete: if signedIn() && request.auth.uid == resource.data.senderId;
     }
 
-    // Guest support: anyone can create a ticket/message without login (via public API).
-    // Reads/updates remain restricted to authenticated users (admin/support team).
+    // Support tickets: anyone can create/read (for landing page bot & tracking); admin can manage
     match /support_tickets/{ticketId} {
-      allow read: if signedIn();
+      allow read: if true;
       allow create: if true;
       allow update: if signedIn();
-      allow delete: if false;
+      allow delete: if signedIn();
+
+      match /messages/{messageId} {
+        allow read: if true;
+        allow create: if true;
+        allow update: if signedIn();
+        allow delete: if signedIn();
+      }
+
+      match /internalNotes/{noteId} {
+        allow read: if signedIn();
+        allow create: if signedIn();
+        allow update: if signedIn();
+        allow delete: if signedIn();
+      }
     }
 
-    match /support_tickets/{ticketId}/messages/{messageId} {
-      allow read: if signedIn();
+    // Firebase Trigger Email extension / mail queue: allow creation of ticket confirmation and tracking emails
+    match /mail/{mailId} {
       allow create: if true;
-      allow update: if signedIn();
-      allow delete: if false;
-    }
-
-    match /support_tickets/{ticketId}/internalNotes/{noteId} {
-      allow read: if signedIn();
-      allow create: if signedIn();
-      allow update: if signedIn();
-      allow delete: if false;
+      allow read, update, delete: if signedIn();
     }
 
     match /{document=**} {

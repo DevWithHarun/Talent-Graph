@@ -320,7 +320,11 @@ export default function App() {
                 {/* ── Messages ── */}
                 <Route path="/messages/:connectionId">{() => <S><UnifiedChatPage /></S>}</Route>
 
-                {/* ── Jobs portal ── */}
+                {/* ── Admin & Jobs portal ── */}
+                <Route path="/admin">{() => <S><JobsAdminDashboardPage /></S>}</Route>
+                <Route path="/admin/dashboard">{() => <S><JobsAdminDashboardPage /></S>}</Route>
+                <Route path="/superadmin">{() => <S><JobsAdminDashboardPage /></S>}</Route>
+                <Route path="/admin/login">{() => <S><JobsAdminLoginPage /></S>}</Route>
                 <Route path="/jobs/admin/dashboard">{() => <S><JobsAdminDashboardPage /></S>}</Route>
                 <Route path="/jobs/admin/login">{() => <S><JobsAdminLoginPage /></S>}</Route>
                 <Route path="/jobs/admin/signup">{() => <S><JobsAdminSignupPage /></S>}</Route>

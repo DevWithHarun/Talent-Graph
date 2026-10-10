@@ -10,6 +10,7 @@ import { LandingScoutsClubsOpps } from '@/components/landing/scouts-clubs-opps';
 import { LandingNetworkingFeedAiTimeline } from '@/components/landing/networking-feed-ai-timeline';
 import { LandingPositioningPrivacySafeguarding } from '@/components/landing/positioning-privacy-safeguarding';
 import { LandingAboutTrustFaqContactFooter } from '@/components/landing/about-trust-faq-contact-footer';
+import { LandingSupportBot } from '@/components/landing/support-bot';
 
 export function LandingPage() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -47,6 +48,9 @@ export function LandingPage() {
         {/* ── 7. ABOUT, TRUST, FAQ, FINAL CTA, CONTACT & FOOTER ── */}
         <LandingAboutTrustFaqContactFooter onOpenAuth={() => setAuthModalOpen(true)} />
       </main>
+
+      {/* ── TALENT GRAPH AI SUPPORT BOT ── */}
+      <LandingSupportBot />
     </div>
   );
 }

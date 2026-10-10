@@ -1,13 +1,32 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'wouter';
 
 interface LandingHeroProps {
   onOpenAuth?: () => void;
 }
 
+function getEmbedUrl(url: string) {
+  if (!url) return '';
+  if (url.includes('youtube.com/embed/')) {
+    return url;
+  }
+  if (url.includes('youtube.com/watch?v=')) {
+    const id = url.split('v=')[1]?.split('&')[0];
+    return `https://www.youtube.com/embed/${id}`;
+  }
+  if (url.includes('youtu.be/')) {
+    const id = url.split('youtu.be/')[1]?.split('?')[0];
+    return `https://www.youtube.com/embed/${id}`;
+  }
+  return url;
+}
+
 export function LandingHero({ onOpenAuth = () => {} }: LandingHeroProps) {
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const videoUrl = 'https://www.youtube.com/embed/P16IgAEthdc';
+
   return (
     <>
       {/* ── HERO SECTION ── */}
@@ -42,12 +61,13 @@ export function LandingHero({ onOpenAuth = () => {} }: LandingHeroProps) {
               >
                 Build Your Athlete Profile
               </Link>
-              <a
-                href="#scouts"
-                className="btn h-14 rounded-full border border-white/15 bg-white/5 px-8 text-base text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-white/10 no-underline inline-flex items-center justify-center"
+              <button
+                onClick={() => setIsVideoModalOpen(true)}
+                className="btn h-14 rounded-full border border-white/15 bg-white/5 px-8 text-base text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-white/10 no-underline inline-flex items-center gap-2.5 justify-center cursor-pointer font-bold"
               >
-                For Coaches, Scouts &amp; Clubs
-              </a>
+                <i className="fa-solid fa-play text-[var(--glow-color)]"></i>
+                Watch How It Works
+              </button>
             </div>
             <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-3 border-t border-white/10 pt-6 text-[13px] font-semibold text-[var(--text-light-muted)]">
               <span className="inline-flex items-center gap-2">
@@ -215,6 +235,47 @@ export function LandingHero({ onOpenAuth = () => {} }: LandingHeroProps) {
           </div>
         </div>
       </section>
+
+      {/* ── VIDEO DEMO MODAL ── */}
+      {isVideoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-4xl rounded-2xl border border-white/15 bg-[var(--surface-dark)] p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--secondary-color)] text-white">
+                  <i className="fa-solid fa-play text-xs"></i>
+                </div>
+                <h3 className="text-lg font-bold text-white">Talent Graph Kenya · App Walkthrough & Guide</h3>
+              </div>
+              <button
+                onClick={() => setIsVideoModalOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div className="mt-5 aspect-video w-full overflow-hidden rounded-xl bg-black shadow-inner relative flex items-center justify-center">
+              {videoUrl.includes('youtube') || videoUrl.includes('youtu.be') ? (
+                <iframe
+                  src={`${getEmbedUrl(videoUrl)}${getEmbedUrl(videoUrl).includes('?') ? '&' : '?'}autoplay=1&rel=0`}
+                  title="Talent Graph Kenya Walkthrough Video"
+                  className="h-full w-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  controls
+                  autoPlay
+                  src={videoUrl}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

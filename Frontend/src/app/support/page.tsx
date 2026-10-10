@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow, isPast } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { queueTicketConfirmationEmailFirebase } from '@/lib/firebase-mail';
 
 export default function SupportPage() {
   const { user, isUserLoading } = useUser();
@@ -49,15 +50,23 @@ export default function SupportPage() {
     setSubmitting(true);
     try {
       const now = new Date().toISOString();
+      const ticketCode = `TG-${Math.floor(10000 + Math.random() * 90000)}`;
+      const senderEmail = form.email.trim();
+      const senderName = user?.displayName || form.email.split('@')[0];
+
       const ticketData = {
-        senderEmail: form.email.trim(),
-        senderName: user?.displayName || form.email.split('@')[0],
+        ticketCode,
+        senderEmail,
+        senderName,
+        email: senderEmail,
+        name: senderName,
         senderUserId: user ? user.uid : null,
         subject: form.subject.trim(),
         message: form.message.trim(),
         priority: form.priority.toLowerCase(),
         category: form.category,
-        status: 'new',
+        status: 'open',
+        source: user ? 'in_app' : 'public_support_page',
         createdAt: now,
         updatedAt: now,
         slaDeadline: new Date(Date.now() + (form.priority === 'High' ? 3600000 : 14400000)).toISOString(),
@@ -68,13 +77,32 @@ export default function SupportPage() {
       // Also add initial message to subcollection
       await addDoc(collection(firestore || (window as any).db, 'support_tickets', docRef.id, 'messages'), {
         senderId: user ? user.uid : 'guest',
-        senderName: user?.displayName || form.email.split('@')[0],
+        senderName,
         text: form.message.trim(),
         sentAt: now,
       });
 
-      setSuccessTicketId(docRef.id);
-      toast({ title: 'Ticket submitted successfully!', description: `Reference ID: ${docRef.id}. Our team will respond shortly.` });
+      // Queue confirmation & tracking email into Firebase Firestore `mail` collection
+      queueTicketConfirmationEmailFirebase((firestore || (window as any).db) as any, {
+        ticketId: docRef.id,
+        ticketCode,
+        senderName,
+        senderEmail,
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+        category: form.category,
+        priority: form.priority.toLowerCase(),
+      }).catch(err => console.warn('[support/page] Firebase mail queue error:', err));
+
+      // Trigger notify endpoint
+      fetch('/api/support/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ticketData),
+      }).catch(() => {});
+
+      setSuccessTicketId(ticketCode);
+      toast({ title: 'Ticket submitted successfully!', description: `Reference Code #${ticketCode}. Confirmation email dispatched.` });
       setForm({
         email: user?.email || '',
         phone: '',
@@ -107,8 +135,18 @@ export default function SupportPage() {
             <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center text-emerald-900 shadow-sm">
               <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600 mb-2" />
               <h3 className="text-lg font-bold">Ticket Submitted Successfully!</h3>
-              <p className="text-sm mt-1">Your Reference ID is <code className="font-mono font-bold bg-emerald-100 px-2 py-0.5 rounded">{successTicketId}</code>. We have received your inquiry and will reply to <strong>{form.email}</strong>.</p>
-              <button onClick={() => setSuccessTicketId(null)} className="mt-4 btn btn-sm bg-emerald-600 text-white hover:bg-emerald-700 border-none">Submit Another Ticket</button>
+              <p className="text-sm mt-1">Your Tracking Reference Code is <code className="font-mono font-bold bg-emerald-100 px-2.5 py-1 rounded text-emerald-900">#{successTicketId}</code>.</p>
+              <p className="text-xs text-emerald-700 mt-2">
+                📧 A confirmation email with your <strong>Live Ticket Tracking Link</strong> has been dispatched to your inbox so you can monitor progress before receiving a response from the Superadmin.
+              </p>
+              <div className="mt-4 flex justify-center gap-3">
+                <a href={`/?trackTicket=${successTicketId}`} className="btn btn-sm bg-emerald-700 text-white hover:bg-emerald-800 border-none">
+                  🔍 Track Ticket Live
+                </a>
+                <button onClick={() => setSuccessTicketId(null)} className="btn btn-sm bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border-none">
+                  Submit Another Ticket
+                </button>
+              </div>
             </div>
           )}
 

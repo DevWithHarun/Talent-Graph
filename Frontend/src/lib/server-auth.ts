@@ -1,6 +1,8 @@
 export const FIREBASE_API_KEY = 'AIzaSyDLmugbxMX_0QGxxKRzuUR-9nqtiFBgDQ0';
 export const FIREBASE_PROJECT_ID = 'studio-1186001190-d08bc';
+export const FIRESTORE_DATABASE_ID = '(default)';
 export const STORAGE_BUCKET = 'studio-1186001190-d08bc.firebasestorage.app';
+export const FIRESTORE_REST_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
 /**
  * Verifies a Firebase ID token via the Identity Toolkit REST API.

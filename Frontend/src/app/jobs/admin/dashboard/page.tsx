@@ -279,7 +279,7 @@ export default function AdminDashboard() {
             </TabsContent>
 
             <TabsContent value="support">
-              <SupportInbox />
+              <ClientSupportDashboard />
             </TabsContent>
 
             <TabsContent value="users">

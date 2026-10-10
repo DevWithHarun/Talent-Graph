@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
-import { verifyBearerToken, FIREBASE_API_KEY, FIREBASE_PROJECT_ID } from '@/lib/server-auth';
+import { verifyBearerToken, FIREBASE_API_KEY, FIRESTORE_REST_BASE } from '@/lib/server-auth';
 import { sendNewTicketNotification } from '@/lib/email';
 import { sendSMS } from '@/lib/sms';
 
-const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+const FIRESTORE_BASE = FIRESTORE_REST_BASE;
 const FIRESTORE_KEY = `key=${FIREBASE_API_KEY}`;
 
 function docToTicket(doc: any) {
@@ -89,9 +89,11 @@ export async function POST(req: NextRequest) {
   const now = new Date().toISOString();
   const slaHours = priority === 'high' ? 1 : priority === 'medium' ? 4 : 24;
   const slaDeadline = new Date(Date.now() + slaHours * 3600 * 1000).toISOString();
+  const ticketCode = `TG-${Math.floor(10000 + Math.random() * 90000)}`;
 
   const ticketData: any = {
     fields: {
+      ticketCode: { stringValue: ticketCode },
       senderUserId: uid ? { stringValue: uid } : { stringValue: 'anonymous' },
       senderEmail: { stringValue: senderEmail },
       senderName: { stringValue: senderName || senderEmail },
@@ -153,9 +155,10 @@ export async function POST(req: NextRequest) {
     console.error('[support/tickets] message create failed (non-fatal)', err);
   }
 
-  // Send email notification (fire-and-forget — never blocks the response)
+  // Send confirmation & tracking email to user + alert to admin (fire-and-forget — never blocks the response)
   sendNewTicketNotification({
     ticketId,
+    ticketCode,
     subject,
     message,
     priority,
@@ -167,7 +170,7 @@ export async function POST(req: NextRequest) {
 
   // SMS follow-up if phone provided (fire-and-forget, uses BulkSMS wired API)
   if (senderPhone?.trim()) {
-    const ref = `#${ticketId.slice(0, 8).toUpperCase()}`;
+    const ref = `#${ticketCode}`;
     const smsBody = `Hi ${senderName || 'there'}, your Talent Graph support ticket ${ref} "${subject.slice(0, 40)}" is received. We'll reply within ${slaHours}h. Follow up via email ${senderEmail} or call +254727946012.`;
     sendSMS(senderPhone.trim(), smsBody).then(r => {
       if (!r.success) console.warn('[sms] ticket creation SMS failed', r.error);
@@ -175,5 +178,5 @@ export async function POST(req: NextRequest) {
     }).catch(err => console.error('[sms] ticket creation SMS error', err));
   }
 
-  return Response.json({ success: true, ticketId });
+  return Response.json({ success: true, ticketId, ticketCode });
 }

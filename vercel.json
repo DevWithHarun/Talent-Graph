@@ -3,7 +3,8 @@
   "services": {
     "frontend": {
       "root": "Frontend",
-      "framework": "vite",
+      "framework": "other",
+      "buildCommand": "npm run build",
       "outputDirectory": "dist/public",
       "bindings": [
         {
@@ -16,7 +17,7 @@
     },
     "backend": {
       "root": "Backend",
-      "framework": "express",
+      "framework": "other",
       "buildCommand": "npm run build",
       "outputDirectory": "dist"
     }
