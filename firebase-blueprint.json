@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "Athlete": {
+      "title": "Athlete Profile",
+      "description": "Core athlete identity and athletic profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "firstName": { "type": "string", "maxLength": 64 },
+        "lastName": { "type": "string", "maxLength": 64 },
+        "username": { "type": "string", "maxLength": 64 },
+        "sport": { "type": "string", "maxLength": 64 },
+        "position": { "type": "string", "maxLength": 64 },
+        "rating": { "type": "number" },
+        "clubName": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "firstName", "lastName", "sport"]
+    },
+    "PerformanceMetric": {
+      "title": "Performance Metric",
+      "description": "Granular performance metrics (speed, power, stamina, tactical intelligence)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "athleteId": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "enum": ["physical", "technical", "tactical", "mental"] },
+        "metricName": { "type": "string", "maxLength": 64 },
+        "value": { "type": "number" },
+        "unit": { "type": "string", "maxLength": 32 },
+        "recordedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "athleteId", "category", "metricName", "value", "recordedAt"]
+    },
+    "GrowthMilestone": {
+      "title": "Growth Milestone",
+      "description": "Development goals, milestones, and tracking progress over time",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "athleteId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "achieved"] },
+        "category": { "type": "string", "maxLength": 64 },
+        "targetDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "athleteId", "title", "status"]
+    },
+    "MatchStatistic": {
+      "title": "Match Statistic",
+      "description": "Detailed match performance log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "athleteId": { "type": "string", "maxLength": 128 },
+        "competition": { "type": "string", "maxLength": 128 },
+        "minutes": { "type": "number" },
+        "goals": { "type": "number" },
+        "assists": { "type": "number" },
+        "rating": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "athleteId", "competition", "date"]
+    }
+  },
+  "firestore": {
+    "/athletes/{athleteId}": {
+      "schema": "Athlete",
+      "description": "Athlete profile document"
+    },
+    "/athletes/{athleteId}/performance_metrics/{metricId}": {
+      "schema": "PerformanceMetric",
+      "description": "Performance metrics subcollection for analytics"
+    },
+    "/athletes/{athleteId}/growth_milestones/{milestoneId}": {
+      "schema": "GrowthMilestone",
+      "description": "Growth milestones and goal tracking subcollection"
+    },
+    "/athletes/{athleteId}/match_statistics/{matchId}": {
+      "schema": "MatchStatistic",
+      "description": "Match performance history subcollection"
+    }
+  }
+}

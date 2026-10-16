@@ -1,0 +1,8 @@
+{
+  "name": "Talent Graph",
+  "description": "The intelligence layer for sport. A verified recruitment platform connecting athletes, scouts and clubs worldwide.",
+  "requestPermissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "Frontend",
+    "Backend",
+    "lib/*",
+    "scripts"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=Frontend",
+    "dev:frontend": "npm run dev --workspace=Frontend",
+    "dev:backend": "npm run dev --workspace=Backend",
+    "build": "npm run typecheck && npm run build --workspace=Frontend --if-present",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "npm run typecheck:libs"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "typescript": "~5.9.3",
+    "tsx": "^4.21.0"
+  },
+  "dependencies": {
+    "@google/genai": "^2.27.0"
+  }
+}

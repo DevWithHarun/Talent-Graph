@@ -1,0 +1,297 @@
+Talent Graph Kenya — Technical Architecture
+Document type: System Design & Engineering Reference
+Platform: halearnedbaddy/Talent-graph
+Stack: Next.js 16 · Firebase · TypeScript · Google Gemini AI
+
+1. Problem Statement
+African football talent is lost not because it doesn't exist, but because it is invisible. Scouts rely on word-of-mouth. Coaches have no structured data on their own players. Athletes have no verifiable record of their career. Talent Graph Kenya solves this with a data-first recruitment platform that creates a persistent, verifiable, and queryable profile for every athlete — regardless of whether they play for a top club or a rural Sunday league side.
+
+2. High-Level Architecture
+┌─────────────────────────────────────────────────────────────┐
+│                     Client Layer (Browser / PWA)            │
+│  Next.js 16 App Router · React 19 · TypeScript              │
+│  Tailwind CSS · Shadcn/UI · Recharts · Lucide Icons         │
+└───────────────────┬─────────────────────────────────────────┘
+                    │  Firebase SDK (client-side real-time)
+                    │  Next.js Route Handlers (server-side ops)
+┌───────────────────▼─────────────────────────────────────────┐
+│                   Backend / BaaS Layer                       │
+│  Firebase Auth   Firestore   Firebase Storage               │
+│  Google Genkit   BulkSMS API  Nodemailer  Web Push          │
+└─────────────────────────────────────────────────────────────┘
+
+Architectural pattern: Serverless. No dedicated backend server. All stateful operations go through Firestore or Next.js Route Handlers (API routes) running on Vercel/Firebase App Hosting. This keeps infrastructure cost near-zero at early scale while supporting real-time sync natively.
+
+3. Tech Stack Rationale
+Layer	Choice	Why
+Framework	Next.js 16 (App Router)	Server components, route handlers, and ISR in one tool. No separate Express server needed.
+Language	TypeScript (strict)	Shared types between client and server. Catches data-shape errors at compile time — critical when Firestore returns unknown.
+Database	Cloud Firestore	Real-time subscriptions without WebSocket management. Scales horizontally without schema migrations.
+Auth	Firebase Auth	Email/password + Google OAuth out of the box. JWT verification is handled by Firebase on every request.
+File storage	Firebase Storage	Profile photos, showcase videos — with client-side upload progress and server-side URL signing.
+UI Components	Radix UI + Shadcn	Accessible, unstyled primitives. We own the styles — no CSS-in-JS runtime cost.
+AI	Google Genkit + Gemini	Structured output (typed Zod schemas) from LLM. Genkit adds retries, streaming, and observability.
+SMS	BulkSMS API	Only gateway with reliable Kenya carrier coverage. Used for athlete onboarding and match alerts.
+Forms	React Hook Form + Zod	Validation schema doubles as the TypeScript type. Zero redundancy between form validation and DB writes.
+Charts	Recharts	Radar charts for attribute profiles, line charts for performance trends — composable and lightweight.
+4. Repository Structure
+src/
+├── app/                         # Next.js App Router
+│   ├── (auth)/                  # Auth-gated route group
+│   ├── api/                     # Server-side Route Handlers
+│   │   ├── ai/scouting-report/  # Genkit → Gemini AI flow
+│   │   ├── ai/shortlist/        # AI shortlist generation
+│   │   ├── sms/                 # BulkSMS integrations
+│   │   ├── marketing/           # Campaign + segment management
+│   │   └── push/                # Web Push notifications
+│   ├── dashboard/               # Athlete dashboard (6 sub-pages)
+│   ├── coach-dashboard/         # Coach views (squad, analytics, comms)
+│   ├── club-dashboard/          # Club admin views
+│   ├── scout-dashboard/         # Scout views + scouting reports
+│   ├── analyst-dashboard/       # Analyst views
+│   └── [username]/              # Public athlete profile (SSR)
+├── components/                  # Feature-scoped UI components
+│   ├── dashboard/               # Athlete dashboard widgets
+│   ├── club/                    # Club management components
+│   ├── scout/                   # Scout-specific UI
+│   ├── messaging/               # DM + group chat components
+│   └── ui/                      # Design system (Shadcn base)
+├── firebase/                    # Firebase abstraction layer
+│   ├── index.ts                 # App init + custom React hooks
+│   ├── errors.ts                # Typed Firestore error handling
+│   └── storage.ts               # Upload utilities + compression
+├── lib/                         # Core business logic
+│   ├── types.ts                 # All shared TypeScript interfaces
+│   ├── scoring-calculator.ts    # CSI engine (see Section 6)
+│   ├── metrics.ts               # Sport metric definitions
+│   ├── bulksms.ts               # SMS gateway client
+│   └── server-auth.ts           # Firebase ID token verification
+└── ai/                          # Genkit AI flows
+    └── flows/
+        ├── scouting-report.ts
+        └── shortlist.ts
+
+5. Firestore Data Model
+Collections Overview
+users/{uid}                        — Auth profile + role
+athletes/{uid}                     — Full athlete data + stats
+clubs/{clubId}                     — Club profile
+  └── squad/{athleteId}            — Active squad members
+  └── pendingMembers/{memberId}    — Applicants awaiting approval
+club_members/{uid_clubId}          — Membership join table (role, status)
+matches/{matchId}                  — Per-match performance logs
+  └── reviews/{reviewId}           — Coach/analyst review of match
+squad_invites/{inviteId}           — Coach → athlete squad invitations
+match_confirmations/{id}           — Athlete confirms coach-logged stats
+scout_connections/{connectionId}   — Scout ↔ athlete relationship
+  └── messages/{msgId}             — Scout DM thread
+conversations/{conversationId}     — DM + group chat metadata
+  └── messages/{msgId}             — Individual chat messages
+notifications/{uid}/items/{id}     — Per-user notification inbox
+practices/{id}                     — Training session records
+drills/{id}                        — Drill library
+training_sessions/{id}             — Scheduled training blocks
+live_matches/{id}                  — Real-time live match events
+profile_views/{athleteId}/viewers/ — Scout profile view tracking
+verification_requests/{id}         — Identity verification queue
+
+Core Document Shapes
+athletes/{uid} — the central entity of the platform:
+
+{
+  uid: string
+  firstName, lastName, position, age, heightCm, weightKg
+  affiliatedClubId?: string          // FK → clubs
+  clubStatus: 'pending'|'active'|'rejected'
+  matchHistory: MatchEntry[]         // Embedded array (denormalized for reads)
+  rawMetrics: { [metricId]: MetricEntry[] }
+  detailedAttributes: {
+    Technical: Record<string, number>
+    Mental:    Record<string, number>
+    Physical:  Record<string, number>
+  }
+  // Computed scores (recalculated on every write)
+  performanceIndex:  number          // 0-100
+  efficiencyIndex:   number          // 0-100
+  consistencyIndex:  number          // 0-100
+  riskIndex:         number          // 0-100
+  compositeScoutingIndex: number     // Weighted CSI (0-100)
+  readinessTier: 'Raw'|'Developing'|'Semi-Pro'|'Pro'|'Advanced'|'Elite'
+}
+
+Design decision — embedded matchHistory: Match entries are stored as an array inside the athlete document rather than a separate subcollection. This means a single Firestore getDoc returns everything needed to render the athlete profile and run the CSI calculation. Trade-off accepted: Firestore document limit is 1MB; an athlete with 1,000 matches at ~300 bytes each uses ~300KB — well within limits for a career dataset.
+
+club_members/{uid_clubId} — deterministic document ID:
+
+Document ID = {userId}_{clubId}
+
+This makes membership lookups O(1) from Security Rules (exists() call) without a query — critical for performance in role-based access control.
+
+6. Composite Scouting Index (CSI) Engine
+The CSI is the core IP of the platform. It produces a single 0–100 score representing an athlete's overall recruitment readiness, calculated entirely client-side from verified data.
+
+CSI = (Performance × 0.30)
+    + (Efficiency  × 0.20)
+    + (Consistency × 0.15)
+    + (Context     × 0.15)
+    + (Development × 0.10)
+    + (Risk        × 0.10)  [inverted — lower risk = higher contribution]
+
+Sub-index	What it measures	Key formula
+Performance	Output quality per match	(avgRating × 8) + (G+A per 90 × 20)
+Efficiency	Output per opportunity	Shot-to-goal ratio + weighted rating
+Consistency	Rating stability over time	100 − (stdDev of ratings × 15)
+Context	League level weighting	Appearance-weighted league coefficient
+Development	Trajectory (improving/declining)	Score delta across rolling windows
+Risk	Discipline + availability risk	Fouls/90 + cards/90 + minutes availability
+All metrics are normalised to per-90 minutes to make cross-competition comparisons fair — an athlete playing 20 minutes per match is not penalised against one playing full games.
+
+The score is recomputed and written back to Firestore on every match log, attribute update, or metric entry. No background job required.
+
+7. Security Model
+Security is enforced at the Firestore layer, not the application layer — so it cannot be bypassed even with direct API calls.
+
+Role Hierarchy
+admin          — Full platform access
+club           — Club admin (owns their club document)
+coach          — Staff member (read/write squad data)
+analyst        — Staff member (read/write match data)
+scout          — External (read athlete profiles, manage connections)
+athlete        — Owns their own document
+
+Key Security Patterns
+Deterministic membership check (O(1)):
+
+function isActiveMemberOfClub(clubId) {
+  let memberPath = /databases/$(database)/documents/
+                   club_members/$(request.auth.uid + '_' + clubId);
+  return exists(memberPath) && get(memberPath).data.status == 'active';
+}
+
+This runs inside Security Rules — no round-trip to the application layer.
+
+Null-safe role resolution:
+
+function getUserData() {
+  let userDoc = get(/databases/.../users/$(request.auth.uid));
+  return userDoc != null ? userDoc.data : {};
+}
+
+Guards against race conditions during account creation where the user document may not yet exist.
+
+Athlete owns their own record — but verified fields are write-protected: Coaches can set isVerified: true on a match entry. Athletes can add new match entries but cannot modify the isVerified flag on an existing one. This creates a trustable audit chain.
+
+8. Real-Time Features
+All real-time features use Firestore onSnapshot listeners managed through custom React hooks:
+
+// Custom hook pattern (src/firebase/index.ts)
+function useCollection<T>(query) {
+  const [data, setData] = useState<T[] | null>(null)
+  useEffect(() => {
+    if (!query) return
+    return onSnapshot(query, snap =>
+      setData(snap.docs.map(d => ({ id: d.id, ...d.data() } as T)))
+    )
+  }, [query])
+  return { data }
+}
+
+Features using real-time listeners:
+
+Notification bell badge (unread count updates live)
+Squad invite card (appears instantly when coach sends invite)
+Live match tracker (events stream in real-time during matches)
+Direct messages + squad group chat
+Coach's invite history (accept/decline status flips live)
+Optimistic UI on message send:
+Messages are added to local state immediately with a _sending: true flag, then confirmed or rolled back when the Firestore write settles. This makes the chat feel instant on slow connections — important for Kenya's mobile network conditions.
+
+9. AI Integration
+Scouting Report Generation
+Route: POST /api/ai/scouting-report
+
+Athlete stats → Genkit flow → Gemini Pro →
+Structured output (Zod schema) →
+{
+  executiveSummary: string
+  strengths: string[]
+  developmentAreas: string[]
+  recruitmentVerdict: 'Recommend' | 'Monitor' | 'Pass'
+  confidenceScore: number
+}
+
+The output schema is enforced via Zod — the AI cannot return a malformed response. If Gemini produces invalid JSON, Genkit retries automatically before surfacing an error.
+
+AI Shortlist Generation
+Route: POST /api/ai/shortlist
+
+Takes a natural-language scout query (e.g. "left-footed CDM, under 22, high consistency") and returns a ranked list of matching athlete IDs. The ranking combines semantic match with CSI scores.
+
+10. SMS Integration (Kenya-specific)
+BulkSMS API is used over email for athlete communication because smartphone penetration in rural Kenya is high, but email open rates are low.
+
+Trigger points:
+
+Athlete invited to join a club → SMS confirmation
+Match stats logged by coach → SMS notification to athlete
+Training session scheduled → SMS reminder (24h before)
+Scout connection request → SMS alert
+The SMS client (src/lib/bulksms.ts) uses p-retry for automatic retry on gateway timeouts, with exponential backoff.
+
+11. API Routes (Server-Side)
+All API routes use Firebase Admin SDK + Bearer token verification:
+
+// src/lib/server-auth.ts
+const token = req.headers.authorization?.split('Bearer ')[1]
+const decoded = await adminAuth.verifyIdToken(token)
+// decoded.uid is now trusted
+
+Route	Purpose
+POST /api/ai/scouting-report	Trigger Gemini scouting report
+POST /api/ai/shortlist	AI-powered athlete shortlisting
+POST /api/sms/announcement	Club broadcast SMS
+POST /api/push/send	Web Push to athlete devices
+POST /api/marketing/campaigns	Marketing campaign creation
+POST /api/invitations/send	Bulk invite emails
+GET /api/cron/send-scheduled-campaigns	Scheduled campaign delivery
+12. PWA & Mobile Strategy
+The app is built as a Progressive Web App targeting Android (dominant in Kenya):
+
+Service Worker: Caches static assets for offline use
+Web App Manifest: "Add to Home Screen" prompt on first visit
+Mobile-first layout: Bottom navigation bar on mobile, sidebar on desktop
+Image compression: Profile photos are compressed client-side to max 600px / 82% quality before upload — reducing Firebase Storage bandwidth
+13. Multi-Role Dashboard System
+Each user role gets an entirely separate dashboard at a dedicated route:
+
+Role	Route	Key Capabilities
+Athlete	/dashboard	Profile, match log, CSI view, squad invites, injury tracker
+Coach	/coach-dashboard	Squad management, training sessions, match verification, analytics
+Club Admin	/club-dashboard	Roster, billing, scouts, matches, announcements
+Scout	/scout-dashboard	Athlete discovery, scouting reports, connections
+Analyst	/analyst-dashboard	Match data, squad analytics
+All dashboards share the same Firebase hooks and type system — only the queries and UI differ.
+
+14. Ghost Player System
+This is one of the platform's most Kenya-specific features. Coaches frequently log match stats for players who are not yet registered on the platform. These are stored as Ghost Players — placeholder profiles with match data but no Firebase Auth account.
+
+When an athlete signs up, the platform matches their phone number / email against existing ghost records and automatically claims those stats into their new profile. Their career history is preserved even from before they joined the platform.
+
+15. Key Engineering Decisions & Trade-offs
+Decision	Trade-off
+Embedded matchHistory array on athlete document	Fast reads, single document fetch. Limit: ~3,000 matches per athlete before hitting Firestore 1MB cap — acceptable for career lifespan.
+CSI computed client-side on write	No background Cloud Function needed. Trade-off: If scoring formula changes, historical scores need a one-time backfill migration.
+Deterministic document IDs (uid_clubId)	O(1) membership check in Security Rules. Trade-off: IDs are not human-readable.
+setDoc with merge: true over updateDoc	Prevents "document not found" errors on conversations that may not yet exist. Trade-off: Slightly more verbose write operations.
+Role stored in users collection, not Auth claims	Easier to update without re-issuing JWTs. Trade-off: Every Security Rule role check does one extra Firestore read (get(users/uid)). Mitigated by Firestore's internal read cache.
+Denormalized clubName on athlete document	Avoids a join query on every profile read. Trade-off: Must update all athlete documents if a club renames (rare, handled on club update).
+16. Scaling Considerations
+The current architecture handles the early-scale needs (thousands of athletes, hundreds of clubs). At significant scale:
+
+CSI calculation moves to a Cloud Function triggered on Firestore write — removes computation from the client
+Match history splits into a match_entries subcollection with pagination — removes the embedded array limit
+AI scouting reports add a caching layer (write to Firestore on first generation, serve cache thereafter)
+Messaging could migrate to Firebase Realtime Database for sub-100ms latency at very high message volume
+None of these require architectural changes — they are evolutionary refactors of existing patterns.
+
+This document reflects the system as of the current codebase state.
