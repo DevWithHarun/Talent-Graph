@@ -3,7 +3,8 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - npm install
+        - npm install --workspace=Frontend --save-optional --no-save @rollup/rollup-linux-x64-gnu lightningcss-linux-x64-gnu
     build:
       commands:
         - npm run build
